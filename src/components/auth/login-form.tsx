@@ -1,7 +1,6 @@
 
 "use client";
 
-import type { LucideIcon } from 'lucide-react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "البريد الإلكتروني غير صالح" }),
@@ -27,7 +26,7 @@ interface LoginFormProps {
   title: string;
   description?: string;
   redirectPath: string;
-  userRoleIcon?: LucideIcon;
+  userRoleIconName?: 'Building' | 'UserSquare' | 'UserCheck' | 'Users';
 }
 
 const cardVariants = {
@@ -40,7 +39,7 @@ const fieldVariants = (delay: number) => ({
   visible: { opacity: 1, x: 0, transition: { duration: 0.3, delay } },
 });
 
-export default function LoginForm({ title, description, redirectPath, userRoleIcon: UserRoleIcon }: LoginFormProps) {
+export default function LoginForm({ title, description, redirectPath, userRoleIconName }: LoginFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -62,11 +61,23 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
     router.push(redirectPath);
   };
 
+  const renderIcon = () => {
+    if (!userRoleIconName) return null;
+    const commonProps = { className: "mx-auto h-12 w-12 text-primary mb-3" };
+    switch (userRoleIconName) {
+      case 'Building': return <Building {...commonProps} />;
+      case 'UserSquare': return <UserSquare {...commonProps} />;
+      case 'UserCheck': return <UserCheck {...commonProps} />;
+      case 'Users': return <Users {...commonProps} />;
+      default: return null;
+    }
+  };
+
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full max-w-md">
       <Card className="shadow-2xl overflow-hidden">
         <CardHeader className="bg-primary/10 text-center p-6">
-          {UserRoleIcon && <UserRoleIcon className="mx-auto h-12 w-12 text-primary mb-3" />}
+          {renderIcon()}
           <CardTitle className="text-2xl md:text-3xl font-bold">{title}</CardTitle>
           {description && <CardDescription className="text-sm md:text-base mt-1">{description}</CardDescription>}
         </CardHeader>

@@ -1,6 +1,5 @@
 
 import LoginForm from '@/components/auth/login-form';
-import { Users } from 'lucide-react';
 
 export default function ServantLoginPage() {
   return (
@@ -8,7 +7,7 @@ export default function ServantLoginPage() {
       title="تسجيل دخول الخادم"
       description="أهلاً بك أيها الخادم الأمين! يرجى تسجيل الدخول للاطلاع على مهام الافتقاد."
       redirectPath="/servant-panel/dashboard"
-      userRoleIcon={Users}
+      userRoleIconName="Users"
     />
   );
 }
