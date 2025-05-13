@@ -27,7 +27,7 @@ const withPWA = withPWAInit({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // Disable PWA in development mode
+  disable: false, // Explicitly enable PWA in all environments for testing install prompt
   runtimeCaching, // Added for better caching strategies
   buildExcludes: [/middleware-manifest\.json$/], // Recommended for App Router
   // For App Router, ensure that the service worker is generated correctly.

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   description: 'لوحة تحكم لإدارة شؤون الكنيسة والكهنة والعائلات والإعلانات',
   applicationName: 'لوحة تحكم مدير الكنيسة',
   manifest: '/manifest.json',
+  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover', // Added viewport for PWA
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -64,9 +65,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Meta tags for PWA compatibility and appearance, largely handled by Metadata API */}
-        {/* <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover" /> */}
-        {/* The viewport meta tag is typically automatically handled by Next.js */}
+        {/* Meta tags for PWA compatibility and appearance are now largely handled by the Metadata API, including viewport. */}
       </head>
       <body className={`${tajawal.variable} font-sans antialiased`}>
         <ThemeProvider
