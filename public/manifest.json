@@ -5,6 +5,7 @@
   "lang": "ar",
   "dir": "rtl",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F9FAFB",
   "theme_color": "#1E3A8A",
@@ -52,3 +53,4 @@
     }
   ]
 }
+
