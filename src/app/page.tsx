@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Image from 'next/image';
 
 const MotionLink = motion(Link);
+const MotionButton = motion(Button);
 
 const navLinks = [
   { href: '#hero', label: 'الرئيسية' },
@@ -24,22 +25,22 @@ const userSections = [
     title: 'بوابة إدارة الكنيسة',
     description: 'أدوات شاملة لإدارة شؤون الكنيسة، الإعلانات، والبيانات العامة بكفاءة وسهولة.',
     icon: Building,
-    href: '/auth/admin/login', // Updated
+    href: '/auth/admin/login', 
     animation: { type: 'slide', direction: 'top' },
     delay: 0.2,
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10',
+    color: 'text-blue-500', // Kept for icon, consider using primary theme color
+    bg: 'bg-blue-500/10', // Kept for icon background
     buttonText: 'دخول الإدارة',
   },
   {
     title: 'بوابة الكهنة',
     description: 'متابعة خدمة الافتقاد، تنظيم مواعيد الاعترافات، وإدارة بيانات الأسر المخدومة.',
     icon: UserSquare,
-    href: '/auth/priest/login', // Updated
+    href: '/auth/priest/login', 
     animation: { type: 'bounce' },
     delay: 0.4,
-    color: 'text-green-500',
-    bg: 'bg-green-500/10',
+    color: 'text-green-500', // Kept for icon
+    bg: 'bg-green-500/10', // Kept for icon background
     buttonText: 'دخول الكهنة',
 
   },
@@ -47,22 +48,22 @@ const userSections = [
     title: 'بوابة الخدام',
     description: 'استلام مهام الافتقاد، تسجيل الزيارات، وتقديم تقارير الخدمة بشكل مبسط.',
     icon: Users,
-    href: '/auth/servant/login', // Updated
+    href: '/auth/servant/login', 
     animation: { type: 'fadeScale' },
     delay: 0.6,
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10',
+    color: 'text-purple-500', // Kept for icon
+    bg: 'bg-purple-500/10', // Kept for icon background
     buttonText: 'دخول الخدام',
   },
   {
     title: 'بوابة المخدومين',
     description: 'طلب مواعيد الاعتراف، الاطلاع على تعليمات الكنيسة، والمشاركة في الأنشطة الروحية.',
     icon: UserCheck,
-    href: '/auth/public/login', // Updated
+    href: '/auth/public/login', 
     animation: { type: 'slide', direction: 'bottom' },
     delay: 0.8,
-    color: 'text-yellow-500',
-    bg: 'bg-yellow-500/10',
+    color: 'text-yellow-500', // Kept for icon
+    bg: 'bg-yellow-500/10', // Kept for icon background
     buttonText: 'دخول المخدومين',
   },
 ];
@@ -135,7 +136,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Button asChild variant="default" className="hidden md:flex group">
-              <Link href="/auth/admin/login"> {/* Updated */}
+              <Link href="/auth/admin/login"> 
                 <LogIn className="me-2 h-4 w-4 group-hover:animate-pulse" /> تسجيل الدخول
               </Link>
             </Button>
@@ -163,7 +164,7 @@ export default function LandingPage() {
                     </Link>
                     ))}
                     <Button asChild variant="default" size="lg" className="mt-4" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Link href="/auth/admin/login"> {/* Updated */}
+                        <Link href="/auth/admin/login"> 
                             <LogIn className="me-2 h-5 w-5" /> تسجيل الدخول
                         </Link>
                     </Button>
@@ -185,9 +186,9 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
             >
                 <Church className="mx-auto h-20 w-20 text-primary mb-6" />
             </motion.div>
@@ -213,12 +214,25 @@ export default function LandingPage() {
               transition={{ duration: 0.5, delay: 0.6, ease: "backOut" }} 
               className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
             >
-              <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transform hover:scale-105 transition-transform duration-300">
+              <MotionButton 
+                size="lg" 
+                asChild 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
+                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Link href="#services">اكتشف المزيد</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="bg-background/20 hover:bg-background/30 text-white border-white/50 hover:border-white shadow-lg transform hover:scale-105 transition-transform duration-300">
+              </MotionButton>
+              <MotionButton 
+                size="lg" 
+                variant="outline" 
+                asChild 
+                className="bg-background/20 hover:bg-background/30 text-white border-white/50 hover:border-white shadow-lg"
+                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Link href="#user-types">بوابات الدخول</Link>
-              </Button>
+              </MotionButton>
             </motion.div>
           </div>
         </motion.section>
@@ -250,7 +264,12 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ duration: 0.5, delay: index * 0.15, ease: "easeOut" }}
-                  className="p-6 bg-card rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 text-center"
+                  whileHover={{ 
+                    scale: 1.05, 
+                    boxShadow: "0px 8px 25px -5px hsla(var(--primary), 0.15), 0px 5px 15px -6px hsla(var(--primary), 0.1)" 
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="p-6 bg-card rounded-xl shadow-lg text-center"
                 >
                   {service.icon}
                   <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
@@ -363,4 +382,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
