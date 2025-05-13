@@ -1,4 +1,4 @@
-
+"use client";
 import DailyVisitationSchedule from '@/components/priest-panel/daily-visitation-schedule';
 import { motion } from 'framer-motion';
 

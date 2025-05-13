@@ -1,4 +1,4 @@
-
+"use client";
 import AddFamilyForm from '@/components/priest-panel/add-family-form';
 import { motion } from 'framer-motion';
 

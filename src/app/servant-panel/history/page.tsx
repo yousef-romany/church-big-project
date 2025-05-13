@@ -1,4 +1,4 @@
-
+"use client";
 import CompletedTasksHistory from '@/components/servant-panel/completed-tasks-history';
 import { motion } from 'framer-motion';
 

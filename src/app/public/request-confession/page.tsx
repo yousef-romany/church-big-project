@@ -1,4 +1,4 @@
-
+"use client";
 import RequestConfessionForm from '@/components/public/request-confession-form';
 import { motion } from 'framer-motion';
 

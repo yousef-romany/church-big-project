@@ -1,4 +1,4 @@
-
+"use client";
 import ConfessionSchedule from '@/components/priest-panel/confession-schedule';
 import { motion } from 'framer-motion';
 

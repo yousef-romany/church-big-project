@@ -1,4 +1,4 @@
-
+"use client";
 import SendServantForm from '@/components/priest-panel/send-servant-form';
 import { motion } from 'framer-motion';
 

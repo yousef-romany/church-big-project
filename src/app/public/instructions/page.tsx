@@ -1,4 +1,4 @@
-
+"use client";
 import ChurchInstructionsDisplay from '@/components/public/church-instructions-display';
 import { motion } from 'framer-motion';
 

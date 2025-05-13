@@ -1,4 +1,4 @@
-
+"use client";
 import TaskList from '@/components/servant-panel/task-list';
 import { motion } from 'framer-motion';
 
