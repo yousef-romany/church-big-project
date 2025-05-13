@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 export interface ConfessionRequestFormInput {
   fullName: string;
   mobileNumber: string;
-  affiliatedChurch: string;
+  selectedPriestId: string; // Changed from affiliatedChurch
 }
 
 export interface ConfessionRequest extends ConfessionRequestFormInput {
@@ -20,3 +20,4 @@ export interface ChurchInstruction {
   icon: LucideIcon;
   category: string; // e.g., "Spiritual Life", "Church Activities"
 }
+

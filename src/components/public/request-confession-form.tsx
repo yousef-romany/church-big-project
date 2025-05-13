@@ -8,15 +8,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { Send, User, Phone, Home } from 'lucide-react';
+import { Send, User, Phone, UserSquare } from 'lucide-react'; // Changed Home to UserSquare
 
 const confessionRequestSchema = z.object({
   fullName: z.string().min(5, { message: "الاسم الكامل يجب أن يكون 5 أحرف على الأقل" }),
   mobileNumber: z.string().regex(/^01[0-2,5]{1}[0-9]{8}$/, { message: "رقم الموبايل غير صالح (مثال: 01234567890)" }),
-  affiliatedChurch: z.string().min(3, { message: "اسم الكنيسة يجب أن يكون 3 أحرف على الأقل" }),
+  selectedPriestId: z.string().min(1, { message: "يجب اختيار أب الاعتراف" }), // Changed from affiliatedChurch
 });
+
+const availablePriests = [
+  { id: 'priest_john', name: 'أبونا يوحنا' },
+  { id: 'priest_peter', name: 'أبونا بطرس' },
+  { id: 'priest_paul', name: 'أبونا بولس' },
+  { id: 'priest_mark', name: 'أبونا مرقس' },
+];
 
 export default function RequestConfessionForm() {
   const { toast } = useToast();
@@ -25,17 +33,18 @@ export default function RequestConfessionForm() {
     defaultValues: {
       fullName: '',
       mobileNumber: '',
-      affiliatedChurch: 'كنيسة السيدة العذراء مريم بـ...', // Default or example
+      selectedPriestId: '',
     },
   });
 
   const onSubmit: SubmitHandler<ConfessionRequestFormInput> = (data) => {
-    console.log("Confession Request Submitted:", data);
+    const selectedPriest = availablePriests.find(p => p.id === data.selectedPriestId);
+    console.log("Confession Request Submitted:", { ...data, priestName: selectedPriest?.name });
     // In a real app, this data would be sent to a backend service
     // which would then make it available in the priest's panel.
     toast({
       title: "تم إرسال طلب الاعتراف بنجاح!",
-      description: `شكرًا لك، ${data.fullName}. سيتم التواصل معك قريبًا لترتيب الموعد.`,
+      description: `شكرًا لك، ${data.fullName}. سيتم التواصل معك قريبًا لترتيب الموعد مع ${selectedPriest?.name}.`,
       variant: "default",
     });
     form.reset();
@@ -102,13 +111,24 @@ export default function RequestConfessionForm() {
               <motion.div custom={2} variants={fieldVariants}>
                 <FormField
                   control={form.control}
-                  name="affiliatedChurch"
+                  name="selectedPriestId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center"><Home className="me-2 h-4 w-4 text-muted-foreground" /> الكنيسة التابع لها</FormLabel>
-                      <FormControl>
-                        <Input placeholder="مثال: كنيسة مارجرجس بالزيتون" {...field} className="py-5 transition-all duration-300 focus:shadow-md" />
-                      </FormControl>
+                      <FormLabel className="flex items-center"><UserSquare className="me-2 h-4 w-4 text-muted-foreground" /> أب الاعتراف</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="py-5 transition-all duration-300 focus:shadow-md">
+                            <SelectValue placeholder="اختر أب الاعتراف" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availablePriests.map((priest) => (
+                            <SelectItem key={priest.id} value={priest.id}>
+                              {priest.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -139,3 +159,4 @@ export default function RequestConfessionForm() {
     </motion.div>
   );
 }
+
