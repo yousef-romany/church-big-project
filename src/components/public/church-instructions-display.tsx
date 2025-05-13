@@ -3,7 +3,7 @@
 import type { ChurchInstruction } from '@/types/public';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { BookOpen, CalendarDays, Users, ClipboardEdit, HelpCircle } from 'lucide-react';
+import { BookOpen, CalendarDays, Users, ClipboardEdit, HelpCircle, Megaphone, ScrollText, User } from 'lucide-react';
 
 const mockInstructions: ChurchInstruction[] = [
   { id: 'instr1', title: 'قانون الاعتراف والتناول', content: 'يجب على المعترف أن يكون صائمًا انقطاعيًا لمدة لا تقل عن ٩ ساعات قبل التناول. ينصح بالاستعداد الجيد للاعتراف بمراجعة الذات والصلاة.', icon: BookOpen, category: 'الحياة الروحية' },
@@ -61,3 +61,4 @@ export default function ChurchInstructionsDisplay() {
     </motion.div>
   );
 }
+

@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -73,6 +73,14 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
         <SidebarFooter className="p-4">
            <SidebarMenu>
             <SidebarMenuItem>
+                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "العودة للرئيسية", side: "left" }} asChild>
+                   <Link href="/">
+                    <ArrowRightToLine className="h-5 w-5 me-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">العودة للرئيسية</span>
+                   </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
                 <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "الإعدادات", side: "left" }}>
                     <Settings className="h-5 w-5 me-2" />
                     <span className="group-data-[collapsible=icon]:hidden">الإعدادات</span>
@@ -128,3 +136,4 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
     </SidebarProvider>
   );
 }
+

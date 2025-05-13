@@ -1,7 +1,8 @@
+
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Home, Users, UserSquare, Megaphone, Church, Settings, Menu, Search } from 'lucide-react';
+import { Home, Users, UserSquare, Megaphone, Church, Settings, Menu, Search, ArrowRightToLine } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -65,10 +66,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-4">
-          <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-            <Settings className="h-5 w-5" />
-            <span className="group-data-[collapsible=icon]:hidden">إعدادات</span>
-          </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "العودة للرئيسية", side: "left" }} asChild>
+                   <Link href="/">
+                    <ArrowRightToLine className="h-5 w-5 me-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">العودة للرئيسية</span>
+                   </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "الإعدادات", side: "left" }}>
+                    <Settings className="h-5 w-5 me-2" />
+                    <span className="group-data-[collapsible=icon]:hidden">الإعدادات</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>

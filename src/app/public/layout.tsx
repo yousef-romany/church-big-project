@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Church, Home, Send, ScrollText } from 'lucide-react';
+import { Church, Home, Send, ScrollText, ArrowRightToLine } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
@@ -25,7 +25,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
         <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2" aria-label="الصفحة الرئيسية">
+          <Link href="/public/instructions" className="flex items-center gap-2" aria-label="الصفحة الرئيسية للخدمات العامة">
             <Church className="h-7 w-7 text-primary" />
             <span className="font-semibold text-lg hidden sm:inline">خدمات المخدومين</span>
           </Link>
@@ -52,8 +52,13 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+             <Link href="/" legacyBehavior passHref>
+               <Button variant="outline" size="sm">
+                 <ArrowRightToLine className="me-1.5 h-4 w-4" /> الرئيسية
+               </Button>
+            </Link>
             <Link href="/dashboard" legacyBehavior passHref>
-               <Button variant="outline" size="sm">لوحة التحكم (Admin)</Button>
+               <Button variant="ghost" size="sm">لوحة التحكم</Button>
             </Link>
           </div>
         </div>
@@ -79,3 +84,4 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ');
 }
+
