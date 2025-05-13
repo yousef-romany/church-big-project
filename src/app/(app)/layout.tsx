@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import InstallPWAButton from '@/components/shared/InstallPWAButton';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
@@ -103,6 +104,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 />
               </div>
             </form>
+            <InstallPWAButton />
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

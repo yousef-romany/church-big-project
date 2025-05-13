@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Church, Home, Send, ScrollText, ArrowRightToLine } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import InstallPWAButton from '@/components/shared/InstallPWAButton';
 import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -51,6 +52,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2">
+            <InstallPWAButton />
             <ThemeToggle />
              <Link href="/" legacyBehavior passHref>
                <Button variant="outline" size="sm">
@@ -84,4 +86,3 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ');
 }
-

@@ -2,9 +2,10 @@
 "use client";
 
 import Link from 'next/link';
-import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone } from 'lucide-react';
+import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import InstallPWAButton from '@/components/shared/InstallPWAButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -24,7 +25,7 @@ const userSections = [
   {
     title: 'بوابة إدارة الكنيسة',
     description: 'أدوات شاملة لإدارة شؤون الكنيسة، الإعلانات، والبيانات العامة بكفاءة وسهولة.',
-    icon: Building,
+    iconName: 'Building',
     href: '/auth/admin/login', 
     animation: { type: 'slide', direction: 'top' },
     delay: 0.2,
@@ -35,7 +36,7 @@ const userSections = [
   {
     title: 'بوابة الكهنة',
     description: 'متابعة خدمة الافتقاد، تنظيم مواعيد الاعترافات، وإدارة بيانات الأسر المخدومة.',
-    icon: UserSquare,
+    iconName: 'UserSquare',
     href: '/auth/priest/login', 
     animation: { type: 'bounce' },
     delay: 0.4,
@@ -47,7 +48,7 @@ const userSections = [
   {
     title: 'بوابة الخدام',
     description: 'استلام مهام الافتقاد، تسجيل الزيارات، وتقديم تقارير الخدمة بشكل مبسط.',
-    icon: Users,
+    iconName: 'Users',
     href: '/auth/servant/login', 
     animation: { type: 'fadeScale' },
     delay: 0.6,
@@ -58,7 +59,7 @@ const userSections = [
   {
     title: 'بوابة المخدومين',
     description: 'طلب مواعيد الاعتراف، الاطلاع على تعليمات الكنيسة، والمشاركة في الأنشطة الروحية.',
-    icon: UserCheck,
+    iconName: 'UserCheck',
     href: '/auth/public/login', 
     animation: { type: 'slide', direction: 'bottom' },
     delay: 0.8,
@@ -67,6 +68,16 @@ const userSections = [
     buttonText: 'دخول المخدومين',
   },
 ];
+
+const iconComponents: { [key: string]: React.ElementType } = {
+  Building,
+  UserSquare,
+  Users,
+  UserCheck,
+  Megaphone,
+  ScrollText,
+};
+
 
 const sectionAnimationVariants = {
   slide_top: {
@@ -134,6 +145,7 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <InstallPWAButton />
             <ThemeToggle />
             <Button asChild variant="default" className="hidden md:flex group">
               <Link href="/auth/admin/login"> 
@@ -254,10 +266,12 @@ export default function LandingPage() {
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { title: "إدارة الرعية", description: "تنظيم بيانات الأسر والخدام، وتتبع الأنشطة والفعاليات الكنسية.", icon: <Users className="h-10 w-10 text-primary mb-4" /> },
-                { title: "التواصل الفعال", description: "نظام إعلانات متقدم، وتسهيل التواصل بين جميع أفراد الكنيسة.", icon: <Megaphone className="h-10 w-10 text-primary mb-4" /> },
-                { title: "الخدمة الروحية", description: "تسهيل طلب الاعترافات، ونشر التعليمات الروحية الهامة.", icon: <ScrollText className="h-10 w-10 text-primary mb-4" /> }
-              ].map((service, index) => (
+                { title: "إدارة الرعية", description: "تنظيم بيانات الأسر والخدام، وتتبع الأنشطة والفعاليات الكنسية.", iconName: "Users" },
+                { title: "التواصل الفعال", description: "نظام إعلانات متقدم، وتسهيل التواصل بين جميع أفراد الكنيسة.", iconName: "Megaphone" },
+                { title: "الخدمة الروحية", description: "تسهيل طلب الاعترافات، ونشر التعليمات الروحية الهامة.", iconName: "ScrollText" }
+              ].map((service, index) => {
+                const IconComponent = iconComponents[service.iconName];
+                return (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 30 }}
@@ -271,11 +285,11 @@ export default function LandingPage() {
                   whileTap={{ scale: 0.98 }}
                   className="p-6 bg-card rounded-xl shadow-lg text-center"
                 >
-                  {service.icon}
+                  {IconComponent && <IconComponent className="h-10 w-10 text-primary mb-4 mx-auto" />}
                   <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
                   <p className="text-muted-foreground text-sm">{service.description}</p>
                 </motion.div>
-              ))}
+              )})}
             </div>
           </div>
         </section>
@@ -302,6 +316,7 @@ export default function LandingPage() {
                 const animationProps = section.animation.type === 'slide' 
                   ? sectionAnimationVariants[`slide_${section.animation.direction as 'top' | 'bottom'}`]
                   : sectionAnimationVariants[section.animation.type as 'bounce' | 'fadeScale'];
+                const IconComponent = iconComponents[section.iconName];
                 
                 return (
                   <motion.div
@@ -314,7 +329,7 @@ export default function LandingPage() {
                   >
                     <div className="p-8 flex flex-col items-center text-center flex-grow bg-card">
                       <div className={`p-4 rounded-full ${section.bg} mb-6 inline-block`}>
-                        <section.icon className={`h-12 w-12 ${section.color}`} />
+                        {IconComponent && <IconComponent className={`h-12 w-12 ${section.color}`} />}
                       </div>
                       <h3 className="text-2xl font-semibold mb-3 text-foreground">{section.title}</h3>
                       <p className="text-muted-foreground text-sm mb-6 flex-grow">{section.description}</p>
