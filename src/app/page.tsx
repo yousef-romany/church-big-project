@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText } from 'lucide-react';
+import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -104,7 +104,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background text-foreground flex flex-col" suppressHydrationWarning>
       {/* Header */}
       <motion.header 
         initial={{ y: -100, opacity: 0 }}
@@ -363,3 +363,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
