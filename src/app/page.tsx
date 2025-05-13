@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube } from 'lucide-react';
+import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +24,7 @@ const userSections = [
     title: 'بوابة إدارة الكنيسة',
     description: 'أدوات شاملة لإدارة شؤون الكنيسة، الإعلانات، والبيانات العامة بكفاءة وسهولة.',
     icon: Building,
-    href: '/dashboard',
+    href: '/auth/admin/login', // Updated
     animation: { type: 'slide', direction: 'top' },
     delay: 0.2,
     color: 'text-blue-500',
@@ -35,7 +35,7 @@ const userSections = [
     title: 'بوابة الكهنة',
     description: 'متابعة خدمة الافتقاد، تنظيم مواعيد الاعترافات، وإدارة بيانات الأسر المخدومة.',
     icon: UserSquare,
-    href: '/priest-panel/dashboard',
+    href: '/auth/priest/login', // Updated
     animation: { type: 'bounce' },
     delay: 0.4,
     color: 'text-green-500',
@@ -47,7 +47,7 @@ const userSections = [
     title: 'بوابة الخدام',
     description: 'استلام مهام الافتقاد، تسجيل الزيارات، وتقديم تقارير الخدمة بشكل مبسط.',
     icon: Users,
-    href: '/servant-panel/dashboard',
+    href: '/auth/servant/login', // Updated
     animation: { type: 'fadeScale' },
     delay: 0.6,
     color: 'text-purple-500',
@@ -58,7 +58,7 @@ const userSections = [
     title: 'بوابة المخدومين',
     description: 'طلب مواعيد الاعتراف، الاطلاع على تعليمات الكنيسة، والمشاركة في الأنشطة الروحية.',
     icon: UserCheck,
-    href: '/public/instructions',
+    href: '/auth/public/login', // Updated
     animation: { type: 'slide', direction: 'bottom' },
     delay: 0.8,
     color: 'text-yellow-500',
@@ -135,7 +135,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Button asChild variant="default" className="hidden md:flex group">
-              <Link href="/dashboard">
+              <Link href="/auth/admin/login"> {/* Updated */}
                 <LogIn className="me-2 h-4 w-4 group-hover:animate-pulse" /> تسجيل الدخول
               </Link>
             </Button>
@@ -163,7 +163,7 @@ export default function LandingPage() {
                     </Link>
                     ))}
                     <Button asChild variant="default" size="lg" className="mt-4" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Link href="/dashboard">
+                        <Link href="/auth/admin/login"> {/* Updated */}
                             <LogIn className="me-2 h-5 w-5" /> تسجيل الدخول
                         </Link>
                     </Button>
@@ -336,7 +336,7 @@ export default function LandingPage() {
               <h4 className="text-lg font-semibold mb-4">روابط سريعة</h4>
               <ul className="space-y-2 text-sm">
                 {navLinks.slice(1).map(link => (
-                     <li><Link href={link.href} className="hover:text-primary-foreground/70 transition-colors">{link.label}</Link></li>
+                     <li key={link.label}><Link href={link.href} className="hover:text-primary-foreground/70 transition-colors">{link.label}</Link></li>
                 ))}
                 <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors">سياسة الخصوصية</Link></li>
                 <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors">شروط الاستخدام</Link></li>
@@ -363,5 +363,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
