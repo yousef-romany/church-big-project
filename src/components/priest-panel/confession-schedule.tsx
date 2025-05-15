@@ -1,13 +1,13 @@
 
 "use client";
-import type { ConfessionAppointment, ConfessionStatus, PriestAvailability } from '@/types/priest-panel';
+import type { ConfessionAppointment, ConfessionStatus, PriestAvailability, PriestAvailabilitySlot } from '@/types/priest-panel';
 import { useState, useEffect, useMemo } from 'react';
-import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Added import
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,35 +18,30 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlusCircle, Edit2, Trash2, AlertTriangle, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle } from 'lucide-react';
-import { format, parse, addMinutes, isWithinInterval, differenceInMinutes, isValid, getDay, formatISO, startOfDay } from 'date-fns';
+import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle } from 'lucide-react';
+import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual } from 'date-fns';
 import { arSA } from 'date-fns/locale';
+import { 
+  getAppointments, 
+  addAppointment as addAppointmentToStore, 
+  updateAppointment as updateAppointmentInStore, 
+  deleteAppointment as deleteAppointmentFromStore,
+  getPriestAvailability, 
+  setPriestAvailability as setPriestAvailabilityInStore,
+  combineDateAndTime
+} from '@/lib/appointments-store';
+
 
 const appointmentSchema = z.object({
   name: z.string().min(3, { message: "الاسم يجب أن يكون 3 أحرف على الأقل" }),
-  day: z.string().min(1, { message: "يجب اختيار اليوم" }), // This will be derived from date
   date: z.date({ required_error: "يجب اختيار التاريخ" }),
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "الوقت يجب أن يكون بصيغة HH:mm (24 ساعة)"}),
   status: z.enum(['قادم', 'تم', 'لم يحضر', 'ملغى']),
   notes: z.string().optional(),
+  durationMinutes: z.number().min(15).max(120).default(30),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
-
-// Helper to combine Date object (date part) and time string (HH:mm) into a new Date object
-const combineDateAndTime = (dateObj: Date, timeStr: string): Date => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const newDate = new Date(dateObj);
-  newDate.setHours(hours, minutes, 0, 0);
-  return newDate;
-};
-
-const initialAppointments: ConfessionAppointment[] = [
-  { id: '1', name: 'يوحنا سمير', day: 'السبت', time: '17:00', status: 'قادم', datetime: combineDateAndTime(new Date('2024-08-24'), '17:00') },
-  { id: '2', name: 'مريم فؤاد', day: 'السبت', time: '18:30', status: 'تم', datetime: combineDateAndTime(new Date('2024-08-17'), '18:30') },
-  { id: '3', name: 'بطرس كامل', day: 'الأحد', time: '10:00', status: 'قادم', datetime: combineDateAndTime(new Date('2024-08-25'), '10:00') },
-  { id: '4', name: 'جورج إبراهيم', day: 'السبت', time: '19:00', status: 'لم يحضر', datetime: combineDateAndTime(new Date('2024-08-17'), '19:00') },
-].map(app => ({...app, datetime: isValid(app.datetime) ? app.datetime : new Date() })).sort((a,b) => a.datetime.getTime() - b.datetime.getTime());
 
 
 const statusStyles: Record<ConfessionStatus, string> = {
@@ -64,17 +59,16 @@ const statusIcons: Record<ConfessionStatus, JSX.Element> = {
 };
 
 const daysOfWeek = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-const dayToIndexMap: { [key: string]: number } = { "الأحد": 0, "الاثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الخميس": 4, "الجمعة": 5, "السبت": 6 };
 
 
 export default function ConfessionSchedule() {
-  const [appointments, setAppointments] = useState<ConfessionAppointment[]>(initialAppointments);
+  const [appointments, setAppointments] = useState<ConfessionAppointment[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<ConfessionAppointment | null>(null);
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-  const [priestAvailability, setPriestAvailability] = useState<PriestAvailability>({});
+  const [priestAvailability, setLocalPriestAvailability] = useState<PriestAvailability>({});
   const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
   
   const [isCancelRescheduleModalOpen, setIsCancelRescheduleModalOpen] = useState(false);
@@ -82,28 +76,39 @@ export default function ConfessionSchedule() {
   const [newDateForReschedule, setNewDateForReschedule] = useState<Date | undefined>();
   const [newTimeForReschedule, setNewTimeForReschedule] = useState<string>("");
 
-
   useEffect(() => {
     setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    
+    // Load initial data from store
+    const loadedAppointments = getAppointments().sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+    setAppointments(loadedAppointments);
+    
+    const loadedAvailability = getPriestAvailability();
+    setLocalPriestAvailability(loadedAvailability);
+    availabilityForm.reset(loadedAvailability); // Ensure form is synced
+
     return () => clearInterval(timer);
   }, []);
+
 
   const upcomingAlerts = useMemo(() => {
     if (!currentTime) return [];
     const now = currentTime;
-    const alertWindowEnd = addMinutes(now, 30);
+    const alertWindowEnd = addMinutes(now, 30); // Alert for appointments within the next 30 minutes
     return appointments.filter(
-      (app) => app.status === 'قادم' && isValid(app.datetime) && isWithinInterval(app.datetime, { start: now, end: alertWindowEnd })
+      (app) => app.status === 'قادم' && isValid(new Date(app.datetime)) && isWithinInterval(new Date(app.datetime), { start: now, end: alertWindowEnd })
     );
   }, [appointments, currentTime]);
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
-    defaultValues: { name: '', day: '', time: '', status: 'قادم', notes: ''}
+    defaultValues: { name: '', time: '', status: 'قادم', notes: '', durationMinutes: 30}
   });
 
-  const availabilityForm = useForm<PriestAvailability>();
+  const availabilityForm = useForm<PriestAvailability>({
+    defaultValues: getPriestAvailability() // Initialize with stored or default availability
+  });
   
   useEffect(() => {
     if (isAvailabilityModalOpen) {
@@ -115,15 +120,20 @@ export default function ConfessionSchedule() {
   const handleSaveAvailability: SubmitHandler<PriestAvailability> = (data) => {
     const newAvailability: PriestAvailability = {};
     daysOfWeek.forEach(day => {
-      const dayData = data[day as keyof PriestAvailability] as any; // Temp any for easier access
+      const dayData = data[day as keyof PriestAvailability] as PriestAvailabilitySlot | undefined | null;
       if (dayData && dayData.enabled && dayData.startTime && dayData.endTime) {
-        newAvailability[day] = { startTime: dayData.startTime, endTime: dayData.endTime };
+        if (isBefore(parse(dayData.endTime, 'HH:mm', new Date()), parse(dayData.startTime, 'HH:mm', new Date()))) {
+            toast({ title: `خطأ في يوم ${day}`, description: "وقت النهاية لا يمكن أن يكون قبل وقت البداية.", variant: "destructive" });
+            return; // Or handle error appropriately
+        }
+        newAvailability[day] = { startTime: dayData.startTime, endTime: dayData.endTime, enabled: true };
       } else {
-        newAvailability[day] = null;
+        newAvailability[day] = null; // Mark as unavailable or partially defined
       }
     });
-    setPriestAvailability(newAvailability);
-    toast({ title: "تم حفظ إعدادات التوافر!" });
+    setPriestAvailabilityInStore(newAvailability);
+    setLocalPriestAvailability(newAvailability); // Update local state
+    toast({ title: "تم حفظ إعدادات التوافر بنجاح!" });
     setIsAvailabilityModalOpen(false);
   };
 
@@ -132,15 +142,14 @@ export default function ConfessionSchedule() {
     const newDatetime = combineDateAndTime(data.date, data.time);
     const dayName = format(data.date, 'EEEE', { locale: arSA });
 
-    // Check priest availability
     const dayAvailability = priestAvailability[dayName];
     let availabilityWarning = false;
-    if (dayAvailability) {
+    if (dayAvailability && dayAvailability.enabled) {
         if (data.time < dayAvailability.startTime || data.time > dayAvailability.endTime) {
             availabilityWarning = true;
         }
-    } else { // Day not marked as available at all
-      if (Object.keys(priestAvailability).length > 0 && Object.values(priestAvailability).some(slot => slot !== null)) { // Only warn if availability is set for *any* day
+    } else { 
+      if (Object.values(priestAvailability).some(slot => slot && slot.enabled)) { 
         availabilityWarning = true;
       }
     }
@@ -150,18 +159,28 @@ export default function ConfessionSchedule() {
             title: "تحذير: الوقت خارج أوقات التوافر",
             description: `الموعد المحدد (${dayName} الساعة ${data.time}) خارج أوقات التوافر المحددة أو في يوم غير متاح.`,
             variant: "default", 
+            duration: 5000,
         });
     }
+    
+    const appointmentData = { 
+        ...data, 
+        datetime: newDatetime, 
+        day: dayName, 
+        durationMinutes: data.durationMinutes || 30 
+    };
 
     if (editingAppointment) {
-      setAppointments(prev => prev.map(app => app.id === editingAppointment.id ? { ...editingAppointment, ...data, datetime: newDatetime, day: dayName } : app).sort((a,b) => a.datetime.getTime() - b.datetime.getTime()));
+      const updatedAppt = { ...editingAppointment, ...appointmentData };
+      updateAppointmentInStore(updatedAppt);
+      setAppointments(prev => prev.map(app => app.id === editingAppointment.id ? updatedAppt : app).sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
       toast({ title: "تم تعديل الموعد بنجاح!" });
     } else {
-      const newAppointment: ConfessionAppointment = { id: Date.now().toString(), ...data, datetime: newDatetime, day: dayName };
-      setAppointments(prev => [...prev, newAppointment].sort((a,b) => a.datetime.getTime() - b.datetime.getTime()));
+      const newAppointment = addAppointmentToStore(appointmentData);
+      setAppointments(prev => [...prev, newAppointment].sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
       toast({ title: "تم إضافة الموعد بنجاح!" });
     }
-    form.reset({ name: '', day: '', time: '', status: 'قادم', notes: '', date: undefined });
+    form.reset({ name: '', time: '', status: 'قادم', notes: '', date: undefined, durationMinutes: 30 });
     setEditingAppointment(null);
     setIsModalOpen(false);
   };
@@ -170,30 +189,31 @@ export default function ConfessionSchedule() {
     setEditingAppointment(appointment);
     form.reset({
       name: appointment.name,
-      day: appointment.day,
-      date: appointment.datetime,
+      date: new Date(appointment.datetime),
       time: appointment.time,
       status: appointment.status,
-      notes: appointment.notes || ''
+      notes: appointment.notes || '',
+      durationMinutes: appointment.durationMinutes || 30,
     });
     setIsModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
+    deleteAppointmentFromStore(id);
     setAppointments(prev => prev.filter(app => app.id !== id));
     toast({ title: "تم حذف الموعد", variant: "destructive" });
   };
   
   const openAddModal = () => {
     setEditingAppointment(null);
-    form.reset({ name: '', day: '', time: '', status: 'قادم', notes: '', date: undefined });
+    form.reset({ name: '', time: '', status: 'قادم', notes: '', date: undefined, durationMinutes: 30 });
     setIsModalOpen(true);
   }
 
   const appointmentsOnDateToCancel = useMemo(() => {
     if (!dateToCancel) return [];
     const selectedDateStart = startOfDay(dateToCancel);
-    return appointments.filter(app => isValid(app.datetime) && startOfDay(app.datetime).getTime() === selectedDateStart.getTime() && app.status === 'قادم');
+    return appointments.filter(app => isValid(new Date(app.datetime)) && isEqual(startOfDay(new Date(app.datetime)), selectedDateStart) && app.status === 'قادم');
   }, [dateToCancel, appointments]);
 
   const handleConfirmReschedule = () => {
@@ -202,23 +222,31 @@ export default function ConfessionSchedule() {
       return;
     }
 
-    const updatedAppointments = appointments.map(app => {
-      if (appointmentsOnDateToCancel.find(a => a.id === app.id)) {
+    const updatedAppointmentsList = [...appointments]; // Create a mutable copy
+
+    appointmentsOnDateToCancel.forEach(appToReschedule => {
         const newDatetime = combineDateAndTime(newDateForReschedule, newTimeForReschedule);
-        return {
-          ...app,
+        const rescheduledApp: ConfessionAppointment = {
+          ...appToReschedule,
           datetime: newDatetime,
           day: format(newDateForReschedule, 'EEEE', { locale: arSA }),
           time: newTimeForReschedule,
-          status: 'قادم' as ConfessionStatus, // Ensure it's marked as upcoming
-          notes: `${app.notes || ''} (تم الترحيل من ${format(dateToCancel, 'PPPp', { locale: arSA })})`.trim(),
-          originalDatetime: app.datetime,
+          status: 'قادم',
+          notes: `${appToReschedule.notes || ''} (تم الترحيل من ${format(dateToCancel, 'PPPp', { locale: arSA })})`.trim(),
+          originalDatetime: appToReschedule.datetime,
         };
-      }
-      return app;
-    }).sort((a,b) => a.datetime.getTime() - b.datetime.getTime());
+        
+        const index = updatedAppointmentsList.findIndex(a => a.id === appToReschedule.id);
+        if (index > -1) {
+            updatedAppointmentsList[index] = rescheduledApp;
+        }
+        // No direct update to store here, will be done in bulk below
+    });
     
-    setAppointments(updatedAppointments);
+    // Save all changes to store at once
+    saveAppointments(updatedAppointmentsList.sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+    setAppointments(updatedAppointmentsList.sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())); // Update local state
+
     toast({ title: "تم ترحيل المواعيد بنجاح!" });
     setIsCancelRescheduleModalOpen(false);
     setDateToCancel(undefined);
@@ -242,10 +270,10 @@ export default function ConfessionSchedule() {
               <Bell className="h-6 w-6 me-3 animate-pulse" />
               <div>
                 <p className="font-bold">تنبيه موعد قريب!</p>
-                <p>{alert.name} - {alert.day} الساعة {isValid(alert.datetime) ? format(alert.datetime, 'hh:mm a', { locale: arSA }) : '--:--'} (بعد {currentTime && isValid(alert.datetime) ? differenceInMinutes(alert.datetime, currentTime) : 'دقائق'} دقيقة)</p>
+                <p>{alert.name} - {alert.day} الساعة {isValid(new Date(alert.datetime)) ? format(new Date(alert.datetime), 'hh:mm a', { locale: arSA }) : '--:--'} (بعد {currentTime && isValid(new Date(alert.datetime)) ? differenceInMinutes(new Date(alert.datetime), currentTime) : 'دقائق'} دقيقة)</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => {/* Mark as seen or dismiss logic */}}>إخفاء</Button>
+            {/* <Button variant="ghost" size="sm" onClick={() => {}}>إخفاء</Button> */}
           </motion.div>
         ))}
       </AnimatePresence>
@@ -265,35 +293,43 @@ export default function ConfessionSchedule() {
                 <DialogHeader><DialogTitle>إدارة أوقات التوافر للاعترافات</DialogTitle></DialogHeader>
                 <Form {...availabilityForm}>
                   <form onSubmit={availabilityForm.handleSubmit(handleSaveAvailability)} className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                    {daysOfWeek.map((day, index) => (
+                    {daysOfWeek.map((day) => (
                       <Card key={day} className="p-4">
                          <FormField
                             control={availabilityForm.control}
-                            name={`${day}.enabled` as any}
+                            name={`${day}.enabled` as keyof PriestAvailability}
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rtl:space-x-reverse mb-3">
+                                <FormItem className="flex flex-row items-center space-x-3 rtl:space-x-reverse space-y-0 mb-3">
                                  <FormControl>
                                     <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                      checked={!!field.value} // Handle undefined by treating as false
+                                      onCheckedChange={(checked) => {
+                                          field.onChange(checked);
+                                          if (checked && !availabilityForm.getValues(`${day}.startTime` as keyof PriestAvailability)) {
+                                              availabilityForm.setValue(`${day}.startTime` as keyof PriestAvailability, "09:00" as any);
+                                              availabilityForm.setValue(`${day}.endTime` as keyof PriestAvailability, "17:00" as any);
+                                          }
+                                      }}
                                     />
                                 </FormControl>
                                 <FormLabel className="font-semibold text-md">{day}</FormLabel>
                                 </FormItem>
                             )}
                             />
-                        {availabilityForm.watch(`${day}.enabled` as any) && (
+                        {availabilityForm.watch(`${day}.enabled` as keyof PriestAvailability) && (
                           <div className="grid grid-cols-2 gap-4">
-                            <FormField control={availabilityForm.control} name={`${day}.startTime` as any} render={({ field }) => (
+                            <FormField control={availabilityForm.control} name={`${day}.startTime` as keyof PriestAvailability} render={({ field }) => (
                               <FormItem>
                                 <FormLabel>من الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} /></FormControl>
+                                <FormControl><Input type="time" {...field} defaultValue="09:00" /></FormControl>
+                                <FormMessage />
                               </FormItem>
                             )} />
-                            <FormField control={availabilityForm.control} name={`${day}.endTime` as any} render={({ field }) => (
+                            <FormField control={availabilityForm.control} name={`${day}.endTime` as keyof PriestAvailability}  render={({ field }) => (
                               <FormItem>
                                 <FormLabel>حتى الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} /></FormControl>
+                                <FormControl><Input type="time" {...field} defaultValue="17:00" /></FormControl>
+                                <FormMessage />
                               </FormItem>
                             )} />
                           </div>
@@ -398,7 +434,7 @@ export default function ConfessionSchedule() {
                                 </FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < startOfDay(new Date())} initialFocus locale={arSA} />
+                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => isBefore(date, startOfDay(new Date())) && !isEqual(date, startOfDay(new Date()))} initialFocus locale={arSA} />
                             </PopoverContent>
                             </Popover>
                             <FormMessage />
@@ -408,18 +444,37 @@ export default function ConfessionSchedule() {
                     <FormField control={form.control} name="time" render={({ field }) => (
                       <FormItem><FormLabel>الساعة (صيغة 24 ساعة)</FormLabel><FormControl><Input type="time" placeholder="مثال: 17:00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                     <FormField
+                        control={form.control}
+                        name="durationMinutes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>مدة الاعتراف (بالدقائق)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="مثال: 30" {...field} onChange={e => field.onChange(parseInt(e.target.value,10) || 30)} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     
-                    {form.watch("date") && form.watch("time") && 
-                     priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] === null &&
-                     Object.keys(priestAvailability).length > 0 && Object.values(priestAvailability).some(slot => slot !== null) && (
-                        <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>
-                    )}
-                    {form.watch("date") && form.watch("time") && 
-                     priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] && 
-                     (form.watch("time") < priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })]!.startTime || 
-                      form.watch("time") > priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })]!.endTime) && (
-                        <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>الوقت المحدد خارج نطاق التوافر لهذا اليوم.</p>
-                    )}
+                    {form.watch("date") && form.watch("time") && (() => {
+                        const selectedDate = form.watch("date");
+                        const selectedTime = form.watch("time");
+                        if (!selectedDate || !selectedTime) return null;
+
+                        const dayName = format(selectedDate, 'EEEE', { locale: arSA });
+                        const dayAvail = priestAvailability[dayName];
+
+                        if (dayAvail === null || !dayAvail?.enabled) {
+                             if (Object.values(priestAvailability).some(slot => slot && slot.enabled)) {
+                                return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>;
+                             }
+                        } else if (dayAvail && dayAvail.enabled && (selectedTime < dayAvail.startTime || selectedTime > dayAvail.endTime)) {
+                            return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>الوقت المحدد خارج نطاق التوافر لهذا اليوم ({dayAvail.startTime} - {dayAvail.endTime}).</p>;
+                        }
+                        return null;
+                    })()}
 
 
                     <FormField control={form.control} name="status" render={({ field }) => (
@@ -456,6 +511,7 @@ export default function ConfessionSchedule() {
                     <TableHead>اسم المعترف</TableHead>
                     <TableHead>اليوم والتاريخ</TableHead>
                     <TableHead>الساعة</TableHead>
+                    <TableHead>المدة</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>ملاحظات</TableHead>
                     <TableHead className="text-left">إجراءات</TableHead>
@@ -473,8 +529,9 @@ export default function ConfessionSchedule() {
                         className="hover:bg-muted/50"
                       >
                         <TableCell className="font-medium">{appointment.name}</TableCell>
-                        <TableCell>{isValid(appointment.datetime) ? format(appointment.datetime, "EEEE, PPP", { locale: arSA }) : 'تاريخ غير صالح'}</TableCell>
-                        <TableCell>{isValid(appointment.datetime) ? format(appointment.datetime, 'hh:mm a', { locale: arSA }) : '--:--'}</TableCell>
+                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), "EEEE, PPP", { locale: arSA }) : 'تاريخ غير صالح'}</TableCell>
+                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), 'hh:mm a', { locale: arSA }) : '--:--'}</TableCell>
+                        <TableCell>{appointment.durationMinutes || 30} د</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center w-fit ${statusStyles[appointment.status]}`}>
                             {statusIcons[appointment.status]}
@@ -502,4 +559,3 @@ export default function ConfessionSchedule() {
     </motion.div>
   );
 }
-
