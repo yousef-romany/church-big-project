@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label'; // Added import
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -71,7 +72,7 @@ export default function ConfessionSchedule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<ConfessionAppointment | null>(null);
   const { toast } = useToast();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [priestAvailability, setPriestAvailability] = useState<PriestAvailability>({});
   const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
@@ -83,11 +84,13 @@ export default function ConfessionSchedule() {
 
 
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   const upcomingAlerts = useMemo(() => {
+    if (!currentTime) return [];
     const now = currentTime;
     const alertWindowEnd = addMinutes(now, 30);
     return appointments.filter(
@@ -137,14 +140,16 @@ export default function ConfessionSchedule() {
             availabilityWarning = true;
         }
     } else { // Day not marked as available at all
+      if (Object.keys(priestAvailability).length > 0 && Object.values(priestAvailability).some(slot => slot !== null)) { // Only warn if availability is set for *any* day
         availabilityWarning = true;
+      }
     }
 
     if (availabilityWarning) {
         toast({
             title: "تحذير: الوقت خارج أوقات التوافر",
-            description: `الموعد المحدد (${dayName} الساعة ${data.time}) خارج أوقات التوافر المحددة.`,
-            variant: "default", // Use default or a custom "warning" variant if available
+            description: `الموعد المحدد (${dayName} الساعة ${data.time}) خارج أوقات التوافر المحددة أو في يوم غير متاح.`,
+            variant: "default", 
         });
     }
 
@@ -237,7 +242,7 @@ export default function ConfessionSchedule() {
               <Bell className="h-6 w-6 me-3 animate-pulse" />
               <div>
                 <p className="font-bold">تنبيه موعد قريب!</p>
-                <p>{alert.name} - {alert.day} الساعة {format(alert.datetime, 'hh:mm a', { locale: arSA })} (بعد {differenceInMinutes(alert.datetime, currentTime)} دقيقة)</p>
+                <p>{alert.name} - {alert.day} الساعة {isValid(alert.datetime) ? format(alert.datetime, 'hh:mm a', { locale: arSA }) : '--:--'} (بعد {currentTime && isValid(alert.datetime) ? differenceInMinutes(alert.datetime, currentTime) : 'دقائق'} دقيقة)</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={() => {/* Mark as seen or dismiss logic */}}>إخفاء</Button>
@@ -404,13 +409,16 @@ export default function ConfessionSchedule() {
                       <FormItem><FormLabel>الساعة (صيغة 24 ساعة)</FormLabel><FormControl><Input type="time" placeholder="مثال: 17:00" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     
-                    {form.watch("date") && form.watch("time") && priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] && 
+                    {form.watch("date") && form.watch("time") && 
+                     priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] === null &&
+                     Object.keys(priestAvailability).length > 0 && Object.values(priestAvailability).some(slot => slot !== null) && (
+                        <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>
+                    )}
+                    {form.watch("date") && form.watch("time") && 
+                     priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] && 
                      (form.watch("time") < priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })]!.startTime || 
                       form.watch("time") > priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })]!.endTime) && (
                         <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>الوقت المحدد خارج نطاق التوافر لهذا اليوم.</p>
-                    )}
-                    {form.watch("date") && !priestAvailability[format(form.watch("date")!, 'EEEE', { locale: arSA })] && Object.keys(priestAvailability).length > 0 && (
-                        <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>
                     )}
 
 
@@ -494,3 +502,4 @@ export default function ConfessionSchedule() {
     </motion.div>
   );
 }
+
