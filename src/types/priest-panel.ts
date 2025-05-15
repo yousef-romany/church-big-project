@@ -5,9 +5,11 @@ export interface ConfessionAppointment {
   id: string;
   name: string;
   day: string; // e.g., "الأحد"
-  time: string; // e.g., "٠٥:٠٠ م"
+  time: string; // e.g., "17:00" in HH:mm format
   status: ConfessionStatus;
   datetime: Date; // For sorting and alerts
+  notes?: string; // For rescheduling info or other notes
+  originalDatetime?: Date; // To track if rescheduled
 }
 
 export type VisitationFamilyStatus = 'عاجل' | 'عادي' | 'تواصل فقط' | 'تمت الزيارة' | 'لم تتم الزيارة';
@@ -26,10 +28,19 @@ export interface PriestPanelFamily {
   motherName: string;
   members: FamilyMember[];
   address: string;
-  // mapLocation: { lat: number; lng: number }; // For future Google Maps integration
   phoneNumber: string;
   region?: string;
   visitationStatus?: VisitationFamilyStatus;
   lastVisited?: Date;
   notes?: string;
+}
+
+export interface PriestAvailabilitySlot {
+  startTime: string; // HH:mm
+  endTime: string;   // HH:mm
+}
+
+export interface PriestAvailability {
+  // Key is day name e.g., "الأحد", "الاثنين"
+  [dayOfWeek: string]: PriestAvailabilitySlot | null;
 }
