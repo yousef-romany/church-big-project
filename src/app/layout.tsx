@@ -29,18 +29,18 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', type: 'image/x-icon' }, // Ensure public/favicon.ico exists
-      { url: '/icons/icon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: 'https://placehold.co/16x16.png?text=Icon', sizes: '16x16', type: 'image/png' },
+      { url: 'https://placehold.co/32x32.png?text=Icon', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/icons/apple-touch-icon.png' }, // e.g., 180x180, ensure public/icons/apple-touch-icon.png exists
-      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
-      { url: '/icons/icon-167x167.png', sizes: '167x167', type: 'image/png' },
-      { url: '/icons/icon-180x180.png', sizes: '180x180', type: 'image/png' },
+      { url: 'https://placehold.co/180x180.png?text=AppleIcon' }, 
+      { url: 'https://placehold.co/152x152.png?text=Icon', sizes: '152x152', type: 'image/png' },
+      { url: 'https://placehold.co/167x167.png?text=Icon', sizes: '167x167', type: 'image/png' },
+      { url: 'https://placehold.co/180x180.png?text=Icon', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: [ // Used for Android home screen icons
-      { url: '/icons/icon-192x192.png', sizes: '192x192' }
+      { url: 'https://placehold.co/192x192.png?text=Shortcut', sizes: '192x192' }
     ],
   },
   other: {

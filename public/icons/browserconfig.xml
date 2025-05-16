@@ -1,12 +1,11 @@
-
 <?xml version="1.0" encoding="utf-8"?>
 <browserconfig>
     <msapplication>
         <tile>
-            <square70x70logo src="/icons/icon-70x70.png"/>
-            <square150x150logo src="/icons/icon-150x150.png"/>
-            <wide310x150logo src="/icons/icon-310x150.png"/>
-            <square310x310logo src="/icons/icon-310x310.png"/>
+            <square70x70logo src="https://placehold.co/70x70.png?text=TileS"/>
+            <square150x150logo src="https://placehold.co/150x150.png?text=TileM"/>
+            <wide310x150logo src="https://placehold.co/310x150.png?text=TileW"/>
+            <square310x310logo src="https://placehold.co/310x310.png?text=TileL"/>
             <TileColor>#1E3A8A</TileColor>
         </tile>
     </msapplication>
