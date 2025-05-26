@@ -1,252 +1,249 @@
 
 "use client";
-import type { ConfessionRequestFormInput, PriestData, ConfessionRequest } from '@/types/public';
-import type { ConfessionAppointment, PriestAvailability } from '@/types/priest-panel';
+import type { ConfessionRequestFormInput, PriestData } from '@/types/public';
 import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Added CardFooter
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { Send, User, Phone, Church, CalendarClock } from 'lucide-react';
-import { getPriestAvailability, getAppointments, addAppointment as addAppointmentToStore, combineDateAndTime, isSlotOverlapping } from '@/lib/appointments-store';
-import { format, addDays, startOfDay, addMinutes, parse, isValid } from 'date-fns';
+import { ScrollText, User, Phone, Church, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { addAppointment, getAppointments, getPriestAvailability, combineDateAndTime, isSlotOverlapping } from '@/lib/appointments-store';
+import type { ConfessionAppointment } from '@/types/priest-panel';
+import { format, addDays, startOfDay, addMinutes } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
-const requestSchema = z.object({
+const confessionRequestSchema = z.object({
   fullName: z.string().min(3, { message: "الاسم الكامل يجب أن يكون 3 أحرف على الأقل" }),
-  mobileNumber: z.string().regex(/^01[0-2,5]{1}[0-9]{8}$/, { message: "رقم الموبايل غير صالح" }),
-  selectedPriestId: z.string({ required_error: "يرجى اختيار الكاهن" }),
+  mobileNumber: z.string().regex(/^01[0-2,5]{1}[0-9]{8}$/, { message: "رقم الموبايل غير صالح (يجب أن يكون 11 رقمًا ويبدأ بـ 010, 011, 012, أو 015)" }),
+  selectedPriestId: z.string({ required_error: "الرجاء اختيار الكاهن" }),
 });
 
-type RequestFormData = z.infer<typeof requestSchema>;
+type FormValues = z.infer<typeof confessionRequestSchema>;
 
-// Mock data for priests - in a real app, this would come from an API
-const priests: PriestData[] = [
-  { id: 'كاهن_افتراضي_1', name: 'أبونا مرقس بولس', churchName: 'كنيسة السيدة العذراء مريم والقديس أثناسيوس الرسولي، مدينة نصر' },
-  { id: 'كاهن_افتراضي_2', name: 'أبونا بيشوي كامل', churchName: 'كنيسة مارجرجس والأنبا أنطونيوس، مصر الجديدة' },
+const mockPriests: PriestData[] = [
+  { id: 'priest1', name: 'الأب يوحنا', churchName: 'كنيسة السيدة العذراء مريم' },
+  { id: 'priest2', name: 'الأب بطرس', churchName: 'كنيسة مارجرجس' },
 ];
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeOut" } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+};
+
+
 export default function ConfessionRequestForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [bookedSlotInfo, setBookedSlotInfo] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<string | null>(null);
+
   const { toast } = useToast();
-  const [selectedPriest, setSelectedPriest] = useState<PriestData>(priests[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingResult, setBookingResult] = useState<{success: boolean, message: string, details?: string} | null>(null);
-
-
-  const form = useForm<RequestFormData>({
-    resolver: zodResolver(requestSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(confessionRequestSchema),
     defaultValues: {
       fullName: '',
       mobileNumber: '',
-      selectedPriestId: priests[0].id,
+      selectedPriestId: undefined,
     },
   });
 
-  const findAndBookNextAvailableSlot = (data: RequestFormData) => {
-    setIsSubmitting(true);
-    setBookingResult(null);
-
+  const findAndBookNextAvailableSlot = (requestData: FormValues): ConfessionAppointment | null => {
     const availability = getPriestAvailability();
     const existingAppointments = getAppointments();
-    const appointmentDuration = 30; // Default duration in minutes
-    let slotFound = false;
+    const confessionDuration = 30; // Default duration in minutes
 
-    // Iterate through next 60 days to find a slot
-    for (let i = 0; i < 60; i++) {
-      const currentDate = addDays(startOfDay(new Date()), i);
+    let currentDate = startOfDay(new Date());
+    const endDateLimit = addDays(currentDate, 60); // Search up to 60 days in the future
+
+    while (currentDate <= endDateLimit) {
       const dayName = format(currentDate, 'EEEE', { locale: arSA });
       const dayAvailability = availability[dayName];
 
       if (dayAvailability && dayAvailability.enabled && dayAvailability.startTime && dayAvailability.endTime) {
-        let currentTimeInSlot = parse(dayAvailability.startTime, 'HH:mm', currentDate);
-        const slotEndTime = parse(dayAvailability.endTime, 'HH:mm', currentDate);
+        let slotTime = combineDateAndTime(currentDate, dayAvailability.startTime);
+        const dayEndTime = combineDateAndTime(currentDate, dayAvailability.endTime);
 
-        while (isValid(currentTimeInSlot) && isValid(slotEndTime) && currentTimeInSlot < slotEndTime) {
-          const potentialSlotEnd = addMinutes(currentTimeInSlot, appointmentDuration);
-          if (potentialSlotEnd > slotEndTime) break; // Slot exceeds day's availability
-
-          // Check if current time is in the past (only for today)
-          if (i === 0 && currentTimeInSlot < new Date()) {
-            currentTimeInSlot = addMinutes(currentTimeInSlot, appointmentDuration);
-            continue;
-          }
-          
-          if (!isSlotOverlapping(currentTimeInSlot, appointmentDuration, existingAppointments)) {
-            // Found a slot
-            const bookedAppointment: Omit<ConfessionAppointment, 'id'> = {
-              name: data.fullName,
-              datetime: currentTimeInSlot,
-              day: format(currentTimeInSlot, 'EEEE', { locale: arSA }),
-              time: format(currentTimeInSlot, 'HH:mm', { locale: arSA }),
+        while (addMinutes(slotTime, confessionDuration) <= dayEndTime) {
+          if (!isSlotOverlapping(slotTime, confessionDuration, existingAppointments)) {
+            // Found an available slot
+            const newAppointment: Omit<ConfessionAppointment, 'id'> = {
+              name: requestData.fullName,
+              datetime: slotTime,
+              day: dayName,
+              time: format(slotTime, 'HH:mm'),
               status: 'قادم',
-              durationMinutes: appointmentDuration,
-              notes: `حجز تلقائي لـ ${data.fullName} عبر البوابة العامة. رقم الموبايل: ${data.mobileNumber}`,
-              priestId: selectedPriest.id, // Using the currently selected priest
+              notes: `طلب من المخدوم: ${requestData.fullName}, موبايل: ${requestData.mobileNumber}`,
+              durationMinutes: confessionDuration,
+              priestId: requestData.selectedPriestId,
             };
-            
-            try {
-                addAppointmentToStore(bookedAppointment);
-                const successMsg = `تم حجز موعدك بنجاح!`;
-                const detailsMsg = `مع ${selectedPriest.name} يوم ${bookedAppointment.day} الموافق ${format(bookedAppointment.datetime, 'PPP', { locale: arSA })} الساعة ${format(bookedAppointment.datetime, 'hh:mm a', { locale: arSA })}.`;
-                toast({
-                    title: successMsg,
-                    description: detailsMsg,
-                    duration: 10000, // Longer duration for important info
-                });
-                setBookingResult({success: true, message: successMsg, details: detailsMsg });
-                form.reset();
-            } catch (e) {
-                console.error("Error saving appointment:", e);
-                toast({ title: "خطأ في الحجز", description: "حدث خطأ أثناء محاولة حفظ الموعد. يرجى المحاولة مرة أخرى.", variant: "destructive" });
-                setBookingResult({success: false, message: "حدث خطأ أثناء محاولة حفظ الموعد."});
-            }
-            slotFound = true;
-            break;
+            return addAppointment(newAppointment);
           }
-          currentTimeInSlot = addMinutes(currentTimeInSlot, 15); // Check in 15-minute increments
+          slotTime = addMinutes(slotTime, confessionDuration); // Move to the next potential slot
         }
       }
-      if (slotFound) break;
+      currentDate = addDays(currentDate, 1); // Move to the next day
     }
-
-    if (!slotFound) {
-      toast({
-        title: "لم يتم العثور على موعد متاح",
-        description: `عذرًا، لم نتمكن من العثور على موعد متاح مع ${selectedPriest.name} خلال الـ 60 يومًا القادمة. يرجى المحاولة مرة أخرى لاحقًا أو التواصل مع الكنيسة.`,
-        variant: "default",
-        duration: 10000,
-      });
-       setBookingResult({success: false, message: `عذرًا، لم نتمكن من العثور على موعد متاح مع ${selectedPriest.name} حاليًا.`});
-    }
-    setIsSubmitting(false);
+    return null; // No slot found
   };
 
 
-  const onSubmit: SubmitHandler<RequestFormData> = (data) => {
-    findAndBookNextAvailableSlot(data);
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setIsLoading(true);
+    setBookedSlotInfo(null);
+    setErrorInfo(null);
+    
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const bookedAppointment = findAndBookNextAvailableSlot(data);
+
+    if (bookedAppointment) {
+      const priestName = mockPriests.find(p => p.id === bookedAppointment.priestId)?.name || "الكاهن المحدد";
+      const successMessage = `تم حجز موعد اعتراف لك بنجاح مع ${priestName} يوم ${bookedAppointment.day} (${format(bookedAppointment.datetime, 'PPP', { locale: arSA })}) الساعة ${format(bookedAppointment.datetime, 'hh:mm a', { locale: arSA })}.`;
+      
+      setBookedSlotInfo(successMessage);
+      setIsSuccess(true);
+      toast({
+        title: "تم إرسال طلبك بنجاح!",
+        description: successMessage,
+        variant: "default",
+        duration: 10000, // Show longer
+      });
+      form.reset();
+    } else {
+      const errorMessage = "عذرًا، لم نتمكن من إيجاد موعد متاح حاليًا. يرجى المحاولة مرة أخرى لاحقًا أو التواصل مع الكنيسة مباشرة.";
+      setErrorInfo(errorMessage);
+      toast({
+        title: "لم يتم العثور على موعد",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 7000,
+      });
+    }
+    setIsLoading(false);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="w-full max-w-lg mx-auto"
-    >
-      <Card className="shadow-2xl overflow-hidden">
-        <CardHeader className="bg-primary/10 text-center p-6">
-          <CalendarClock className="mx-auto h-12 w-12 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold">طلب موعد اعتراف</CardTitle>
-          <CardDescription className="text-md mt-2">
-            يرجى ملء البيانات التالية لطلب موعد اعتراف. سيقوم النظام بمحاولة إيجاد أقرب موعد متاح لك.
-          </CardDescription>
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full">
+      <Card className="w-full max-w-lg shadow-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center text-2xl font-bold">
+            <ScrollText className="me-3 h-7 w-7 text-primary" /> طلب موعد اعتراف
+          </CardTitle>
+          <CardDescription>الرجاء تعبئة البيانات التالية لطلب موعد اعتراف. سيقوم النظام بالبحث عن أقرب موعد متاح.</CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6 p-6 md:p-8">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center text-base"><User className="me-2 h-5 w-5 text-muted-foreground" /> الاسم الكامل</FormLabel>
-                    <FormControl>
-                      <Input placeholder="مثال: مينا عادل فانوس" {...field} className="h-12 text-base" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="mobileNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center text-base"><Phone className="me-2 h-5 w-5 text-muted-foreground" /> رقم الموبايل</FormLabel>
-                    <FormControl>
-                      <Input dir="ltr" placeholder="01XXXXXXXXX" {...field} className="h-12 text-base" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="selectedPriestId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center text-base"><Church className="me-2 h-5 w-5 text-muted-foreground" /> اختر الأب الكاهن</FormLabel>
-                    <Select 
-                        onValueChange={(value) => {
-                            field.onChange(value);
-                            const currentPriest = priests.find(p => p.id === value);
-                            if (currentPriest) setSelectedPriest(currentPriest);
-                        }} 
-                        defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-12 text-base">
-                          <SelectValue placeholder="اختر الكاهن" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {priests.map((priest) => (
-                          <SelectItem key={priest.id} value={priest.id} className="text-base py-2">
-                            <div className="flex flex-col">
-                                <span>{priest.name}</span>
-                                <span className="text-xs text-muted-foreground">{priest.churchName}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {bookingResult && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className={`p-4 rounded-md text-sm ${bookingResult.success ? 'bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200'}`}
-                >
-                  <p className="font-semibold">{bookingResult.message}</p>
-                  {bookingResult.details && <p className="mt-1">{bookingResult.details}</p>}
-                </motion.div>
-              )}
-
+            <CardContent className="space-y-6 pt-6">
+              <motion.div variants={itemVariants}>
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><User className="me-2 h-4 w-4 text-muted-foreground" /> الاسم الكامل</FormLabel>
+                      <FormControl><Input placeholder="مثال: مينا جرجس" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants} transition={{ delay: 0.1 }}>
+                <FormField
+                  control={form.control}
+                  name="mobileNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><Phone className="me-2 h-4 w-4 text-muted-foreground" /> رقم الموبايل</FormLabel>
+                      <FormControl><Input dir="ltr" placeholder="01XXXXXXXXX" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+              <motion.div variants={itemVariants} transition={{ delay: 0.2 }}>
+                <FormField
+                  control={form.control}
+                  name="selectedPriestId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center"><Church className="me-2 h-4 w-4 text-muted-foreground" /> اختيار الكاهن</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="اختر الكاهن الذي تود الاعتراف معه" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {mockPriests.map(priest => (
+                            <SelectItem key={priest.id} value={priest.id}>{priest.name} - {priest.churchName}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
             </CardContent>
-            <CardFooter className="p-6 md:p-8 border-t">
-              <Button type="submit" className="w-full h-12 text-lg font-semibold group" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? (
-                   <>
+            <CardFooter className="flex justify-end p-6 border-t">
+              <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading || isSuccess}>
+                {isLoading ? (
+                  <>
                     <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="me-3 h-5 w-5 border-2 border-transparent border-t-primary-foreground rounded-full"
-                       />
-                      جاري البحث عن موعد...
-                   </>
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="me-2 h-5 w-5 border-2 border-transparent border-t-primary-foreground rounded-full"
+                    />
+                    جاري البحث عن موعد...
+                  </>
+                ) : isSuccess ? (
+                  <>
+                    <CheckCircle className="me-2 h-5 w-5" /> تم الحجز بنجاح
+                  </>
                 ) : (
                   <>
-                    <Send className="me-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" /> إرسال الطلب وحجز موعد
+                    <Send className="me-2 h-5 w-5" /> إرسال الطلب وحجز موعد
                   </>
                 )}
               </Button>
             </CardFooter>
           </form>
         </Form>
+        {isSuccess && bookedSlotInfo && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 m-6 mt-0 border border-green-500 bg-green-500/10 rounded-md text-green-700"
+          >
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 me-2" />
+              <h3 className="font-semibold">تم تأكيد موعدك!</h3>
+            </div>
+            <p className="text-sm mt-1">{bookedSlotInfo}</p>
+          </motion.div>
+        )}
+        {errorInfo && (
+           <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 m-6 mt-0 border border-destructive bg-destructive/10 rounded-md text-destructive"
+          >
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 me-2" />
+              <h3 className="font-semibold">خطأ في الحجز</h3>
+            </div>
+            <p className="text-sm mt-1">{errorInfo}</p>
+          </motion.div>
+        )}
       </Card>
-       <p className="text-xs text-muted-foreground text-center mt-4 px-4">
-        سيقوم النظام بالبحث عن أقرب موعد متاح لك مع الكاهن المختار خلال الـ 60 يومًا القادمة. مدة الاعتراف الافتراضية هي 30 دقيقة.
-      </p>
     </motion.div>
   );
 }
