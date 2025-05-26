@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone, Download } from 'lucide-react';
+import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import InstallPWAButton from '@/components/shared/InstallPWAButton';
@@ -29,8 +29,8 @@ const userSections = [
     href: '/auth/admin/login', 
     animation: { type: 'slide', direction: 'top' },
     delay: 0.2,
-    color: 'text-blue-500', // Kept for icon, consider using primary theme color
-    bg: 'bg-blue-500/10', // Kept for icon background
+    color: 'text-primary', 
+    bg: 'bg-primary/10', 
     buttonText: 'دخول الإدارة',
   },
   {
@@ -40,8 +40,8 @@ const userSections = [
     href: '/auth/priest/login', 
     animation: { type: 'bounce' },
     delay: 0.4,
-    color: 'text-green-500', // Kept for icon
-    bg: 'bg-green-500/10', // Kept for icon background
+    color: 'text-green-500', 
+    bg: 'bg-green-500/10', 
     buttonText: 'دخول الكهنة',
 
   },
@@ -52,8 +52,8 @@ const userSections = [
     href: '/auth/servant/login', 
     animation: { type: 'fadeScale' },
     delay: 0.6,
-    color: 'text-purple-500', // Kept for icon
-    bg: 'bg-purple-500/10', // Kept for icon background
+    color: 'text-purple-500', 
+    bg: 'bg-purple-500/10', 
     buttonText: 'دخول الخدام',
   },
   {
@@ -63,8 +63,8 @@ const userSections = [
     href: '/auth/public/login', 
     animation: { type: 'slide', direction: 'bottom' },
     delay: 0.8,
-    color: 'text-yellow-500', // Kept for icon
-    bg: 'bg-yellow-500/10', // Kept for icon background
+    color: 'text-yellow-500', 
+    bg: 'bg-yellow-500/10', 
     buttonText: 'دخول المخدومين',
   },
 ];
@@ -147,9 +147,9 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <InstallPWAButton />
             <ThemeToggle />
-            <Button asChild variant="default" className="hidden md:flex group">
+            <Button asChild variant="outline" className="hidden md:flex group border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               <Link href="/auth/admin/login"> 
-                <LogIn className="me-2 h-4 w-4 group-hover:animate-pulse" /> تسجيل الدخول
+                <LogIn className="me-2 h-4 w-4 group-hover:animate-pulse" /> دخول الإدارة
               </Link>
             </Button>
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -192,7 +192,7 @@ export default function LandingPage() {
         <motion.section 
           id="hero"
           className="relative py-20 md:py-32 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://picsum.photos/seed/churchbg/1600/900')" }}
+          style={{ backgroundImage: "url('https://placehold.co/1600x900.png?text=Hero+Background')" }}
           data-ai-hint="church interior congregation"
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
@@ -283,7 +283,7 @@ export default function LandingPage() {
                     boxShadow: "0px 8px 25px -5px hsla(var(--primary), 0.15), 0px 5px 15px -6px hsla(var(--primary), 0.1)" 
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="p-6 bg-card rounded-xl shadow-lg text-center"
+                  className="p-6 bg-card rounded-xl shadow-lg text-center border"
                 >
                   {IconComponent && <IconComponent className="h-10 w-10 text-primary mb-4 mx-auto" />}
                   <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
@@ -325,9 +325,9 @@ export default function LandingPage() {
                     whileInView={animationProps.animate}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ ...animationProps.transition, delay: section.delay }}
-                    className={`flex flex-col rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden ${section.bg} border border-transparent hover:border-primary/30`}
+                    className={`flex flex-col rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300 overflow-hidden border hover:border-primary/30`}
                   >
-                    <div className="p-8 flex flex-col items-center text-center flex-grow bg-card">
+                    <div className={`p-8 flex flex-col items-center text-center flex-grow bg-card`}>
                       <div className={`p-4 rounded-full ${section.bg} mb-6 inline-block`}>
                         {IconComponent && <IconComponent className={`h-12 w-12 ${section.color}`} />}
                       </div>
@@ -372,14 +372,14 @@ export default function LandingPage() {
                 {navLinks.slice(1).map(link => (
                      <li key={link.label}><Link href={link.href} className="hover:text-primary-foreground/70 transition-colors">{link.label}</Link></li>
                 ))}
-                <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors">سياسة الخصوصية</Link></li>
-                <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors">شروط الاستخدام</Link></li>
+                <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors flex items-center">سياسة الخصوصية <ExternalLink className="ms-1.5 h-3 w-3 opacity-70"/></Link></li>
+                <li><Link href="#" className="hover:text-primary-foreground/70 transition-colors flex items-center">شروط الاستخدام <ExternalLink className="ms-1.5 h-3 w-3 opacity-70"/></Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-lg font-semibold mb-4">تواصل معنا</h4>
               <p className="text-sm text-primary-foreground/80 mb-2">info@churchplatform.example</p>
-              <p className="text-sm text-primary-foreground/80 mb-4">+1234567890</p>
+              <p className="text-sm text-primary-foreground/80 mb-4" dir="ltr">+1 (234) 567-890</p>
               <div className="flex space-x-4 rtl:space-x-reverse">
                 <Link href="#" aria-label="Facebook" className="text-primary-foreground/80 hover:text-white transition-colors"><Facebook className="h-6 w-6" /></Link>
                 <Link href="#" aria-label="Twitter" className="text-primary-foreground/80 hover:text-white transition-colors"><Twitter className="h-6 w-6" /></Link>

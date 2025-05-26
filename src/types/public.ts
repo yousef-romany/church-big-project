@@ -19,8 +19,8 @@ export interface ChurchInstruction {
   id:string;
   title: string;
   content: string;
-  icon: LucideIcon; // Or specific icon name string if preferred
-  category: string; // e.g., "Spiritual Life", "Church Activities"
+  icon: LucideIcon; 
+  category: string; 
 }
 
 export interface PriestData {
