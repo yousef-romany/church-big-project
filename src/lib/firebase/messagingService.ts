@@ -33,9 +33,9 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
   }
 
   // تحقق أولاً من أن إعدادات Firebase ليست القيم المؤقتة
-  if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID") {
+  if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID") { // This check might be redundant now
     console.warn("Firebase config is not set. Please update firebaseConfig.ts with your project settings.");
-    alert("إعدادات Firebase غير مكتملة. يرجى مراجعة المسؤول."); // تنبيه للمستخدم
+    // alert("إعدادات Firebase غير مكتملة. يرجى مراجعة المسؤول."); // تنبيه للمستخدم
     return null;
   }
   
@@ -46,8 +46,8 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       console.log('Notification permission granted.');
       // خـطـوة هـامـة: اسـتـبـدل 'YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE'
       // بـمـفـتـاح VAPID الـعـام مـن Firebase Console (Project settings > Cloud Messaging > Web Push certificates)
-      const vapidKey = "YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE";
-      if (vapidKey === "YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE") {
+      const vapidKey = "BGyv1z2sR4J1EVcH_Ttk-PLRhI6RMoSqkbwFGwnjoUnOAqLGj90gUuIBnhJTxUuuEMVOtTQChPWAvG4ltYvdcDQ";
+      if (vapidKey === "YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE") { // This check might be redundant
         console.warn("VAPID key is not set in messagingService.ts. Please add your VAPID key.");
         alert("مفتاح VAPID غير مُعد. يرجى مراجعة المسؤول."); // تنبيه للمستخدم
         return null;
@@ -94,8 +94,8 @@ export const isFCMSupported = (): boolean => {
                                'serviceWorker' in navigator && 
                                'PushManager' in window;
     
-    const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY" &&
-                                 firebaseConfig.messagingSenderId !== "YOUR_MESSAGING_SENDER_ID";
+    const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY" && // No longer placeholder
+                                 firebaseConfig.messagingSenderId !== "YOUR_MESSAGING_SENDER_ID"; // No longer placeholder
 
     return isBrowserSupported && isFirebaseConfigured && messagingInstance !== null;
 };

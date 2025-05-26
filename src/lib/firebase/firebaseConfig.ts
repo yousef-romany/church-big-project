@@ -3,11 +3,15 @@
 // خـطـوة هـامـة: يـجـب اسـتـبـدال الـقـيـم الـتـالـيـة بـإعـدادات مـشـروع Firebase الـخـاص بـك
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // استبدل هذه القيمة
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // استبدل هذه القيمة
-  projectId: "YOUR_PROJECT_ID", // استبدل هذه القيمة
-  storageBucket: "YOUR_PROJECT_ID.appspot.com", // استبدل هذه القيمة
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // استبدل هذه القيمة
-  appId: "YOUR_APP_ID", // استبدل هذه القيمة
-  measurementId: "YOUR_MEASUREMENT_ID" // اختياري، استبدل إذا كنت تستخدمه
+  apiKey: "AIzaSyCLI1l9VP5Rh3-QFt6Y8pPh8BTK-VbF7S4",
+  authDomain: "botbot-f929f.firebaseapp.com",
+  projectId: "botbot-f929f",
+  storageBucket: "botbot-f929f.appspot.com", // Corrected from firebasestorage.app to appspot.com
+  messagingSenderId: "350363887575",
+  appId: "1:350363887575:web:e8b2d8309ef40b97e64d92",
+  measurementId: "G-4QE2Z70X2K"
 };
+
+// Note: getAnalytics and the analytics constant are not directly used by the messaging service as implemented.
+// If analytics are needed elsewhere, they can be initialized there.
+// For FCM, only initializeApp is strictly required to then getMessaging.
