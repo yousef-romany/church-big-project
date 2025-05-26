@@ -29,10 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react'; // تمت الإضافة
-import { requestNotificationPermission, setupOnMessageListener, isFCMSupported } from '@/lib/firebase/messagingService'; // تمت الإضافة
-import { useToast } from '@/hooks/use-toast'; // تمت الإضافة
+import { useEffect } from 'react'; 
+import { requestNotificationPermission, setupOnMessageListener, isFCMSupported } from '@/lib/firebase/messagingService'; 
+import { useToast } from '@/hooks/use-toast'; 
 import DevotionalMessageDisplay from '@/components/priest-panel/DevotionalMessageDisplay';
+import { firebaseConfig } from '@/lib/firebase/firebaseConfig';
 
 
 const navItems = [
@@ -45,25 +46,25 @@ const navItems = [
 
 export default function PriestPanelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { toast } = useToast(); // تمت الإضافة
+  const { toast } = useToast(); 
 
   useEffect(() => {
     // تأكد من أن الكود يعمل فقط في المتصفح وأن FCM مدعوم ومُعد بشكل صحيح
     if (typeof window !== 'undefined' && isFCMSupported()) {
       requestNotificationPermission().then(token => {
         if (token) {
-          console.log("FCM Token obtained in layout:", token);
+          console.info("🔔 FCM Token obtained in PriestPanelLayout:", token);
           // TODO: قم بإرسال هذا التوكن إلى خادمك وربطه بالكاهن الحالي
           // مثال: sendTokenToServer(token);
         } else {
-          console.log("Failed to get FCM token or permission denied.");
+          console.warn("Failed to get FCM token or permission denied in PriestPanelLayout.");
         }
       }).catch(error => {
-        console.error("Error requesting notification permission:", error);
+        console.error("Error requesting notification permission in PriestPanelLayout:", error);
       });
 
       const handleIncomingMessage = (payload: any) => {
-        console.log('Foreground message received in layout:', payload);
+        console.log('Foreground message received in PriestPanelLayout:', payload);
         if (payload.notification) {
           toast({
             title: payload.notification.title || "إشعار جديد",
@@ -82,14 +83,15 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
           unsubscribe();
         }
       };
-    } else if (typeof window !== 'undefined') { // إذا كان في المتصفح ولكن FCM غير مدعوم
+    } else if (typeof window !== 'undefined') { 
         console.log("Firebase Cloud Messaging is not supported in this browser or not configured properly.");
         // يمكنك هنا عرض رسالة للمستخدم إذا كانت الإعدادات غير مكتملة
-        if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID" || firebaseConfig.apiKey === "YOUR_API_KEY") {
-            console.warn("Firebase configuration is incomplete. Please check firebaseConfig.ts");
+        // Check against generic placeholder, not the actual user-provided config which might be valid.
+        if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID_PLACEHOLDER" || firebaseConfig.apiKey === "YOUR_API_KEY_PLACEHOLDER") {
+            console.warn("Firebase configuration seems to be using placeholder values. Please check firebaseConfig.ts");
         }
     }
-  }, [toast]); // toast الآن جزء من الـ dependencies
+  }, [toast]);
 
   return (
     <SidebarProvider defaultOpen>
@@ -190,4 +192,5 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
 }
 
 // Make sure firebaseConfig is imported if used directly here, or rely on isFCMSupported
-import { firebaseConfig } from '@/lib/firebase/firebaseConfig';
+// Import firebaseConfig to make the check against placeholder more specific
+// import { firebaseConfig } from '@/lib/firebase/firebaseConfig'; // Already imported

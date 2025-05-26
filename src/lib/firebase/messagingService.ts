@@ -33,9 +33,9 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
   }
 
   // تحقق أولاً من أن إعدادات Firebase ليست القيم المؤقتة
-  if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID") { // This check might be redundant now
+  if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID_PLACEHOLDER") { 
     console.warn("Firebase config is not set. Please update firebaseConfig.ts with your project settings.");
-    // alert("إعدادات Firebase غير مكتملة. يرجى مراجعة المسؤول."); // تنبيه للمستخدم
+    // Consider a less intrusive way to inform the admin if needed
     return null;
   }
   
@@ -46,25 +46,26 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       console.log('Notification permission granted.');
       // خـطـوة هـامـة: اسـتـبـدل 'YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE'
       // بـمـفـتـاح VAPID الـعـام مـن Firebase Console (Project settings > Cloud Messaging > Web Push certificates)
-      const vapidKey = "BGyv1z2sR4J1EVcH_Ttk-PLRhI6RMoSqkbwFGwnjoUnOAqLGj90gUuIBnhJTxUuuEMVOtTQChPWAvG4ltYvdcDQ";
-      if (vapidKey === "YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE") { // This check might be redundant
-        console.warn("VAPID key is not set in messagingService.ts. Please add your VAPID key.");
-        alert("مفتاح VAPID غير مُعد. يرجى مراجعة المسؤول."); // تنبيه للمستخدم
-        return null;
-      }
+      const vapidKey = "BGyv1z2sR4J1EVcH_Ttk-PLRhI6RMoSqkbwFGwnjoUnOAqLGj90gUuIBnhJTxUuuEMVOtTQChPWAvG4ltYvdcDQ"; // User provided
+      
+      // This check for placeholder VAPID key can be removed if it's confirmed to be always filled by the user or system
+      // if (vapidKey === "YOUR_PUBLIC_VAPID_KEY_PLACEHOLDER") { 
+      //   console.warn("VAPID key is not set in messagingService.ts. Please add your VAPID key.");
+      //   return null;
+      // }
 
       const currentToken = await getToken(messagingInstance, { vapidKey: vapidKey });
       if (currentToken) {
-        console.log('FCM Token:', currentToken);
+        console.info('%c🔔 FCM Token Obtained: %s', 'color: green; font-weight: bold;', currentToken);
         // TODO: أرسل هذا التوكن إلى خادمك وقم بتخزينه مقابل المستخدم لإرسال الإشعارات
         localStorage.setItem('fcmToken', currentToken); // لغرض العرض التوضيحي فقط
         return currentToken;
       } else {
-        console.log('No registration token available. Request permission to generate one.');
+        console.warn('No registration token available. Request permission to generate one.');
         return null;
       }
     } else {
-      console.log('Unable to get permission to notify.');
+      console.warn('Unable to get permission to notify.');
       return null;
     }
   } catch (error) {
@@ -94,8 +95,9 @@ export const isFCMSupported = (): boolean => {
                                'serviceWorker' in navigator && 
                                'PushManager' in window;
     
-    const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY" && // No longer placeholder
-                                 firebaseConfig.messagingSenderId !== "YOUR_MESSAGING_SENDER_ID"; // No longer placeholder
+    // Use a more robust check against placeholder values if needed
+    const isFirebaseConfigured = firebaseConfig.apiKey !== "AIzaSyCLI1l9VP5Rh3-QFt6Y8pPh8BTK-VbF7S4_PLACEHOLDER" && 
+                                 firebaseConfig.messagingSenderId !== "YOUR_MESSAGING_SENDER_ID_PLACEHOLDER"; 
 
     return isBrowserSupported && isFirebaseConfigured && messagingInstance !== null;
 };
