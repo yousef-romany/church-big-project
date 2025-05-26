@@ -129,9 +129,8 @@ export default function ConfessionSchedule() {
         if (!dayData.startTime || !dayData.endTime) {
           toast({ title: `خطأ في يوم ${day}`, description: "يجب تحديد وقت البداية والنهاية لليوم المفعّل.", variant: "destructive" });
           hasError = true;
-          // Store current (potentially incomplete) data for correction, but mark as error
           newAvailability[dayKey] = { startTime: dayData.startTime || "", endTime: dayData.endTime || "", enabled: true }; 
-          return; // Go to next day
+          return; 
         }
 
         const baseDate = new Date();
@@ -141,29 +140,27 @@ export default function ConfessionSchedule() {
         if (!isValid(parsedStartTime) || !isValid(parsedEndTime)) {
             toast({ title: `خطأ في يوم ${day}`, description: "صيغة الوقت غير صالحة.", variant: "destructive" });
             hasError = true;
-            newAvailability[dayKey] = { ...dayData }; // Keep current data for correction
+            newAvailability[dayKey] = { ...dayData }; 
             return; 
         }
 
         if (isBefore(parsedEndTime, parsedStartTime) || isEqual(parsedEndTime, parsedStartTime)) {
             toast({ title: `خطأ في يوم ${day}`, description: "وقت النهاية يجب أن يكون بعد وقت البداية وبفارق زمني.", variant: "destructive" });
             hasError = true;
-            newAvailability[dayKey] = { ...dayData }; // Keep current data for correction
+            newAvailability[dayKey] = { ...dayData }; 
             return; 
         }
         newAvailability[dayKey] = { startTime: dayData.startTime, endTime: dayData.endTime, enabled: true };
       } else {
-        // If dayData exists but is not enabled, or if dayData is null (not configured)
         newAvailability[dayKey] = { startTime: dayData?.startTime || "", endTime: dayData?.endTime || "", enabled: false };
       }
     });
 
     if (hasError) {
-      // Update form with current (potentially erroneous) data for user to correct
       availabilityForm.reset(newAvailability); 
-      setLocalPriestAvailability(newAvailability); // also update local state to reflect form
+      setLocalPriestAvailability(newAvailability); 
       toast({ title: "خطأ في الحفظ", description: "يرجى تصحيح أخطاء التوافر الموضحة ثم حاول الحفظ مرة أخرى.", variant: "destructive", duration: 7000 });
-      return; // Do not save to store if there are errors
+      return;
     }
 
     setPriestAvailabilityInStore(newAvailability);
@@ -354,14 +351,14 @@ export default function ConfessionSchedule() {
                             <FormField control={availabilityForm.control} name={`${day}.startTime` as keyof PriestAvailability} render={({ field }) => (
                               <FormItem>
                                 <FormLabel>من الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} defaultValue="09:00" /></FormControl>
+                                <FormControl><Input type="time" {...field} /></FormControl>
                                 <FormMessage />
                               </FormItem>
                             )} />
                             <FormField control={availabilityForm.control} name={`${day}.endTime` as keyof PriestAvailability}  render={({ field }) => (
                               <FormItem>
                                 <FormLabel>حتى الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} defaultValue="17:00" /></FormControl>
+                                <FormControl><Input type="time" {...field} /></FormControl>
                                 <FormMessage />
                               </FormItem>
                             )} />
