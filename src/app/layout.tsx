@@ -26,22 +26,22 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },
-      { url: 'https://placehold.co/16x16.png?text=Icon', sizes: '16x16', type: 'image/png', dataAiHint: 'app icon' },
-      { url: 'https://placehold.co/32x32.png?text=Icon', sizes: '32x32', type: 'image/png', dataAiHint: 'app icon' },
+      { url: 'https://placehold.co/16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: 'https://placehold.co/32x32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: 'https://placehold.co/180x180.png?text=AppleIcon', dataAiHint: 'apple touch icon' },
-      { url: 'https://placehold.co/152x152.png?text=Icon', sizes: '152x152', type: 'image/png', dataAiHint: 'apple touch icon' },
-      { url: 'https://placehold.co/167x167.png?text=Icon', sizes: '167x167', type: 'image/png', dataAiHint: 'apple touch icon' },
-      { url: 'https://placehold.co/180x180.png?text=Icon', sizes: '180x180', type: 'image/png', dataAiHint: 'apple touch icon' },
+      { url: 'https://placehold.co/180x180.png' },
+      { url: 'https://placehold.co/152x152.png', sizes: '152x152', type: 'image/png' },
+      { url: 'https://placehold.co/167x167.png', sizes: '167x167', type: 'image/png' },
+      { url: 'https://placehold.co/180x180.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: [
-      { url: 'https://placehold.co/192x192.png?text=Shortcut', sizes: '192x192', dataAiHint: 'app shortcut icon' }
+      { url: 'https://placehold.co/192x192.png', sizes: '192x192' }
     ],
   },
   other: {
     'msapplication-TileColor': '#1E3A8A',
-    'msapplication-config': '/icons/browserconfig.xml',
+    'msapplication-config': '/icons/browserconfig.xml', // This file needs to exist or its reference removed if not used
     'mobile-web-app-capable': 'yes',
   }
 };
@@ -51,8 +51,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#1E3A8A' },
-    { media: '(prefers-color-scheme: dark)', color: '#6B8AEF' }
+    { media: '(prefers-color-scheme: light)', color: '#1E3A8A' }, // Matches manifest theme_color
+    { media: '(prefers-color-scheme: dark)', color: '#6B8AEF' }  // Example dark mode theme color
   ],
 };
 

@@ -2,10 +2,10 @@
 <browserconfig>
     <msapplication>
         <tile>
-            <square70x70logo src="https://placehold.co/70x70.png?text=TileS"/>
-            <square150x150logo src="https://placehold.co/150x150.png?text=TileM"/>
-            <wide310x150logo src="https://placehold.co/310x150.png?text=TileW"/>
-            <square310x310logo src="https://placehold.co/310x310.png?text=TileL"/>
+            <square70x70logo src="https://placehold.co/70x70.png"/>
+            <square150x150logo src="https://placehold.co/150x150.png"/>
+            <wide310x150logo src="https://placehold.co/310x150.png"/>
+            <square310x310logo src="https://placehold.co/310x310.png"/>
             <TileColor>#1E3A8A</TileColor>
         </tile>
     </msapplication>

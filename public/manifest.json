@@ -1,95 +1,41 @@
 {
   "name": "لوحة تحكم مدير الكنيسة",
-  "short_name": "مدير الكنيسة",
-  "description": "لوحة تحكم لإدارة شؤون الكنيسة والكهنة والعائلات والإعلانات",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#1E3A8A",
-  "theme_color": "#1E3A8A",
-  "orientation": "portrait-primary",
+  "short_name": "إدارة الكنيسة",
+  "description": "لوحة تحكم لإدارة شؤون الكنيسة والكهنة والعائلات والإعلانات.",
   "icons": [
     {
-      "src": "https://placehold.co/72x72.png?text=Icon",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "https://placehold.co/16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
     },
     {
-      "src": "https://placehold.co/96x96.png?text=Icon",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "https://placehold.co/32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
     },
     {
-      "src": "https://placehold.co/128x128.png?text=Icon",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://placehold.co/144x144.png?text=Icon",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://placehold.co/152x152.png?text=Icon",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://placehold.co/192x192.png?text=Icon",
+      "src": "https://placehold.co/192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://placehold.co/384x384.png?text=Icon",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://placehold.co/512x512.png?text=Icon",
+      "src": "https://placehold.co/512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "https://placehold.co/1080x1920.png?text=Screenshot1",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "شاشة تسجيل الدخول"
+      "purpose": "any maskable"
     },
     {
-      "src": "https://placehold.co/1920x1080.png?text=Screenshot2",
-      "sizes": "1920x1080",
+      "src": "https://placehold.co/180x180.png",
+      "sizes": "180x180",
       "type": "image/png",
-      "form_factor": "wide",
-      "label": "لوحة التحكم الرئيسية"
+      "purpose": "apple-touch-icon"
     }
   ],
-  "categories": ["business", "productivity", "utilities"],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "shortcuts": [
-    {
-      "name": "إضافة أسرة جديدة",
-      "short_name": "إضافة أسرة",
-      "description": "الانتقال مباشرة لإضافة أسرة جديدة للنظام",
-      "url": "/priest-panel/families/add",
-      "icons": [{ "src": "https://placehold.co/96x96.png?text=Add", "sizes": "96x96" }]
-    },
-    {
-      "name": "عرض الإعلانات",
-      "short_name": "الإعلانات",
-      "description": "عرض أحدث إعلانات الكنيسة",
-      "url": "/dashboard/announcements",
-      "icons": [{ "src": "https://placehold.co/96x96.png?text=Announce", "sizes": "96x96" }]
-    }
-  ]
+  "theme_color": "#1E3A8A",
+  "background_color": "#F9FAFB",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/"
 }
