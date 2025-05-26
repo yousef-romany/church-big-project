@@ -6,7 +6,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Added Input
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,8 +18,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle } from 'lucide-react';
-import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual } from 'date-fns';
+import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle, Search, ListFilter, XCircle as ClearFilterIcon } from 'lucide-react';
+import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual, isAfter, endOfDay } from 'date-fns';
+import type { DateRange } from 'react-day-picker'; // Added DateRange
 import { arSA } from 'date-fns/locale';
 import { 
   getAppointments, 
@@ -76,6 +77,12 @@ export default function ConfessionSchedule() {
   const [dateToCancel, setDateToCancel] = useState<Date | undefined>();
   const [newDateForReschedule, setNewDateForReschedule] = useState<Date | undefined>();
   const [newTimeForReschedule, setNewTimeForReschedule] = useState<string>("");
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<ConfessionStatus | 'الكل'>('الكل');
+  const [filterDateRange, setFilterDateRange] = useState<DateRange | undefined>(undefined);
+
 
   useEffect(() => {
     setCurrentTime(new Date());
@@ -285,6 +292,36 @@ export default function ConfessionSchedule() {
     setNewTimeForReschedule("");
   };
 
+  // Filtered appointments logic
+  const filteredAppointments = useMemo(() => {
+    return appointments
+      .filter(app => {
+        if (!app.datetime || !isValid(new Date(app.datetime))) return false;
+        const appointmentDate = new Date(app.datetime);
+
+        if (searchTerm && !app.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return false;
+        }
+        if (filterStatus !== 'الكل' && app.status !== filterStatus) {
+          return false;
+        }
+        if (filterDateRange?.from && isBefore(appointmentDate, startOfDay(filterDateRange.from))) {
+          return false;
+        }
+        if (filterDateRange?.to && isAfter(appointmentDate, endOfDay(filterDateRange.to))) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
+  }, [appointments, searchTerm, filterStatus, filterDateRange]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterStatus('الكل');
+    setFilterDateRange(undefined);
+  };
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -308,6 +345,77 @@ export default function ConfessionSchedule() {
         ))}
       </AnimatePresence>
 
+      <Card className="shadow-lg mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center"><ListFilter className="me-2 h-6 w-6"/> فلترة المواعيد</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="searchTermInput">بحث بالاسم</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="searchTermInput"
+                  placeholder="اسم المعترف..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="ps-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="filterStatusSelect">الحالة</Label>
+              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ConfessionStatus | 'الكل')}>
+                <SelectTrigger id="filterStatusSelect">
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="الكل">الكل</SelectItem>
+                  {(['قادم', 'تم', 'لم يحضر', 'ملغى'] as ConfessionStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="filterDateRangePicker">نطاق التاريخ</Label>
+               <Popover>
+                <PopoverTrigger asChild>
+                  <Button id="filterDateRangePicker" variant={"outline"} className="w-full justify-start text-left font-normal">
+                    <CalendarDays className="me-2 h-4 w-4" />
+                    {filterDateRange?.from ? (
+                      filterDateRange.to ? (
+                        <>
+                          {format(filterDateRange.from, "PPP", { locale: arSA })} - {format(filterDateRange.to, "PPP", { locale: arSA })}
+                        </>
+                      ) : (
+                        format(filterDateRange.from, "PPP", { locale: arSA })
+                      )
+                    ) : (
+                      <span>اختر نطاقًا</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={filterDateRange?.from}
+                    selected={filterDateRange}
+                    onSelect={setFilterDateRange}
+                    numberOfMonths={2}
+                    locale={arSA}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <Button onClick={clearFilters} variant="outline" size="sm">
+            <ClearFilterIcon className="me-2 h-4 w-4" /> مسح الفلاتر
+          </Button>
+        </CardContent>
+      </Card>
+
+
       <Card className="shadow-xl">
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
@@ -323,8 +431,14 @@ export default function ConfessionSchedule() {
                 <DialogHeader><DialogTitle>إدارة أوقات التوافر للاعترافات</DialogTitle></DialogHeader>
                 <Form {...availabilityForm}>
                   <form onSubmit={availabilityForm.handleSubmit(handleSaveAvailability)} className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                    {!Object.values(availabilityForm.watch()).some(daySlot => daySlot && daySlot.enabled) && (
+                        <p className="text-sm text-center text-muted-foreground p-3 bg-muted/30 rounded-md border border-dashed">
+                            <AlertCircle className="inline h-4 w-4 me-1 mb-0.5"/>
+                            لم يتم تفعيل أي أيام توافر. يرجى تحديد أيام وساعات عملك لاستقبال الاعترافات.
+                        </p>
+                    )}
                     {daysOfWeek.map((day) => (
-                      <Card key={day} className="p-4">
+                      <Card key={day} className="p-4 bg-background/70">
                          <FormField
                             control={availabilityForm.control}
                             name={`${day}.enabled` as keyof PriestAvailability}
@@ -342,31 +456,36 @@ export default function ConfessionSchedule() {
                                       }}
                                     />
                                 </FormControl>
-                                <FormLabel className="font-semibold text-md">{day}</FormLabel>
+                                <FormLabel className="font-semibold text-md select-none">{day}</FormLabel>
                                 </FormItem>
                             )}
                             />
                         {availabilityForm.watch(`${day}.enabled` as keyof PriestAvailability) && (
-                          <div className="grid grid-cols-2 gap-4">
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            transition={{ duration: 0.3 }}
+                            className="grid grid-cols-2 gap-x-4 gap-y-2"
+                          >
                             <FormField control={availabilityForm.control} name={`${day}.startTime` as keyof PriestAvailability} render={({ field }) => (
                               <FormItem>
-                                <FormLabel>من الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} /></FormControl>
+                                <FormLabel className="text-xs">من الساعة</FormLabel>
+                                <FormControl><Input type="time" {...field} className="h-9" /></FormControl>
                                 <FormMessage />
                               </FormItem>
                             )} />
                             <FormField control={availabilityForm.control} name={`${day}.endTime` as keyof PriestAvailability}  render={({ field }) => (
                               <FormItem>
-                                <FormLabel>حتى الساعة</FormLabel>
-                                <FormControl><Input type="time" {...field} /></FormControl>
+                                <FormLabel className="text-xs">حتى الساعة</FormLabel>
+                                <FormControl><Input type="time" {...field} className="h-9" /></FormControl>
                                 <FormMessage />
                               </FormItem>
                             )} />
-                          </div>
+                          </motion.div>
                         )}
                       </Card>
                     ))}
-                    <DialogFooter>
+                    <DialogFooter className="pt-4">
                       <DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose>
                       <Button type="submit">حفظ الإعدادات</Button>
                     </DialogFooter>
@@ -380,10 +499,13 @@ export default function ConfessionSchedule() {
                 <Button variant="outline"><CalendarDays className="me-2 h-5 w-5" /> إلغاء يوم وترحيل</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
-                <DialogHeader><DialogTitle>إلغاء يوم وترحيل المواعيد</DialogTitle></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>إلغاء يوم كامل وترحيل المواعيد</DialogTitle>
+                    <CardDescription className="pt-1">قم بإلغاء جميع المواعيد القادمة في يوم محدد وترحيلها إلى يوم ووقت جديدين.</CardDescription>
+                </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label htmlFor="dateToCancelCalendar">اختر اليوم المُراد إلغاؤه:</Label>
+                    <Label htmlFor="dateToCancelCalendar">1. اختر اليوم المُراد إلغاؤه:</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button id="dateToCancelCalendar" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
@@ -397,22 +519,23 @@ export default function ConfessionSchedule() {
                     </Popover>
                   </div>
 
-                  {dateToCancel && appointmentsOnDateToCancel.length > 0 && (
-                    <div className="max-h-40 overflow-y-auto border p-2 rounded-md">
-                      <h4 className="text-sm font-semibold mb-2">المواعيد في هذا اليوم ({appointmentsOnDateToCancel.length}):</h4>
-                      <ul className="text-xs list-disc ps-5">
-                        {appointmentsOnDateToCancel.map(app => <li key={app.id}>{app.name} - {app.time}</li>)}
-                      </ul>
+                  {dateToCancel && (
+                    <div className="p-3 bg-muted/50 rounded-md border">
+                        <h4 className="text-sm font-semibold mb-2">المواعيد القادمة في هذا اليوم ({appointmentsOnDateToCancel.length}):</h4>
+                        {appointmentsOnDateToCancel.length > 0 ? (
+                            <ul className="text-xs list-disc ps-5 max-h-32 overflow-y-auto">
+                                {appointmentsOnDateToCancel.map(app => <li key={app.id}>{app.name} - {app.time}</li>)}
+                            </ul>
+                        ) : (
+                             <p className="text-xs text-muted-foreground">لا توجد مواعيد قادمة في هذا اليوم لإلغائها.</p>
+                        )}
                     </div>
-                  )}
-                  {dateToCancel && appointmentsOnDateToCancel.length === 0 && (
-                    <p className="text-sm text-muted-foreground">لا توجد مواعيد قادمة في هذا اليوم لإلغائها.</p>
                   )}
 
                   {appointmentsOnDateToCancel.length > 0 && (
                     <>
                       <div>
-                        <Label htmlFor="newDateForRescheduleCalendar">اختر اليوم الجديد للترحيل إليه:</Label>
+                        <Label htmlFor="newDateForRescheduleCalendar">2. اختر اليوم الجديد للترحيل إليه:</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button id="newDateForRescheduleCalendar" variant={"outline"} className="w-full justify-start text-left font-normal mt-1">
@@ -421,19 +544,19 @@ export default function ConfessionSchedule() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
-                            <Calendar mode="single" selected={newDateForReschedule} onSelect={setNewDateForReschedule} initialFocus locale={arSA} />
+                            <Calendar mode="single" selected={newDateForReschedule} onSelect={setNewDateForReschedule} initialFocus locale={arSA} disabled={(date) => isBefore(date, startOfDay(new Date()))} />
                           </PopoverContent>
                         </Popover>
                       </div>
                       <div>
-                        <Label htmlFor="newTimeForRescheduleInput">الوقت الجديد للترحيل (HH:mm):</Label>
+                        <Label htmlFor="newTimeForRescheduleInput">3. الوقت الجديد للترحيل (HH:mm):</Label>
                         <Input id="newTimeForRescheduleInput" type="time" value={newTimeForReschedule} onChange={(e) => setNewTimeForReschedule(e.target.value)} className="mt-1" />
                       </div>
                     </>
                   )}
-                  <DialogFooter>
+                  <DialogFooter className="pt-4">
                     <DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose>
-                    <Button onClick={handleConfirmReschedule} disabled={appointmentsOnDateToCancel.length === 0 || !newDateForReschedule || !newTimeForReschedule}>تأكيد الترحيل</Button>
+                    <Button onClick={handleConfirmReschedule} disabled={appointmentsOnDateToCancel.length === 0 || !newDateForReschedule || !newTimeForReschedule}>تأكيد الترحيل ({appointmentsOnDateToCancel.length})</Button>
                   </DialogFooter>
                 </div>
               </DialogContent>
@@ -520,7 +643,7 @@ export default function ConfessionSchedule() {
                      <FormField control={form.control} name="notes" render={({ field }) => (
                         <FormItem><FormLabel>ملاحظات (اختياري)</FormLabel><FormControl><Input placeholder="ملاحظات عن الموعد..." {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <DialogFooter>
+                    <DialogFooter className="pt-4">
                       <DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose>
                       <Button type="submit">{editingAppointment ? 'حفظ التعديلات' : 'إضافة الموعد'}</Button>
                     </DialogFooter>
@@ -531,8 +654,10 @@ export default function ConfessionSchedule() {
           </div>
         </CardHeader>
         <CardContent>
-          {appointments.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">لا توجد مواعيد حاليًا.</p>
+          {filteredAppointments.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              {appointments.length === 0 ? "لا توجد مواعيد حاليًا." : "لا توجد مواعيد تطابق الفلاتر المطبقة."}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -549,7 +674,7 @@ export default function ConfessionSchedule() {
                 </TableHeader>
                 <TableBody>
                   <AnimatePresence>
-                    {appointments.map((appointment) => (
+                    {filteredAppointments.map((appointment) => (
                       <motion.tr
                         key={appointment.id}
                         layout
