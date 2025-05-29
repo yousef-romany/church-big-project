@@ -6,7 +6,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Added Input
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,9 +18,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle, Search, ListFilter, XCircle as ClearFilterIcon } from 'lucide-react';
-import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual, isAfter, endOfDay } from 'date-fns';
-import type { DateRange } from 'react-day-picker'; // Added DateRange
+import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle, Search, ListFilter, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange } from 'lucide-react';
+import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual, isAfter, endOfDay, addDays, isToday, isTomorrow } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
 import { arSA } from 'date-fns/locale';
 import { 
   getAppointments, 
@@ -322,6 +322,38 @@ export default function ConfessionSchedule() {
     setFilterDateRange(undefined);
   };
 
+  const upcomingSummary = useMemo(() => {
+    const today = new Date();
+    const todayStart = startOfDay(today);
+    const todayEnd = endOfDay(today);
+    const tomorrowStart = startOfDay(addDays(today, 1));
+    const tomorrowEnd = endOfDay(addDays(today, 1));
+    const next7DaysStart = todayStart;
+    const next7DaysEnd = endOfDay(addDays(today, 6)); // 0 (today) to 6 means 7 days
+
+    let todayCount = 0;
+    let tomorrowCount = 0;
+    let next7DaysCount = 0;
+
+    // Use the full `appointments` list for the summary, not the filtered one
+    appointments.forEach(app => {
+      if (app.status !== 'قادم' || !isValid(new Date(app.datetime))) return;
+      const appDate = new Date(app.datetime);
+
+      if (isToday(appDate)) {
+        todayCount++;
+      }
+      if (isTomorrow(appDate)) {
+        tomorrowCount++;
+      }
+      if (isWithinInterval(appDate, { start: next7DaysStart, end: next7DaysEnd })) {
+        next7DaysCount++;
+      }
+    });
+
+    return { todayCount, tomorrowCount, next7DaysCount };
+  }, [appointments]);
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
@@ -344,6 +376,36 @@ export default function ConfessionSchedule() {
           </motion.div>
         ))}
       </AnimatePresence>
+
+      <Card className="shadow-lg mb-6 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center"><CalendarClock className="me-2 h-6 w-6 text-primary" /> ملخص المواعيد القادمة</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
+            <CalendarDays className="h-8 w-8 text-primary me-3" />
+            <div>
+              <p className="text-2xl font-bold text-primary">{upcomingSummary.todayCount}</p>
+              <p className="text-sm text-muted-foreground">موعد اليوم</p>
+            </div>
+          </div>
+          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
+            <CalendarPlus className="h-8 w-8 text-primary me-3" />
+            <div>
+              <p className="text-2xl font-bold text-primary">{upcomingSummary.tomorrowCount}</p>
+              <p className="text-sm text-muted-foreground">موعد غدًا</p>
+            </div>
+          </div>
+          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
+            <CalendarRange className="h-8 w-8 text-primary me-3" />
+            <div>
+              <p className="text-2xl font-bold text-primary">{upcomingSummary.next7DaysCount}</p>
+              <p className="text-sm text-muted-foreground">موعد خلال 7 أيام</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card className="shadow-lg mb-6">
         <CardHeader>
