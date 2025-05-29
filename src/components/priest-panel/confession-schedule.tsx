@@ -1,7 +1,7 @@
 
 "use client";
 import type { ConfessionAppointment, ConfessionStatus, PriestAvailability, PriestAvailabilitySlot } from '@/types/priest-panel';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Added useMemo here
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,7 +29,7 @@ import {
   combineDateAndTime,
   saveAppointments
 } from '@/lib/appointments-store';
-import AppointmentsListDisplay from './AppointmentsListDisplay'; // New Import
+import AppointmentsListDisplay from './AppointmentsListDisplay'; 
 
 
 const appointmentSchema = z.object({
@@ -38,7 +38,7 @@ const appointmentSchema = z.object({
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "الوقت يجب أن يكون بصيغة HH:mm (24 ساعة)"}),
   status: z.enum(['قادم', 'تم', 'لم يحضر', 'ملغى']),
   notes: z.string().optional(),
-  durationMinutes: z.number().min(15, {message: "المدة يجب ألا تقل عن 15 دقيقة"}).max(120, {message: "المدة يجب ألا تزيد عن 120 دقيقة"}).default(30),
+  durationMinutes: z.number().min(15, {message: "مدة الاعتراف يجب ألا تقل عن 15 دقيقة"}).max(120, {message: "مدة الاعتراف يجب ألا تزيد عن 120 دقيقة"}).default(30),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
