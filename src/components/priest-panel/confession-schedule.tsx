@@ -1,26 +1,23 @@
 
 "use client";
 import type { ConfessionAppointment, ConfessionStatus, PriestAvailability, PriestAvailabilitySlot } from '@/types/priest-panel';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PlusCircle, Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Settings, AlertCircle, Search, ListFilter, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange } from 'lucide-react';
-import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual, isAfter, endOfDay, addDays, isToday, isTomorrow } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
+import { motion } from 'framer-motion';
+import { PlusCircle, CalendarDays, Settings, AlertCircle, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange, Edit2, Trash2 } from 'lucide-react';
+import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 import { 
   getAppointments, 
@@ -32,6 +29,7 @@ import {
   combineDateAndTime,
   saveAppointments
 } from '@/lib/appointments-store';
+import AppointmentsListDisplay from './AppointmentsListDisplay'; // New Import
 
 
 const appointmentSchema = z.object({
@@ -45,21 +43,6 @@ const appointmentSchema = z.object({
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
 
-
-const statusStyles: Record<ConfessionStatus, string> = {
-  'تم': 'bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200',
-  'لم يحضر': 'bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200',
-  'قادم': 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200',
-  'ملغى': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200',
-};
-
-const statusIcons: Record<ConfessionStatus, JSX.Element> = {
-    'تم': <CheckCircle className="h-4 w-4" />,
-    'لم يحضر': <XCircle className="h-4 w-4" />,
-    'قادم': <Clock className="h-4 w-4" />,
-    'ملغى': <Bell className="h-4 w-4" />
-};
-
 const daysOfWeek = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
 
@@ -68,8 +51,7 @@ export default function ConfessionSchedule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<ConfessionAppointment | null>(null);
   const { toast } = useToast();
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
-
+  
   const [priestAvailability, setLocalPriestAvailability] = useState<PriestAvailability>({});
   const [isAvailabilityModalOpen, setIsAvailabilityModalOpen] = useState(false);
   
@@ -78,16 +60,7 @@ export default function ConfessionSchedule() {
   const [newDateForReschedule, setNewDateForReschedule] = useState<Date | undefined>();
   const [newTimeForReschedule, setNewTimeForReschedule] = useState<string>("");
 
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<ConfessionStatus | 'الكل'>('الكل');
-  const [filterDateRange, setFilterDateRange] = useState<DateRange | undefined>(undefined);
-
-
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
-    
     const loadedAppointments = getAppointments().sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
     setAppointments(loadedAppointments);
     
@@ -95,18 +68,7 @@ export default function ConfessionSchedule() {
     setLocalPriestAvailability(loadedAvailability);
     availabilityForm.reset(loadedAvailability); 
 
-    return () => clearInterval(timer);
   }, []);
-
-
-  const upcomingAlerts = useMemo(() => {
-    if (!currentTime) return [];
-    const now = currentTime;
-    const alertWindowEnd = addMinutes(now, 30); 
-    return appointments.filter(
-      (app) => app.status === 'قادم' && isValid(new Date(app.datetime)) && isWithinInterval(new Date(app.datetime), { start: now, end: alertWindowEnd })
-    );
-  }, [appointments, currentTime]);
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -292,202 +254,14 @@ export default function ConfessionSchedule() {
     setNewTimeForReschedule("");
   };
 
-  // Filtered appointments logic
-  const filteredAppointments = useMemo(() => {
-    return appointments
-      .filter(app => {
-        if (!app.datetime || !isValid(new Date(app.datetime))) return false;
-        const appointmentDate = new Date(app.datetime);
-
-        if (searchTerm && !app.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return false;
-        }
-        if (filterStatus !== 'الكل' && app.status !== filterStatus) {
-          return false;
-        }
-        if (filterDateRange?.from && isBefore(appointmentDate, startOfDay(filterDateRange.from))) {
-          return false;
-        }
-        if (filterDateRange?.to && isAfter(appointmentDate, endOfDay(filterDateRange.to))) {
-          return false;
-        }
-        return true;
-      })
-      .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
-  }, [appointments, searchTerm, filterStatus, filterDateRange]);
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilterStatus('الكل');
-    setFilterDateRange(undefined);
-  };
-
-  const upcomingSummary = useMemo(() => {
-    const today = new Date();
-    const todayStart = startOfDay(today);
-    const todayEnd = endOfDay(today);
-    const tomorrowStart = startOfDay(addDays(today, 1));
-    const tomorrowEnd = endOfDay(addDays(today, 1));
-    const next7DaysStart = todayStart;
-    const next7DaysEnd = endOfDay(addDays(today, 6)); // 0 (today) to 6 means 7 days
-
-    let todayCount = 0;
-    let tomorrowCount = 0;
-    let next7DaysCount = 0;
-
-    // Use the full `appointments` list for the summary, not the filtered one
-    appointments.forEach(app => {
-      if (app.status !== 'قادم' || !isValid(new Date(app.datetime))) return;
-      const appDate = new Date(app.datetime);
-
-      if (isToday(appDate)) {
-        todayCount++;
-      }
-      if (isTomorrow(appDate)) {
-        tomorrowCount++;
-      }
-      if (isWithinInterval(appDate, { start: next7DaysStart, end: next7DaysEnd })) {
-        next7DaysCount++;
-      }
-    });
-
-    return { todayCount, tomorrowCount, next7DaysCount };
-  }, [appointments]);
-
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <AnimatePresence>
-        {upcomingAlerts.map(alert => (
-          <motion.div
-            key={alert.id}
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-200 dark:border-yellow-600 rounded-md shadow-lg flex items-center justify-between"
-          >
-            <div className="flex items-center">
-              <Bell className="h-6 w-6 me-3 animate-pulse" />
-              <div>
-                <p className="font-bold">تنبيه موعد قريب!</p>
-                <p>{alert.name} - {alert.day} الساعة {isValid(new Date(alert.datetime)) ? format(new Date(alert.datetime), 'hh:mm a', { locale: arSA }) : '--:--'} (بعد {currentTime && isValid(new Date(alert.datetime)) ? differenceInMinutes(new Date(alert.datetime), currentTime) : 'دقائق'} دقيقة)</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-
-      <Card className="shadow-lg mb-6 bg-card">
-        <CardHeader>
-          <CardTitle className="flex items-center"><CalendarClock className="me-2 h-6 w-6 text-primary" /> ملخص المواعيد القادمة</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
-            <CalendarDays className="h-8 w-8 text-primary me-3" />
-            <div>
-              <p className="text-2xl font-bold text-primary">{upcomingSummary.todayCount}</p>
-              <p className="text-sm text-muted-foreground">موعد اليوم</p>
-            </div>
-          </div>
-          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
-            <CalendarPlus className="h-8 w-8 text-primary me-3" />
-            <div>
-              <p className="text-2xl font-bold text-primary">{upcomingSummary.tomorrowCount}</p>
-              <p className="text-sm text-muted-foreground">موعد غدًا</p>
-            </div>
-          </div>
-          <div className="flex items-center p-4 bg-primary/10 rounded-lg">
-            <CalendarRange className="h-8 w-8 text-primary me-3" />
-            <div>
-              <p className="text-2xl font-bold text-primary">{upcomingSummary.next7DaysCount}</p>
-              <p className="text-sm text-muted-foreground">موعد خلال 7 أيام</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
-      <Card className="shadow-lg mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center"><ListFilter className="me-2 h-6 w-6"/> فلترة المواعيد</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="searchTermInput">بحث بالاسم</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="searchTermInput"
-                  placeholder="اسم المعترف..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="ps-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filterStatusSelect">الحالة</Label>
-              <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as ConfessionStatus | 'الكل')}>
-                <SelectTrigger id="filterStatusSelect">
-                  <SelectValue placeholder="اختر الحالة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="الكل">الكل</SelectItem>
-                  {(['قادم', 'تم', 'لم يحضر', 'ملغى'] as ConfessionStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="filterDateRangePicker">نطاق التاريخ</Label>
-               <Popover>
-                <PopoverTrigger asChild>
-                  <Button id="filterDateRangePicker" variant={"outline"} className="w-full justify-start text-left font-normal">
-                    <CalendarDays className="me-2 h-4 w-4" />
-                    {filterDateRange?.from ? (
-                      filterDateRange.to ? (
-                        <>
-                          {format(filterDateRange.from, "PPP", { locale: arSA })} - {format(filterDateRange.to, "PPP", { locale: arSA })}
-                        </>
-                      ) : (
-                        format(filterDateRange.from, "PPP", { locale: arSA })
-                      )
-                    ) : (
-                      <span>اختر نطاقًا</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={filterDateRange?.from}
-                    selected={filterDateRange}
-                    onSelect={setFilterDateRange}
-                    numberOfMonths={2}
-                    locale={arSA}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <Button onClick={clearFilters} variant="outline" size="sm">
-            <ClearFilterIcon className="me-2 h-4 w-4" /> مسح الفلاتر
-          </Button>
-        </CardContent>
-      </Card>
-
-
-      <Card className="shadow-xl">
-        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <div>
-            <CardTitle>جدول مواعيد الاعتراف</CardTitle>
-            <CardDescription>قائمة بجميع مواعيد الاعتراف المسجلة وأوقات التوافر.</CardDescription>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
+      
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-2">
             <Dialog open={isAvailabilityModalOpen} onOpenChange={setIsAvailabilityModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline"><Settings className="me-2 h-5 w-5" /> إدارة التوافر</Button>
+                <Button variant="outline" className="w-full sm:w-auto"><Settings className="me-2 h-5 w-5" /> إدارة التوافر</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
                 <DialogHeader><DialogTitle>إدارة أوقات التوافر للاعترافات</DialogTitle></DialogHeader>
@@ -558,7 +332,7 @@ export default function ConfessionSchedule() {
 
             <Dialog open={isCancelRescheduleModalOpen} onOpenChange={setIsCancelRescheduleModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline"><CalendarDays className="me-2 h-5 w-5" /> إلغاء يوم وترحيل</Button>
+                <Button variant="outline" className="w-full sm:w-auto"><CalendarDays className="me-2 h-5 w-5" /> إلغاء يوم وترحيل</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
@@ -626,7 +400,7 @@ export default function ConfessionSchedule() {
             
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button onClick={openAddModal}><PlusCircle className="me-2 h-5 w-5" /> إضافة موعد</Button>
+                <Button onClick={openAddModal} className="w-full sm:w-auto"><PlusCircle className="me-2 h-5 w-5" /> إضافة موعد</Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader><DialogTitle>{editingAppointment ? 'تعديل موعد' : 'إضافة موعد جديد'}</DialogTitle></DialogHeader>
@@ -713,67 +487,16 @@ export default function ConfessionSchedule() {
                 </Form>
               </DialogContent>
             </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredAppointments.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              {appointments.length === 0 ? "لا توجد مواعيد حاليًا." : "لا توجد مواعيد تطابق الفلاتر المطبقة."}
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>اسم المعترف</TableHead>
-                    <TableHead>اليوم والتاريخ</TableHead>
-                    <TableHead>الساعة</TableHead>
-                    <TableHead>المدة</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead>ملاحظات</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <AnimatePresence>
-                    {filteredAppointments.map((appointment) => (
-                      <motion.tr
-                        key={appointment.id}
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        className="hover:bg-muted/50"
-                      >
-                        <TableCell className="font-medium">{appointment.name}</TableCell>
-                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), "EEEE, PPP", { locale: arSA }) : 'تاريخ غير صالح'}</TableCell>
-                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), 'hh:mm a', { locale: arSA }) : '--:--'}</TableCell>
-                        <TableCell>{appointment.durationMinutes || 30} د</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center w-fit ${statusStyles[appointment.status]}`}>
-                            {statusIcons[appointment.status]}
-                            <span className="ms-1">{appointment.status}</span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={appointment.notes}>{appointment.notes || '-'}</TableCell>
-                        <TableCell className="text-left space-x-1 rtl:space-x-reverse">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(appointment)} className="text-blue-500 hover:text-blue-700">
-                            <Edit2 className="h-4 w-4" /> <span className="sr-only">تعديل</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(appointment.id)} className="text-red-500 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" /> <span className="sr-only">حذف</span>
-                          </Button>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      </div>
+      
+      <AppointmentsListDisplay 
+        appointments={appointments}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        showUpcomingAlerts={true}
+      />
     </motion.div>
   );
 }
 
+    

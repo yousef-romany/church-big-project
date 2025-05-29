@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -29,16 +29,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePathname } from 'next/navigation';
-// import { useEffect } from 'react'; // Removed useEffect related to FCM
-// import { requestNotificationPermission, setupOnMessageListener, isFCMSupported } from '@/lib/firebase/messagingService'; // Removed FCM
-// import { useToast } from '@/hooks/use-toast'; // Removed useToast if only used for FCM
 import DevotionalMessageDisplay from '@/components/priest-panel/DevotionalMessageDisplay';
-// import { firebaseConfig } from '@/lib/firebase/firebaseConfig'; // Removed firebaseConfig if only used for FCM check
 
 
 const navItems = [
   { href: "/priest-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/priest-panel/confessions", icon: BookUser, label: "سكرتارية الاعتراف" },
+  { href: "/priest-panel/appointments-plan", icon: ClipboardList, label: "خطة المواعيد" },
   { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
   { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
   { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم" },
@@ -46,54 +43,7 @@ const navItems = [
 
 export default function PriestPanelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  // const { toast } = useToast(); // Can be removed if not used for other purposes
-
-  // FCM logic has been moved to RootLayout (src/app/layout.tsx)
-  // useEffect(() => {
-  //   // تأكد من أن الكود يعمل فقط في المتصفح وأن FCM مدعوم ومُعد بشكل صحيح
-  //   if (typeof window !== 'undefined' && isFCMSupported()) {
-  //     requestNotificationPermission().then(token => {
-  //       if (token) {
-  //         console.info("🔔 FCM Token obtained in PriestPanelLayout:", token);
-  //         // TODO: قم بإرسال هذا التوكن إلى خادمك وربطه بالكاهن الحالي
-  //         // مثال: sendTokenToServer(token);
-  //       } else {
-  //         console.warn("Failed to get FCM token or permission denied in PriestPanelLayout.");
-  //       }
-  //     }).catch(error => {
-  //       console.error("Error requesting notification permission in PriestPanelLayout:", error);
-  //     });
-
-  //     const handleIncomingMessage = (payload: any) => {
-  //       console.log('Foreground message received in PriestPanelLayout:', payload);
-  //       if (payload.notification) {
-  //         toast({
-  //           title: payload.notification.title || "إشعار جديد",
-  //           description: payload.notification.body || "لديك رسالة جديدة.",
-  //           duration: 10000, // عرض الإشعار لمدة أطول
-  //         });
-  //       }
-  //     };
-      
-  //     // إعداد مستمع الرسائل واستلام دالة إلغاء الاشتراك
-  //     const unsubscribe = setupOnMessageListener(handleIncomingMessage);
-
-  //     // دالة التنظيف لإلغاء الاشتراك عند تفكيك المكون
-  //     return () => {
-  //       if (unsubscribe) {
-  //         unsubscribe();
-  //       }
-  //     };
-  //   } else if (typeof window !== 'undefined') { 
-  //       console.log("Firebase Cloud Messaging is not supported in this browser or not configured properly.");
-  //       // يمكنك هنا عرض رسالة للمستخدم إذا كانت الإعدادات غير مكتملة
-  //       // Check against generic placeholder, not the actual user-provided config which might be valid.
-  //       if (firebaseConfig.messagingSenderId === "YOUR_MESSAGING_SENDER_ID_PLACEHOLDER" || firebaseConfig.apiKey === "YOUR_API_KEY_PLACEHOLDER") {
-  //           console.warn("Firebase configuration seems to be using placeholder values. Please check firebaseConfig.ts");
-  //       }
-  //   }
-  // }, [toast]);
-
+ 
   return (
     <SidebarProvider defaultOpen>
       <Sidebar side="right" collapsible="icon">
@@ -191,3 +141,5 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
     </SidebarProvider>
   );
 }
+
+    
