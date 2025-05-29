@@ -2,7 +2,13 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import {
   SidebarProvider,
   Sidebar,
@@ -31,15 +37,33 @@ import {
 import { usePathname } from 'next/navigation';
 import DevotionalMessageDisplay from '@/components/priest-panel/DevotionalMessageDisplay';
 
-
-const navItems = [
-  { href: "/priest-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
-  { href: "/priest-panel/confessions", icon: BookUser, label: "سكرتارية الاعتراف" },
-  { href: "/priest-panel/appointments-plan", icon: ClipboardList, label: "خطة المواعيد" },
-  { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
-  { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
-  { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم" },
+// Define navigation structure for accordion
+const groupedNavItems = [
+  {
+    isGroup: false,
+    href: "/priest-panel/dashboard",
+    icon: LayoutDashboard,
+    label: "لوحة التحكم"
+  },
+  {
+    groupTitle: "إدارة الاعترافات",
+    icon: BookUser,
+    defaultOpen: true, // To have this accordion open by default
+    items: [
+      { href: "/priest-panel/confessions", icon: ClipboardList, label: "جدول المواعيد والسكرتارية" },
+    ]
+  },
+  {
+    groupTitle: "خدمات الرعية",
+    icon: UsersRound, // Using a general icon for the group
+    items: [
+      { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
+      { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
+      { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم" },
+    ]
+  },
 ];
+
 
 export default function PriestPanelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -56,22 +80,66 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
           </Link>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.label}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton
-                    className="w-full justify-start"
-                    tooltip={{ children: item.label, side: "left" }}
-                    isActive={pathname === item.href || (item.href !== "/priest-panel/dashboard" && pathname.startsWith(item.href))}
+          <Accordion type="multiple" defaultValue={groupedNavItems.filter(g => g.isGroup && g.defaultOpen).map(g => g.groupTitle)} className="w-full">
+            {groupedNavItems.map((groupOrItem, index) => {
+              if (groupOrItem.isGroup === false && groupOrItem.href) { // Direct link
+                return (
+                  <SidebarMenuItem key={groupOrItem.label}>
+                    <Link href={groupOrItem.href} legacyBehavior passHref>
+                      <SidebarMenuButton
+                        className="w-full justify-start"
+                        tooltip={{ children: groupOrItem.label, side: "left" }}
+                        isActive={pathname === groupOrItem.href || (groupOrItem.href !== "/priest-panel/dashboard" && pathname.startsWith(groupOrItem.href))}
+                      >
+                        <groupOrItem.icon className="h-5 w-5 me-2" />
+                        <span className="group-data-[collapsible=icon]:hidden">{groupOrItem.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                );
+              }
+              
+              // Accordion Group
+              const GroupIcon = groupOrItem.icon;
+              return (
+                <AccordionItem value={groupOrItem.groupTitle || `group-${index}`} key={groupOrItem.groupTitle || `group-${index}`} className="border-none">
+                  <AccordionTrigger 
+                    className="p-0 hover:no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:rounded-md group-data-[collapsible=icon]:hover:bg-sidebar-accent group-data-[collapsible=icon]:aria-expanded:bg-sidebar-accent"
+                    asChild
                   >
-                    <item.icon className="h-5 w-5 me-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+                     <SidebarMenuButton
+                        className="w-full justify-start group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
+                        tooltip={{ children: groupOrItem.groupTitle, side: "left" }}
+                        // An accordion group itself isn't "active" like a link, but its children can be
+                        // To show some indication if a child is active, we might need more complex logic or styling
+                      >
+                        <GroupIcon className="h-5 w-5 group-data-[collapsible=icon]:m-0 md:me-2" />
+                        <span className="group-data-[collapsible=icon]:hidden">{groupOrItem.groupTitle}</span>
+                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden ms-auto group-data-[state=open]:rotate-180" />
+                      </SidebarMenuButton>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-0 group-data-[collapsible=icon]:hidden">
+                    <SidebarMenu className="ps-3 pt-1 border-s-2 border-primary/20 ms-3">
+                      {groupOrItem.items && groupOrItem.items.map((item) => (
+                        <SidebarMenuItem key={item.label}>
+                          <Link href={item.href} legacyBehavior passHref>
+                            <SidebarMenuButton
+                              className="w-full justify-start"
+                              tooltip={{ children: item.label, side: "left" }}
+                              isActive={pathname === item.href || pathname.startsWith(item.href)}
+                            >
+                              <item.icon className="h-4 w-4 me-2" />
+                              <span>{item.label}</span>
+                            </SidebarMenuButton>
+                          </Link>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </SidebarContent>
         <SidebarFooter className="p-4 space-y-2">
            <DevotionalMessageDisplay />
@@ -141,5 +209,4 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
     </SidebarProvider>
   );
 }
-
     
