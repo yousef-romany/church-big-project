@@ -39,15 +39,18 @@ export default function AppointmentsPlanPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<ConfessionAppointment | null>(null);
   const { toast } = useToast();
+
+  // Helper to safely import appointments-store module only on client
+  // Moved this declaration before its use
+  const getAppointmentsStoreModule = () => require('@/lib/appointments-store');
+  
   const priestAvailability = typeof window !== 'undefined' ? getAppointmentsStoreModule().getPriestAvailability() : {}; // Helper for availability check
+
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: { name: '', time: '', status: 'قادم', notes: '', durationMinutes: 30}
   });
-
-  // Helper to safely import appointments-store module only on client
-  const getAppointmentsStoreModule = () => require('@/lib/appointments-store');
 
 
   useEffect(() => {
@@ -230,5 +233,3 @@ export default function AppointmentsPlanPage() {
     </motion.div>
   );
 }
-
-    
