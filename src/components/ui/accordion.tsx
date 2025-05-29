@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -23,18 +24,24 @@ AccordionItem.displayName = "AccordionItem"
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => ( // `asChild` will be in `...props`
   <AccordionPrimitive.Header className="flex">
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline",
+        // Apply rotation style only if we are rendering the default chevron
+        !props.asChild && "[&[data-state=open]>svg]:rotate-180",
         className
       )}
-      {...props}
+      {...props} // This passes asChild to AccordionPrimitive.Trigger
     >
       {children}
-      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+      {/* Only add the default chevron if asChild is not true.
+          If asChild is true, the child component is responsible for its own icon. */}
+      {!props.asChild && (
+        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+      )}
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))
