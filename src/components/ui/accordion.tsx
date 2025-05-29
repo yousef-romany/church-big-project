@@ -29,9 +29,7 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline",
-        // Apply rotation style only if we are rendering the default chevron AND it's not overridden by asChild behavior
-        !props.asChild && "[&[data-state=open]>svg]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
         className
       )}
       {...props} // This passes asChild to AccordionPrimitive.Trigger
