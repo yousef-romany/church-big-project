@@ -1,4 +1,3 @@
-
 "use client"
 
 import *as React from "react"
@@ -29,7 +28,9 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline",
+        // Apply rotation class only for the default icon scenario (when asChild is false)
+        !props.asChild && "[&[data-state=open]>svg]:rotate-180",
         className
       )}
       {...props} // This passes asChild to AccordionPrimitive.Trigger
