@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, ListChecks, History, Settings, Church, Search, ArrowRightToLine, CalendarUser } from 'lucide-react';
+import { LayoutDashboard, ListChecks, History, Settings, Church, Search, ArrowRightToLine, CalendarCheck } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -34,7 +34,7 @@ const navItems = [
   { href: "/servant-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/servant-panel/tasks", icon: ListChecks, label: "مهام الافتقاد" },
   { href: "/servant-panel/history", icon: History, label: "مهام الافتقاد المنجزة" },
-  { href: "/servant-panel/my-ss-attendance", icon: CalendarUser, label: "حضوري (مدارس الأحد)" },
+  { href: "/servant-panel/my-ss-attendance", icon: CalendarCheck, label: "حضوري (مدارس الأحد)" },
 ];
 
 export default function ServantPanelLayout({ children }: { children: ReactNode }) {
