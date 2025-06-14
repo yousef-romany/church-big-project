@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UsersCog } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -48,18 +48,26 @@ const groupedNavItems = [
   {
     groupTitle: "إدارة الاعترافات",
     icon: BookUser,
-    defaultOpen: true, // To have this accordion open by default
+    defaultOpen: true, 
     items: [
-      { href: "/priest-panel/confessions", icon: ClipboardList, label: "جدول المواعيد والسكرتارية" },
+      { href: "/priest-panel/confessions", icon: ClipboardList, label: "سكرتارية الاعتراف" },
     ]
   },
   {
     groupTitle: "خدمات الرعية",
-    icon: UsersRound, // Using a general icon for the group
+    icon: UsersRound, 
     items: [
       { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
       { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
-      { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم" },
+      { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم للافتقاد" },
+    ]
+  },
+  {
+    groupTitle: "خدام مدارس الأحد", // New Group
+    icon: UsersCog, // New Icon
+    items: [
+      { href: "/priest-panel/sunday-school", icon: UsersCog, label: "الإدارة والحضور" },
+      // Potentially more items later like "Reports", "Communication"
     ]
   },
 ];
@@ -80,19 +88,20 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
           </Link>
         </SidebarHeader>
         <SidebarContent>
-          <Accordion type="multiple" defaultValue={groupedNavItems.filter(g => g.isGroup && g.defaultOpen).map(g => g.groupTitle)} className="w-full">
+          <Accordion type="multiple" defaultValue={groupedNavItems.filter(g => 'defaultOpen' in g && g.defaultOpen).map(g => g.groupTitle || '')} className="w-full">
             {groupedNavItems.map((groupOrItem, index) => {
-              if (groupOrItem.isGroup === false && groupOrItem.href) { // Direct link
+              if (!('isGroup' in groupOrItem) || groupOrItem.isGroup === false) { // Direct link
+                const item = groupOrItem as { href: string; icon: React.ElementType; label: string };
                 return (
-                  <SidebarMenuItem key={groupOrItem.label}>
-                    <Link href={groupOrItem.href} legacyBehavior passHref>
+                  <SidebarMenuItem key={item.label}>
+                    <Link href={item.href} legacyBehavior passHref>
                       <SidebarMenuButton
                         className="w-full justify-start"
-                        tooltip={{ children: groupOrItem.label, side: "left" }}
-                        isActive={pathname === groupOrItem.href || (groupOrItem.href !== "/priest-panel/dashboard" && pathname.startsWith(groupOrItem.href))}
+                        tooltip={{ children: item.label, side: "left" }}
+                        isActive={pathname === item.href || (item.href !== "/priest-panel/dashboard" && pathname.startsWith(item.href))}
                       >
-                        <groupOrItem.icon className="h-5 w-5 me-2" />
-                        <span className="group-data-[collapsible=icon]:hidden">{groupOrItem.label}</span>
+                        <item.icon className="h-5 w-5 me-2" />
+                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
@@ -100,27 +109,26 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
               }
               
               // Accordion Group
-              const GroupIcon = groupOrItem.icon;
+              const group = groupOrItem as { groupTitle: string; icon: React.ElementType; items: {href: string; icon: React.ElementType; label: string}[]; defaultOpen?:boolean };
+              const GroupIcon = group.icon;
               return (
-                <AccordionItem value={groupOrItem.groupTitle || `group-${index}`} key={groupOrItem.groupTitle || `group-${index}`} className="border-none">
+                <AccordionItem value={group.groupTitle || `group-${index}`} key={group.groupTitle || `group-${index}`} className="border-none">
                   <AccordionTrigger 
                     className="p-0 hover:no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:rounded-md group-data-[collapsible=icon]:hover:bg-sidebar-accent group-data-[collapsible=icon]:aria-expanded:bg-sidebar-accent"
                     asChild
                   >
                      <SidebarMenuButton
                         className="w-full justify-start group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
-                        tooltip={{ children: groupOrItem.groupTitle, side: "left" }}
-                        // An accordion group itself isn't "active" like a link, but its children can be
-                        // To show some indication if a child is active, we might need more complex logic or styling
+                        tooltip={{ children: group.groupTitle, side: "left" }}
                       >
                         <GroupIcon className="h-5 w-5 group-data-[collapsible=icon]:m-0 md:me-2" />
-                        <span className="group-data-[collapsible=icon]:hidden">{groupOrItem.groupTitle}</span>
+                        <span className="group-data-[collapsible=icon]:hidden">{group.groupTitle}</span>
                         <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden ms-auto group-data-[state=open]:rotate-180" />
                       </SidebarMenuButton>
                   </AccordionTrigger>
                   <AccordionContent className="pb-0 group-data-[collapsible=icon]:hidden">
                     <SidebarMenu className="ps-3 pt-1 border-s-2 border-primary/20 ms-3">
-                      {groupOrItem.items && groupOrItem.items.map((item) => (
+                      {group.items && group.items.map((item) => (
                         <SidebarMenuItem key={item.label}>
                           <Link href={item.href} legacyBehavior passHref>
                             <SidebarMenuButton
