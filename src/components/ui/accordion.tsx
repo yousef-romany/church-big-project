@@ -36,7 +36,7 @@ const AccordionTrigger = React.forwardRef<
       )}
       {...props} // This passes asChild to AccordionPrimitive.Trigger
     >
-      {children}
+      {children} {/* These are the children passed from the consuming component */}
       {/* Only add the default chevron if asChild is not true.
           If asChild is true, the child component is responsible for its own icon. */}
       {!props.asChild && (
