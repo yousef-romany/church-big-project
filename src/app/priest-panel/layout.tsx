@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UsersCog } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -48,14 +48,14 @@ const groupedNavItems = [
   {
     groupTitle: "إدارة الاعترافات",
     icon: BookUser,
-    defaultOpen: true, 
+    defaultOpen: true,
     items: [
       { href: "/priest-panel/confessions", icon: ClipboardList, label: "سكرتارية الاعتراف" },
     ]
   },
   {
     groupTitle: "خدمات الرعية",
-    icon: UsersRound, 
+    icon: UsersRound,
     items: [
       { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
       { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
@@ -64,9 +64,9 @@ const groupedNavItems = [
   },
   {
     groupTitle: "خدام مدارس الأحد", // New Group
-    icon: UsersCog, // New Icon
+    icon: UserCog, // Corrected Icon
     items: [
-      { href: "/priest-panel/sunday-school", icon: UsersCog, label: "الإدارة والحضور" },
+      { href: "/priest-panel/sunday-school", icon: UserCog, label: "الإدارة والحضور" }, // Corrected Icon
       // Potentially more items later like "Reports", "Communication"
     ]
   },
@@ -75,7 +75,7 @@ const groupedNavItems = [
 
 export default function PriestPanelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
- 
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar side="right" collapsible="icon">
@@ -107,13 +107,13 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
                   </SidebarMenuItem>
                 );
               }
-              
+
               // Accordion Group
               const group = groupOrItem as { groupTitle: string; icon: React.ElementType; items: {href: string; icon: React.ElementType; label: string}[]; defaultOpen?:boolean };
               const GroupIcon = group.icon;
               return (
                 <AccordionItem value={group.groupTitle || `group-${index}`} key={group.groupTitle || `group-${index}`} className="border-none">
-                  <AccordionTrigger 
+                  <AccordionTrigger
                     className="p-0 hover:no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:rounded-md group-data-[collapsible=icon]:hover:bg-sidebar-accent group-data-[collapsible=icon]:aria-expanded:bg-sidebar-accent"
                     asChild
                   >
@@ -217,4 +217,3 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
     </SidebarProvider>
   );
 }
-    
