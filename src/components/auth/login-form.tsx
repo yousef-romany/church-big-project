@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users } from 'lucide-react';
+import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users, Footprints, CalendarCheck } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "البريد الإلكتروني غير صالح" }),
@@ -26,7 +26,7 @@ interface LoginFormProps {
   title: string;
   description?: string;
   redirectPath: string;
-  userRoleIconName?: 'Building' | 'UserSquare' | 'UserCheck' | 'Users';
+  userRoleIconName?: 'Building' | 'UserSquare' | 'UserCheck' | 'Users' | 'Footprints' | 'CalendarCheck';
 }
 
 const cardVariants = {
@@ -69,6 +69,8 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
       case 'UserSquare': return <UserSquare {...commonProps} />;
       case 'UserCheck': return <UserCheck {...commonProps} />;
       case 'Users': return <Users {...commonProps} />;
+      case 'Footprints': return <Footprints {...commonProps} />;
+      case 'CalendarCheck': return <CalendarCheck {...commonProps} />;
       default: return null;
     }
   };

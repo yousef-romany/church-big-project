@@ -1,13 +1,13 @@
 
 import LoginForm from '@/components/auth/login-form';
 
-export default function ServantLoginPage() {
+export default function VisitationServantLoginPage() {
   return (
     <LoginForm
-      title="تسجيل دخول الخادم"
+      title="تسجيل دخول خادم الافتقاد"
       description="أهلاً بك أيها الخادم الأمين! يرجى تسجيل الدخول للاطلاع على مهام الافتقاد."
-      redirectPath="/servant-panel/dashboard"
-      userRoleIconName="Users"
+      redirectPath="/visitation-servant-panel/dashboard"
+      userRoleIconName="Footprints"
     />
   );
 }
