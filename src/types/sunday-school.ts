@@ -19,4 +19,8 @@ export interface SundaySchoolAttendance {
   serviceDay: ServingDay; // The specific day of service (Thursday or Friday)
   status: AttendanceStatus;
   notes?: string; // e.g., reason for absence if provided by priest
+  recordedBy?: 'priest' | 'servant'; // Who recorded this
+  selfRecordedAt?: string; // ISO timestamp if servant recorded
+  isGeoVerified?: boolean; // True if servant was within geo-fence when self-recording
 }
+

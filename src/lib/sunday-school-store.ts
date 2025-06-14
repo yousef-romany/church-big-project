@@ -65,10 +65,12 @@ export const recordAttendance = (
   date: string, // YYYY-MM-DD
   serviceDay: ServingDay,
   status: AttendanceStatus,
-  notes?: string
+  notes?: string,
+  recordedBy?: 'priest' | 'servant',
+  selfRecordedAt?: string, // ISO string
+  isGeoVerified?: boolean
 ): SundaySchoolAttendance => {
   const attendanceRecords = getSundaySchoolAttendance();
-  // Check if a record for this servant, date, and serviceDay already exists
   const existingRecordIndex = attendanceRecords.findIndex(
     record => record.servantId === servantId && record.date === date && record.serviceDay === serviceDay
   );
@@ -80,7 +82,10 @@ export const recordAttendance = (
     newOrUpdatedRecord = {
       ...attendanceRecords[existingRecordIndex],
       status,
-      notes: notes || attendanceRecords[existingRecordIndex].notes, // Keep old notes if new ones aren't provided
+      notes: notes !== undefined ? notes : attendanceRecords[existingRecordIndex].notes,
+      recordedBy: recordedBy || attendanceRecords[existingRecordIndex].recordedBy,
+      selfRecordedAt: selfRecordedAt || attendanceRecords[existingRecordIndex].selfRecordedAt,
+      isGeoVerified: isGeoVerified !== undefined ? isGeoVerified : attendanceRecords[existingRecordIndex].isGeoVerified,
     };
     attendanceRecords[existingRecordIndex] = newOrUpdatedRecord;
   } else {
@@ -92,6 +97,9 @@ export const recordAttendance = (
       serviceDay,
       status,
       notes,
+      recordedBy,
+      selfRecordedAt,
+      isGeoVerified,
     };
     attendanceRecords.push(newOrUpdatedRecord);
   }

@@ -36,22 +36,22 @@ export default function RecordSundaySchoolAttendance() {
 
   useEffect(() => {
     if (selectedDate) {
-      const dayOfWeekJsIndex = getDay(selectedDate); // 0 for Sunday, ..., 6 for Saturday
+      const dayOfWeekJsIndex = getDay(selectedDate); 
       const currentServingDay = dayIndexToServingDay[dayOfWeekJsIndex];
 
       if (currentServingDay) {
         const filtered = activeServants.filter(s => s.servingDays.includes(currentServingDay));
         setServantsForSelectedDay(filtered);
 
-        // Load existing attendance for this date and day
         const existingRecords = getAttendanceForDay(format(selectedDate, 'yyyy-MM-dd'), currentServingDay);
         const initialAttendance: Record<string, { status: AttendanceStatus; notes?: string }> = {};
-        existingRecords.forEach(record => {
-          initialAttendance[record.servantId] = { status: record.status, notes: record.notes };
-        });
+        
         filtered.forEach(servant => {
-          if (!initialAttendance[servant.id]) {
-             initialAttendance[servant.id] = { status: 'present' }; // Default to present if no record
+          const servantRecord = existingRecords.find(rec => rec.servantId === servant.id);
+          if (servantRecord) {
+            initialAttendance[servant.id] = { status: servantRecord.status, notes: servantRecord.notes };
+          } else {
+             initialAttendance[servant.id] = { status: 'present' }; // Default to present if no record for this servant
           }
         });
         setAttendanceData(initialAttendance);
@@ -96,7 +96,10 @@ export default function RecordSundaySchoolAttendance() {
           format(selectedDate, 'yyyy-MM-dd'),
           currentServingDay,
           servantAttendance.status,
-          servantAttendance.notes
+          servantAttendance.notes,
+          'priest', // Recorded by priest
+          undefined, // selfRecordedAt - not applicable
+          undefined  // isGeoVerified - not applicable
         );
         recordsSaved++;
       }
@@ -120,14 +123,15 @@ export default function RecordSundaySchoolAttendance() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="attendance-date">اختر تاريخ الخدمة</Label>
+          <Label htmlFor="attendance-date-priest">اختر تاريخ الخدمة</Label>
           <DatePickerWithPresets
             date={selectedDate}
             setDate={setSelectedDate}
             className="mt-1"
-            disabled={(date) => {
+            id="attendance-date-priest"
+            disabled={(date) => { // Priest can select any Thursday or Friday
                 const day = getDay(date);
-                return day !== 4 && day !== 5; // Disable if not Thursday (4) or Friday (5)
+                return day !== 4 && day !== 5; 
             }}
           />
            {selectedDate && !currentSelectedServingDay && (
@@ -149,19 +153,19 @@ export default function RecordSundaySchoolAttendance() {
                 {servantsForSelectedDay.map(servant => (
                   <Card key={servant.id} className="p-4 bg-muted/30">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-                      <Label htmlFor={`status-${servant.id}`} className="text-md font-medium flex items-center mb-2 sm:mb-0">
+                      <Label htmlFor={`status-${servant.id}-priest`} className="text-md font-medium flex items-center mb-2 sm:mb-0">
                         <User className="me-2 h-5 w-5"/> {servant.name}
                       </Label>
                       <RadioGroup
-                        id={`status-${servant.id}`}
-                        defaultValue={attendanceData[servant.id]?.status || "present"}
+                        id={`status-${servant.id}-priest`}
+                        value={attendanceData[servant.id]?.status || "present"}
                         onValueChange={(value) => handleStatusChange(servant.id, value as AttendanceStatus)}
                         className="flex gap-x-3 gap-y-2"
                       >
                         {statusOptions.map(option => (
                           <div key={option.value} className="flex items-center space-x-2 rtl:space-x-reverse">
-                            <RadioGroupItem value={option.value} id={`${servant.id}-${option.value}`} />
-                            <Label htmlFor={`${servant.id}-${option.value}`} className="flex items-center cursor-pointer">
+                            <RadioGroupItem value={option.value} id={`${servant.id}-${option.value}-priest`} />
+                            <Label htmlFor={`${servant.id}-${option.value}-priest`} className="flex items-center cursor-pointer">
                               {option.icon} <span className="ms-1">{option.label}</span>
                             </Label>
                           </div>
