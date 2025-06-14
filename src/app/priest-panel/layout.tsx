@@ -139,6 +139,7 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
                       className="p-0 hover:no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:rounded-md group-data-[collapsible=icon]:hover:bg-sidebar-accent group-data-[collapsible=icon]:aria-expanded:bg-sidebar-accent"
                       asChild
                     >
+                    <>
                        <SidebarMenuButton
                           className="w-full justify-start group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
                           tooltip={{ children: group.groupTitle, side: "left" }}
@@ -147,6 +148,7 @@ export default function PriestPanelLayout({ children }: { children: ReactNode })
                           <span className="group-data-[collapsible=icon]:hidden">{group.groupTitle}</span>
                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[collapsible=icon]:hidden ms-auto group-data-[state=open]:rotate-180" />
                         </SidebarMenuButton>
+                    </>
                     </AccordionTrigger>
                     <AccordionContent className="pb-0 group-data-[collapsible=icon]:hidden">
                       <SidebarMenu className="ps-3 pt-1 border-s-2 border-primary/20 ms-3">
