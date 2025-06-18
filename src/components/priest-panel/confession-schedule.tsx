@@ -20,6 +20,13 @@ import { PlusCircle, CalendarDays, Settings, AlertCircle, XCircle as ClearFilter
 import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   getAppointments, 
   addAppointment as addAppointmentToStore, 
   updateAppointment as updateAppointmentInStore, 
@@ -500,3 +507,4 @@ export default function ConfessionSchedule() {
 }
 
     
+
