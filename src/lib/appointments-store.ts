@@ -1,12 +1,30 @@
 
 'use client';
 import type { ConfessionAppointment, PriestAvailability } from '@/types/priest-panel';
-import { addMinutes, isValid, parse } from 'date-fns'; // Added isValid
+import { addMinutes, isValid, parse, format, isBefore, isEqual, startOfDay } from 'date-fns';
+import { arSA } from 'date-fns/locale';
 
-const AVAILABILITY_KEY = 'priestChurchAvailability'; 
-const APPOINTMENTS_KEY = 'churchConfessionAppointments'; 
+const AVAILABILITY_KEY = 'priestChurchAvailability_v1'; // Added versioning
+const APPOINTMENTS_KEY = 'churchConfessionAppointments_v1'; // Added versioning
 
 const generateId = () => Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+export const combineDateAndTime = (dateObj: Date, timeStr: string): Date => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const newDate = new Date(dateObj);
+  newDate.setHours(hours, minutes, 0, 0);
+  return newDate;
+};
+
+const defaultAppointments: Omit<ConfessionAppointment, 'id' | 'datetime'> & { date: Date }[] = [
+  { name: 'المعترف الأول (اليوم)', date: new Date(), time: '10:00', day: format(new Date(), 'EEEE', { locale: arSA }), status: 'قادم', durationMinutes: 30, notes: 'يطلب تأكيدًا هاتفيًا قبل الموعد.' },
+  { name: 'المعترف الثاني (غدًا)', date: new Date(Date.now() + 24 * 60 * 60 * 1000), time: '17:30', day: format(new Date(Date.now() + 24 * 60 * 60 * 1000), 'EEEE', { locale: arSA }), status: 'قادم', durationMinutes: 45, notes: 'سيحضر معه شخصًا آخر.' },
+  { name: 'المعترف الثالث (أمس)', date: new Date(Date.now() - 24 * 60 * 60 * 1000), time: '11:00', day: format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'EEEE', { locale: arSA }), status: 'تم', durationMinutes: 30, notes: 'اعتراف جيد ومثمر.' },
+  { name: 'المعترف الرابع (أول أمس)', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), time: '18:00', day: format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'EEEE', { locale: arSA }), status: 'لم يحضر', durationMinutes: 30, notes: 'لم يحضر ولم يعتذر.' },
+  { name: 'المعترف الخامس (اليوم - ملغى)', date: new Date(), time: '14:00', day: format(new Date(), 'EEEE', { locale: arSA }), status: 'ملغى', durationMinutes: 30, notes: 'تم الإلغاء بناءً على طلبه بسبب ظرف طارئ.' },
+  { name: 'المعترف السادس (الأسبوع القادم)', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), time: '09:00', day: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'EEEE', { locale: arSA }), status: 'قادم', durationMinutes: 60 },
+];
+
 
 export function getPriestAvailability(): PriestAvailability {
   if (typeof window === 'undefined') return {};
@@ -14,37 +32,29 @@ export function getPriestAvailability(): PriestAvailability {
     const stored = localStorage.getItem(AVAILABILITY_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Ensure default structure for days that might be missing startTime/endTime/enabled
       const daysOfWeek = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
       const completeAvailability: PriestAvailability = {};
       daysOfWeek.forEach(day => {
-        if (parsed[day]) {
-          completeAvailability[day] = {
-            startTime: parsed[day].startTime || "",
-            endTime: parsed[day].endTime || "",
-            enabled: !!parsed[day].enabled,
-          };
-        } else {
-          completeAvailability[day] = { startTime: "", endTime: "", enabled: false };
-        }
+        completeAvailability[day] = {
+          startTime: parsed[day]?.startTime || "",
+          endTime: parsed[day]?.endTime || "",
+          enabled: !!parsed[day]?.enabled,
+        };
       });
       return completeAvailability;
     }
-    // Default availability if nothing is stored
     return { 
       "الأحد": { startTime: "10:00", endTime: "12:00", enabled: true },
       "الاثنين": { startTime: "", endTime: "", enabled: false },
-      "الثلاثاء": { startTime: "", endTime: "", enabled: false },
-      "الأربعاء": { startTime: "17:00", endTime: "19:00", enabled: true },
-      "الخميس": { startTime: "", endTime: "", enabled: false },
+      "الثلاثاء": { startTime: "17:00", endTime: "19:00", enabled: true },
+      "الأربعاء": { startTime: "", endTime: "", enabled: false },
+      "الخميس": { startTime: "18:00", endTime: "20:00", enabled: true },
       "الجمعة": { startTime: "", endTime: "", enabled: false },
       "السبت": { startTime: "16:00", endTime: "20:00", enabled: true },
     };
   } catch (error) {
     console.error("Error reading availability from localStorage", error);
-    return { 
-      "الأحد": { startTime: "10:00", endTime: "12:00", enabled: true }, "الاثنين": { startTime: "", endTime: "", enabled: false }, "الثلاثاء": { startTime: "", endTime: "", enabled: false }, "الأربعاء": { startTime: "17:00", endTime: "19:00", enabled: true }, "الخميس": { startTime: "", endTime: "", enabled: false }, "الجمعة": { startTime: "", endTime: "", enabled: false }, "السبت": { startTime: "16:00", endTime: "20:00", enabled: true },
-    };
+    return {}; // Return empty or default on error
   }
 }
 
@@ -69,17 +79,15 @@ export function getAppointments(): ConfessionAppointment[] {
       }
       return parsedAppointments.map((appt: any) => {
         let dt: Date | null = null;
-        if (appt.datetime) {
+        if (appt.datetime && typeof appt.datetime === 'string') {
           const parsedDate = new Date(appt.datetime);
           if (isValid(parsedDate)) {
             dt = parsedDate;
-          } else {
-            console.warn('Invalid datetime for stored appointment, skipping:', appt);
           }
-        } else {
-          console.warn('Missing datetime for stored appointment, skipping:', appt);
+        } else if (appt.datetime instanceof Date && isValid(appt.datetime)) {
+          dt = appt.datetime; // Already a Date object
         }
-
+        
         let origDt: Date | undefined = undefined;
         if (appt.originalDatetime) {
           const parsedOrigDate = new Date(appt.originalDatetime);
@@ -90,13 +98,23 @@ export function getAppointments(): ConfessionAppointment[] {
         
         return {
           ...appt,
-          datetime: dt, // dt can be null if the original date was invalid
+          datetime: dt,
           originalDatetime: origDt,
-          durationMinutes: Number(appt.durationMinutes) || 30, // Ensure duration is a number and defaults
+          durationMinutes: Number(appt.durationMinutes) || 30,
         };
-      }).filter((appt): appt is ConfessionAppointment & { datetime: Date } => appt.datetime !== null); // Filter out appointments where datetime became null
+      }).filter((appt): appt is ConfessionAppointment & { datetime: Date } => appt.datetime !== null && isValid(appt.datetime))
+        .sort((a,b) => (a.datetime as Date).getTime() - (b.datetime as Date).getTime());
+    } else {
+      // Initialize with default appointments if localStorage is empty
+      const initialAppointmentsWithIds = defaultAppointments.map(appt => ({
+        ...appt,
+        id: generateId(),
+        datetime: combineDateAndTime(appt.date, appt.time),
+      }));
+      saveAppointments(initialAppointmentsWithIds);
+      return initialAppointmentsWithIds.map(appt => ({...appt, datetime: new Date(appt.datetime)}))
+               .sort((a,b) => a.datetime.getTime() - b.datetime.getTime());
     }
-    return [];
   } catch (error) {
     console.error("Error reading appointments from localStorage", error);
     return [];
@@ -106,12 +124,11 @@ export function getAppointments(): ConfessionAppointment[] {
 export function saveAppointments(appointments: ConfessionAppointment[]): void {
   if (typeof window === 'undefined') return;
   try {
-    // Before saving, ensure all datetime properties are valid Date objects or correctly stringifiable
     const appointmentsToSave = appointments.map(app => ({
       ...app,
       datetime: app.datetime instanceof Date && isValid(app.datetime) ? app.datetime.toISOString() : null,
       originalDatetime: app.originalDatetime instanceof Date && isValid(app.originalDatetime) ? app.originalDatetime.toISOString() : undefined,
-    })).filter(app => app.datetime !== null); // Don't save appointments with invalid final datetimes
+    })).filter(app => app.datetime !== null);
 
     localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointmentsToSave));
   } catch (error) {
@@ -124,11 +141,10 @@ export function addAppointment(appointment: Omit<ConfessionAppointment, 'id'>): 
   const newAppointmentWithId: ConfessionAppointment = { 
     ...appointment, 
     id: generateId(),
-    datetime: appointment.datetime, // Ensure datetime is a Date object
+    datetime: appointment.datetime,
     durationMinutes: Number(appointment.durationMinutes) || 30,
   };
   const updatedAppointments = [...appointments, newAppointmentWithId].sort((a,b) => {
-      // Assuming a.datetime and b.datetime are valid Date objects here due to getAppointments filter
       return (a.datetime as Date).getTime() - (b.datetime as Date).getTime();
   });
   saveAppointments(updatedAppointments);
@@ -153,14 +169,6 @@ export function deleteAppointment(appointmentId: string): void {
   saveAppointments(appointments);
 }
 
-
-export const combineDateAndTime = (dateObj: Date, timeStr: string): Date => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const newDate = new Date(dateObj); // Create a new Date object to avoid mutating the original
-  newDate.setHours(hours, minutes, 0, 0); // Set hours and minutes
-  return newDate;
-};
-
 export function isSlotOverlapping(
   newSlotStart: Date,
   newSlotDurationMinutes: number,
@@ -172,13 +180,11 @@ export function isSlotOverlapping(
     if (excludeAppointmentId && app.id === excludeAppointmentId) {
       return false; 
     }
-    // Ensure app.datetime is a valid Date. getAppointments should filter invalid ones.
     if (!(app.datetime instanceof Date) || !isValid(app.datetime)) return false;
 
     const existingStart = app.datetime; 
     const existingEnd = addMinutes(existingStart, Number(app.durationMinutes) || 30); 
     
-    // Check for overlap: (StartA < EndB) and (EndA > StartB)
     return (newSlotStart < existingEnd) && (newSlotEnd > existingStart);
   });
 }

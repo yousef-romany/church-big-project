@@ -10,19 +10,22 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendHorizonal, Users, MapPin, Search } from 'lucide-react';
 
-// Mock data - in a real app, this would come from a data store or API
 const mockFamilies: PriestPanelFamily[] = [
-  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي' },
-  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم' },
-  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا' },
-  { id: 'fam4', fatherName: 'بطرس غالي', motherName: 'سارة كرم', members: [], address: '22 شارع النيل، الزمالك', phoneNumber: '01001234567', region: 'الزمالك'},
-  { id: 'fam5', fatherName: 'اندراوس فايز', motherName: 'ميريت اسحق', members: [], address: '9 شارع الحرية، مصر الجديدة', phoneNumber: '01223344556', region: 'مصر الجديدة'},
+  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم.' },
+  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [{id: 'c3', name: 'فادي', age: 16, gender: 'ذكر', educationLevel: 'أولى ثانوي'}], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5) },
+  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا', visitationStatus: 'تواصل فقط'},
+  { id: 'fam4', fatherName: 'بولس حليم', motherName: 'أماني ذكي', members: [{id: 'c4', name: 'ميرنا', age: 22, gender: 'أنثى', educationLevel: 'خريجة جامعية'}], address: '120 شارع التحرير، الدقي', phoneNumber: '01587654300', region: 'الدقي', visitationStatus: 'تمت الزيارة', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)},
+  { id: 'fam5', fatherName: 'المرحوم مراد فوزي', motherName: 'الأم أنجيل', members: [{id: 'c6', name: 'يوستينا', age: 12, gender: 'أنثى', educationLevel: 'سادسة ابتدائي'}], address: 'عمارة 5، مساكن الزهور، مدينة نصر', phoneNumber: '01011223344', region: 'مدينة نصر', visitationStatus: 'عاجل'},
+  { id: 'fam6', fatherName: 'فايز كرم', motherName: 'سلوى إبراهيم', members: [{id:'c7', name:'ديفيد', age:5, gender:'ذكر', educationLevel:'KG2'}], address: '23 شارع الحرية، عين شمس', phoneNumber: '01276543210', region: 'عين شمس', visitationStatus: 'عادي'},
 ];
 
 const mockServants = [
-  { id: 'serv1', name: 'الخادم طوني' },
-  { id: 'serv2', name: 'الخادمة مريم' },
-  { id: 'serv3', name: 'الخادم بيشوي' },
+  { id: 'serv1', name: 'الخادم طوني صبحي' },
+  { id: 'serv2', name: 'الخادمة مريم لمعي' },
+  { id: 'serv3', name: 'الخادم بيشوي إميل' },
+  { id: 'serv4', name: 'الخادمة فيرينا كامل' },
+  { id: 'serv5', name: 'الخادم أندرو شاكر (افتقاد شباب)' },
+  { id: 'serv6', name: 'الخادمة مونيكا رأفت (افتقاد فتيات)' },
 ];
 
 const cardVariants = {
@@ -43,7 +46,8 @@ export default function SendServantForm() {
     return families.filter(family => 
       family.fatherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       family.motherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      family.region?.toLowerCase().includes(searchTerm.toLowerCase())
+      family.region?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      family.address.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [families, searchTerm]);
 
@@ -59,13 +63,12 @@ export default function SendServantForm() {
     const family = families.find(f => f.id === selectedFamilyId);
     const servant = mockServants.find(s => s.id === selectedServantId);
 
-    // Simulate sending request
     console.log(`Sending servant ${servant?.name} to family ${family?.fatherName} at ${family?.address}`);
     toast({
       title: "تم إرسال الخادم بنجاح!",
       description: `تم إبلاغ ${servant?.name} بزيارة أسرة ${family?.fatherName}.`,
     });
-    setSelectedFamilyId(null); // Reset selection
+    setSelectedFamilyId(null); 
     setSelectedServantId(null);
     setSearchTerm('');
   };
@@ -89,11 +92,11 @@ export default function SendServantForm() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input 
-                placeholder="ابحث بالاسم أو المنطقة..."
+                placeholder="ابحث بالاسم، المنطقة، أو العنوان..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setSelectedFamilyId(null); // Reset family selection on search change
+                  setSelectedFamilyId(null);
                 }}
                 className="ps-10 transition-all duration-300 focus:shadow-md"
               />

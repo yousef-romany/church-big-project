@@ -14,10 +14,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
 const mockFamilies: PriestPanelFamily[] = [
-  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم.' },
-  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [{id: 'c3', name: 'فادي', age: 16, gender: 'ذكر', educationLevel: 'أولى ثانوي'}], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5) },
-  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا', visitationStatus: 'تواصل فقط', notes: 'يحتاجون إلى مكالمة هاتفية فقط هذا الأسبوع.'},
-  { id: 'fam4', fatherName: 'بولس حليم', motherName: 'أماني ذكي', members: [{id: 'c4', name: 'ميرنا', age: 22, gender: 'أنثى', educationLevel: 'خريجة جامعية'}], address: '120 شارع التحرير، الدقي', phoneNumber: '01587654300', region: 'الدقي', visitationStatus: 'تمت الزيارة', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), notes: 'تمت الزيارة، الأمور مستقرة.'},
+  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم. تحتاج الأسرة إلى زيارة عاجلة لمتابعة الحالة الصحية وتوفير الاحتياجات الأساسية.' },
+  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [{id: 'c3', name: 'فادي', age: 16, gender: 'ذكر', educationLevel: 'أولى ثانوي'}], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), notes: 'الابن فادي يحتاج إلى تشجيع في دراسته ومتابعة سلوكه.' },
+  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا', visitationStatus: 'تواصل فقط', notes: 'يحتاجون إلى مكالمة هاتفية فقط هذا الأسبوع للاطمئنان العام ومعرفة أخبارهم.'},
+  { id: 'fam4', fatherName: 'بولس حليم', motherName: 'أماني ذكي', members: [{id: 'c4', name: 'ميرنا', age: 22, gender: 'أنثى', educationLevel: 'خريجة جامعية'}, {id: 'c5', name: 'كيرلس', age: 18, gender: 'ذكر', educationLevel: 'ثانوية عامة'}], address: '120 شارع التحرير، الدقي', phoneNumber: '01587654300', region: 'الدقي', visitationStatus: 'تمت الزيارة', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), notes: 'تمت الزيارة، الأمور مستقرة. ميرنا تبحث عن عمل وكيرلس يستعد لامتحاناته.'},
+  { id: 'fam5', fatherName: 'المرحوم مراد فوزي', motherName: 'الأم أنجيل', members: [{id: 'c6', name: 'يوستينا', age: 12, gender: 'أنثى', educationLevel: 'سادسة ابتدائي'}], address: 'عمارة 5، مساكن الزهور، مدينة نصر', phoneNumber: '01011223344', region: 'مدينة نصر', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), notes: 'الأم أرملة وتحتاج إلى مساعدة في مصروفات الدراسة ليوساتينا. الوضع المادي صعب للغاية.'},
+  { id: 'fam6', fatherName: 'فايز كرم', motherName: 'سلوى إبراهيم', members: [{id:'c7', name:'ديفيد', age:5, gender:'ذكر', educationLevel:'KG2'}], address: '23 شارع الحرية، عين شمس', phoneNumber: '01276543210', region: 'عين شمس', visitationStatus: 'عادي', notes: 'أسرة جديدة في المنطقة، تحتاج إلى ترحيب وتعريف بخدمات الكنيسة ودمجهم في الأنشطة.'},
+  { id: 'fam7', fatherName: 'بطرس نادي', motherName: 'جلوريا ماهر', members: [{id:'c8', name:'فبرونيا', age:3, gender:'أنثى', educationLevel:'حضانة'}, {id:'c9', name:'يوأنس', age:1, gender:'ذكر', educationLevel:'رضيع'}], address: 'فيلا 17، التجمع الخامس', phoneNumber: '01002003004', region: 'التجمع الخامس', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15), notes: 'الأسرة تطلب صلاة من أجل المولود الجديد يوأنس.'},
+  { id: 'fam8', fatherName: 'روماني شوقي', motherName: 'فيفيان منير', members: [], address: 'شقة 10، برج الأطباء، المهندسين', phoneNumber: '01112223334', region: 'المهندسين', visitationStatus: 'تواصل فقط', notes: 'كبار في السن، يفضل الاطمئنان عليهم هاتفيًا بشكل دوري.'}
 ];
 
 
@@ -26,7 +30,7 @@ const statusMap: Record<VisitationFamilyStatus, { label: string; icon: JSX.Eleme
   'عادي': { label: 'عادي', icon: <Info className="h-4 w-4 me-1" />, badgeVariant: 'default' },
   'تواصل فقط': { label: 'تواصل فقط', icon: <MessageSquare className="h-4 w-4 me-1" />, badgeVariant: 'secondary' },
   'تمت الزيارة': { label: 'تمت الزيارة', icon: <CheckSquare className="h-4 w-4 me-1" />, badgeVariant: 'outline' },
-  'لم تتم الزيارة': { label: 'لم تتم الزيارة', icon: <Clock className="h-4 w-4 me-1" />, badgeVariant: 'secondary' }, // Added for completeness
+  'لم تتم الزيارة': { label: 'لم تتم الزيارة', icon: <Clock className="h-4 w-4 me-1" />, badgeVariant: 'secondary' },
 };
 
 const visitationStatuses = ["الكل", ...Object.keys(statusMap).map(key => statusMap[key as VisitationFamilyStatus].label)];
@@ -53,7 +57,7 @@ export default function DailyVisitationSchedule() {
       const familyStatusLabel = family.visitationStatus ? statusMap[family.visitationStatus].label : '';
       const matchesStatus = selectedStatus === 'الكل' || familyStatusLabel === selectedStatus;
       return matchesRegion && matchesStatus;
-    }).sort((a,b) => { // Sort by status priority: عاجل > عادي > تواصل فقط > لم تتم > تمت
+    }).sort((a,b) => {
         const order: Record<VisitationFamilyStatus, number> = {'عاجل':1, 'عادي':2, 'تواصل فقط':3, 'لم تتم الزيارة': 4, 'تمت الزيارة':5};
         return (a.visitationStatus ? order[a.visitationStatus] : 5) - (b.visitationStatus ? order[b.visitationStatus] : 5);
     });
