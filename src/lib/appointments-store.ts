@@ -110,6 +110,7 @@ export function getAppointments(): ConfessionAppointment[] {
         ...appt,
         id: generateId(),
         datetime: combineDateAndTime(appt.date, appt.time),
+        durationMinutes: appt.durationMinutes || 30,
       }));
       saveAppointments(initialAppointmentsWithIds);
       return initialAppointmentsWithIds.map(appt => ({...appt, datetime: new Date(appt.datetime)}))
@@ -128,6 +129,7 @@ export function saveAppointments(appointments: ConfessionAppointment[]): void {
       ...app,
       datetime: app.datetime instanceof Date && isValid(app.datetime) ? app.datetime.toISOString() : null,
       originalDatetime: app.originalDatetime instanceof Date && isValid(app.originalDatetime) ? app.originalDatetime.toISOString() : undefined,
+      durationMinutes: app.durationMinutes || 30,
     })).filter(app => app.datetime !== null);
 
     localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointmentsToSave));
@@ -188,3 +190,4 @@ export function isSlotOverlapping(
     return (newSlotStart < existingEnd) && (newSlotEnd > existingStart);
   });
 }
+

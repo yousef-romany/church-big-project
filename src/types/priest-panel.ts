@@ -47,3 +47,4 @@ export interface PriestAvailability {
   // Key is day name e.g., "الأحد", "الاثنين"
   [dayOfWeek: string]: PriestAvailabilitySlot | null;
 }
+

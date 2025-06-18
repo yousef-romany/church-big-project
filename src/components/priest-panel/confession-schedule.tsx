@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { PlusCircle, CalendarDays, Settings, AlertCircle, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange, Edit2, Trash2 } from 'lucide-react';
-import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays } from 'date-fns';
+import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays, addMinutes } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 import { 
   Select,
@@ -34,7 +34,8 @@ import {
   getPriestAvailability, 
   setPriestAvailability as setPriestAvailabilityInStore,
   combineDateAndTime,
-  saveAppointments
+  saveAppointments,
+  isSlotOverlapping
 } from '@/lib/appointments-store';
 import AppointmentsListDisplay from './AppointmentsListDisplay'; 
 
@@ -45,7 +46,12 @@ const appointmentSchema = z.object({
   time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { message: "الوقت يجب أن يكون بصيغة HH:mm (24 ساعة)"}),
   status: z.enum(['قادم', 'تم', 'لم يحضر', 'ملغى']),
   notes: z.string().optional(),
-  durationMinutes: z.number().min(15, {message: "مدة الاعتراف يجب ألا تقل عن 15 دقيقة"}).max(120, {message: "مدة الاعتراف يجب ألا تزيد عن 120 دقيقة"}).default(30),
+  durationMinutes: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 30 : Number(val)), // Default to 30 if empty
+    z.number({ invalid_type_error: "المدة يجب أن تكون رقمًا" })
+     .min(15, {message: "مدة الاعتراف يجب ألا تقل عن 15 دقيقة"})
+     .max(120, {message: "مدة الاعتراف يجب ألا تزيد عن 120 دقيقة"})
+  ).default(30),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -151,10 +157,22 @@ export default function ConfessionSchedule() {
     const newDatetime = combineDateAndTime(data.date, data.time);
     const dayName = format(data.date, 'EEEE', { locale: arSA });
 
+    // Check for overlap
+    const existingAppts = getAppointments();
+    if (isSlotOverlapping(newDatetime, data.durationMinutes, existingAppts, editingAppointment?.id)) {
+        toast({
+            title: "تداخل في المواعيد",
+            description: "الوقت المحدد يتعارض مع موعد آخر. يرجى اختيار وقت أو مدة مختلفة.",
+            variant: "destructive",
+            duration: 7000,
+        });
+        return; // Prevent form submission
+    }
+
     const dayAvailability = priestAvailability[dayName];
     let availabilityWarning = false;
     if (dayAvailability && dayAvailability.enabled) {
-        if (data.time < dayAvailability.startTime || data.time > dayAvailability.endTime) {
+        if (data.time < dayAvailability.startTime || format(addMinutes(newDatetime, data.durationMinutes), 'HH:mm') > dayAvailability.endTime) {
             availabilityWarning = true;
         }
     } else { 
@@ -166,7 +184,7 @@ export default function ConfessionSchedule() {
     if (availabilityWarning) {
         toast({
             title: "تحذير: الوقت خارج أوقات التوافر",
-            description: `الموعد المحدد (${dayName} الساعة ${data.time}) خارج أوقات التوافر المحددة أو في يوم غير متاح. تم حفظ الموعد على أي حال.`,
+            description: `الموعد المحدد (${dayName} الساعة ${data.time} لمدة ${data.durationMinutes} دقيقة) قد يكون خارج أوقات التوافر المحددة أو في يوم غير متاح. تم حفظ الموعد على أي حال.`,
             variant: "default", 
             duration: 7000,
         });
@@ -457,16 +475,22 @@ export default function ConfessionSchedule() {
                     {form.watch("date") && form.watch("time") && (() => {
                         const selectedDate = form.watch("date");
                         const selectedTime = form.watch("time");
+                        const selectedDuration = form.watch("durationMinutes");
                         if (!selectedDate || !selectedTime) return null;
 
                         const dayName = format(selectedDate, 'EEEE', { locale: arSA });
                         const dayAvail = priestAvailability[dayName];
+                        const currentAppointmentStart = combineDateAndTime(selectedDate, selectedTime);
+
+                        if (isSlotOverlapping(currentAppointmentStart, selectedDuration, getAppointments(), editingAppointment?.id)) {
+                             return <p className="text-xs text-red-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا الوقت يتعارض مع موعد آخر مسجل.</p>;
+                        }
 
                         if (dayAvail === null || !dayAvail?.enabled) {
                              if (Object.values(priestAvailability).some(slot => slot && slot.enabled)) {
                                 return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>;
                              }
-                        } else if (dayAvail && dayAvail.enabled && (selectedTime < dayAvail.startTime || selectedTime > dayAvail.endTime)) {
+                        } else if (dayAvail && dayAvail.enabled && (selectedTime < dayAvail.startTime || format(addMinutes(currentAppointmentStart, selectedDuration), 'HH:mm') > dayAvail.endTime)) {
                             return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>الوقت المحدد خارج نطاق التوافر لهذا اليوم ({dayAvail.startTime} - {dayAvail.endTime}).</p>;
                         }
                         return null;
@@ -507,4 +531,5 @@ export default function ConfessionSchedule() {
 }
 
     
+
 
