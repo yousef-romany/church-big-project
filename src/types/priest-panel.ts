@@ -11,8 +11,9 @@ export interface ConfessionAppointment {
   notes?: string; 
   originalDatetime?: Date; 
   durationMinutes?: number; 
-  priestId?: string; 
-  bookedBySystem?: boolean; // Added to flag system-booked appointments
+  priestId?: string; // ID of the priest for this appointment
+  bookedBySystem?: boolean; 
+  userId?: string; // ID of the user who requested/booked this appointment
 }
 
 export type VisitationFamilyStatus = 'عاجل' | 'عادي' | 'تواصل فقط' | 'تمت الزيارة' | 'لم تتم الزيارة';

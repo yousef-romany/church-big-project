@@ -9,7 +9,7 @@ const dashboardSections = [
   {
     title: 'طلب موعد اعتراف',
     description: 'اطلب موعدًا للاعتراف، وسيقوم النظام بتحديد أقرب وقت متاح لك.',
-    href: '/public/confession-request', // Updated href
+    href: '/public-panel/confession-request', // Updated href
     icon: BookOpenCheck,
     color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     borderColor: 'border-sky-500',
@@ -84,3 +84,4 @@ export default function PublicDashboardPage() {
     </motion.div>
   );
 }
+

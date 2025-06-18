@@ -32,7 +32,7 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   { href: "/public-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
-  { href: "/public/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
+  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
   { href: "/public-panel/instructions", icon: Info, label: "تعليمات الكنيسة" },
 ];
 
@@ -135,3 +135,4 @@ export default function PublicPanelLayout({ children }: { children: ReactNode })
     </SidebarProvider>
   );
 }
+
