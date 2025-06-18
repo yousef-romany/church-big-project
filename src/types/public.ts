@@ -4,15 +4,17 @@ import type { LucideIcon } from 'lucide-react';
 export interface ConfessionRequestFormInput {
   fullName: string;
   mobileNumber: string;
-  selectedPriestId: string;
+  selectedPriestId?: string; // Optional for now, assuming one priest or default
+  notes?: string; // Optional notes from the requester
 }
 
 export interface ConfessionRequest extends ConfessionRequestFormInput {
   id: string;
   submittedAt: Date;
-  status: 'pending' | 'scheduled' | 'completed'; // For priest panel to manage
-  scheduledAt?: Date; // Optional: if priest schedules it
-  priestNotes?: string; // Optional: notes from priest
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled_by_user' | 'cancelled_by_priest';
+  scheduledAt?: Date; 
+  priestNotes?: string; 
+  bookedBySystem?: boolean; // Flag to indicate if booked by system
 }
 
 export interface ChurchInstruction {
@@ -28,3 +30,4 @@ export interface PriestData {
     name: string;
     churchName: string;
 }
+

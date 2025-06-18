@@ -3,15 +3,16 @@ export type ConfessionStatus = 'تم' | 'لم يحضر' | 'قادم' | 'ملغى
 
 export interface ConfessionAppointment {
   id: string;
-  name: string; // Name of the person confessing
-  day: string; // e.g., "الأحد"
-  time: string; // e.g., "17:00" in HH:mm format
+  name: string; 
+  day: string; 
+  time: string; 
   status: ConfessionStatus;
-  datetime: Date; // For sorting and alerts, should be a JS Date object
-  notes?: string; // For rescheduling info or other notes
-  originalDatetime?: Date; // To track if rescheduled
-  durationMinutes?: number; // Duration of the appointment, e.g., 30
-  priestId?: string; // ID of the priest, if multiple priests are supported
+  datetime: Date; 
+  notes?: string; 
+  originalDatetime?: Date; 
+  durationMinutes?: number; 
+  priestId?: string; 
+  bookedBySystem?: boolean; // Added to flag system-booked appointments
 }
 
 export type VisitationFamilyStatus = 'عاجل' | 'عادي' | 'تواصل فقط' | 'تمت الزيارة' | 'لم تتم الزيارة';
@@ -19,9 +20,9 @@ export type VisitationFamilyStatus = 'عاجل' | 'عادي' | 'تواصل فق�
 export interface FamilyMember {
   id: string;
   name: string;
-  age: number | string; // age can be string initially from form input
+  age: number | string; 
   gender: 'ذكر' | 'أنثى' | '';
-  educationLevel?: string; // Made optional as it might not always be relevant
+  educationLevel?: string; 
 }
 
 export interface PriestPanelFamily {
@@ -40,11 +41,9 @@ export interface PriestPanelFamily {
 export interface PriestAvailabilitySlot {
   startTime: string; // HH:mm
   endTime: string;   // HH:mm
-  enabled?: boolean; // Keep enabled here for form structure
+  enabled?: boolean; 
 }
 
 export interface PriestAvailability {
-  // Key is day name e.g., "الأحد", "الاثنين"
   [dayOfWeek: string]: PriestAvailabilitySlot | null;
 }
-

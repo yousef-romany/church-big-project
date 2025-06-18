@@ -58,7 +58,7 @@ export default function PublicPanelLayout({ children }: { children: ReactNode })
                   <SidebarMenuButton
                     className="w-full justify-start"
                     tooltip={{ children: item.label, side: "left" }}
-                    isActive={pathname === item.href || (item.href !== "/public-panel/dashboard" && pathname.startsWith(item.href))}
+                    isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== "/public-panel/dashboard")}
                   >
                     <item.icon className="h-5 w-5 me-2" />
                     <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>

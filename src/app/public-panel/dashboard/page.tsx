@@ -8,8 +8,8 @@ import { BookOpenCheck, Info, ArrowLeft } from 'lucide-react';
 const dashboardSections = [
   {
     title: 'طلب موعد اعتراف',
-    description: 'اطلب موعدًا للاعتراف مع أحد أباء الكنيسة المتاحين.',
-    href: '/public/confession-request',
+    description: 'اطلب موعدًا للاعتراف، وسيقوم النظام بتحديد أقرب وقت متاح لك.',
+    href: '/public/confession-request', // Updated href
     icon: BookOpenCheck,
     color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     borderColor: 'border-sky-500',
