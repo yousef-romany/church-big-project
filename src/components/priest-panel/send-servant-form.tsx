@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendHorizonal, Users, MapPin, Search } from 'lucide-react';
+import { assignVisitationTask } from '@/lib/visitation-tasks-store';
 
 const mockFamilies: PriestPanelFamily[] = [
   { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم.' },
@@ -63,7 +64,20 @@ export default function SendServantForm() {
     const family = families.find(f => f.id === selectedFamilyId);
     const servant = mockServants.find(s => s.id === selectedServantId);
 
-    console.log(`Sending servant ${servant?.name} to family ${family?.fatherName} at ${family?.address}`);
+    if (!family || !servant) {
+        toast({ title: "خطأ", description: "لم يتم العثور على بيانات الأسرة أو الخادم.", variant: "destructive" });
+        return;
+    }
+
+    assignVisitationTask({
+        familyId: family.id,
+        familyName: `${family.fatherName} و ${family.motherName}`,
+        address: family.address,
+        mapLocationImageUrl: `https://picsum.photos/seed/${family.id}/600/300`, // Placeholder image
+        notesFromPriest: family.notes,
+        servantId: servant.id,
+    });
+    
     toast({
       title: "تم إرسال الخادم بنجاح!",
       description: `تم إبلاغ ${servant?.name} بزيارة أسرة ${family?.fatherName}.`,

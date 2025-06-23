@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { Separator } from '@/components/ui/separator';
 
 export default function ServantTasksPage() {
+  // In a real app, this ID would come from the logged-in user's session/context
+  const MOCK_SERVANT_ID = 'serv1';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -17,7 +20,7 @@ export default function ServantTasksPage() {
         <p className="text-muted-foreground">قائمة بالأسر المطلوب منك زيارتها. قم بتحديث الحالة بعد إتمام الزيارة.</p>
       </div>
       <Separator />
-      <TaskList />
+      <TaskList servantId={MOCK_SERVANT_ID} />
     </motion.div>
   );
 }

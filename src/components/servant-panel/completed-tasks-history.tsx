@@ -1,7 +1,7 @@
 
 "use client";
 import type { CompletedServantTask } from '@/types/servant-panel';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,7 @@ import { CalendarCheck, MapPin, User, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { arSA } from 'date-fns/locale';
-
-// Mock data for completed tasks
-const mockCompletedTasks: CompletedServantTask[] = [
-  { id: 'taskc1', familyId: 'fam4', familyName: 'أسرة الأب بولس حليم', address: '120 شارع التحرير، الدقي', mapLocationImageUrl: 'https://picsum.photos/seed/mapcomp1/600/300', status: 'completed', completedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), servantNotes: 'الأسرة في حالة جيدة، تم تقديم الدعم المعنوي.', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3) },
-  { id: 'taskc2', familyId: 'fam5', familyName: 'أسرة الأرملة مريم أسعد', address: '9 شارع الحرية، مصر الجديدة', mapLocationImageUrl: 'https://picsum.photos/seed/mapcomp2/600/300', status: 'completed', completedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), servantNotes: 'تم الاطمئنان على احتياجاتهم الأساسية.', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6) },
-];
+import { getCompletedTasksForServant } from '@/lib/visitation-tasks-store';
 
 const cardVariants = {
   initial: { opacity: 0, y: 20, scale: 0.95 },
@@ -22,8 +17,17 @@ const cardVariants = {
   exit: { opacity: 0, y: -20, scale: 0.9 },
 };
 
-export default function CompletedTasksHistory() {
-  const [completedTasks] = useState<CompletedServantTask[]>(mockCompletedTasks);
+interface CompletedTasksHistoryProps {
+    servantId: string;
+}
+
+export default function CompletedTasksHistory({ servantId }: CompletedTasksHistoryProps) {
+  const [completedTasks, setCompletedTasks] = useState<CompletedServantTask[]>([]);
+
+  useEffect(() => {
+    setCompletedTasks(getCompletedTasksForServant(servantId));
+  }, [servantId]);
+
 
   return (
     <motion.div
@@ -46,10 +50,12 @@ export default function CompletedTasksHistory() {
                     <CardTitle className="text-xl font-semibold flex items-center">
                         <User className="me-2 h-6 w-6 text-primary" /> {task.familyName}
                     </CardTitle>
-                    <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">
-                        <CalendarCheck className="me-1 h-4 w-4" /> 
-                        {format(task.completedAt, 'd MMMM yyyy, hh:mm a', { locale: arSA })}
-                    </Badge>
+                    {task.completedAt && (
+                        <Badge variant="outline" className="border-green-500 text-green-600 bg-green-500/10">
+                            <CalendarCheck className="me-1 h-4 w-4" /> 
+                            {format(new Date(task.completedAt), 'd MMMM yyyy, hh:mm a', { locale: arSA })}
+                        </Badge>
+                    )}
                 </div>
               </CardHeader>
               <CardContent className="pt-4 space-y-3">

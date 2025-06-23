@@ -1,7 +1,7 @@
 
 "use client";
 import type { ServantTask } from '@/types/servant-panel';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { arSA } from 'date-fns/locale';
-
-const mockTasks: ServantTask[] = [
-  { id: 'task1', familyId: 'fam1', familyName: 'أسرة الأب جرجس رؤوف', address: '15 شارع النصر، المعادي', mapLocationImageUrl: 'https://picsum.photos/seed/maploc1/600/300', notesFromPriest: 'التركيز على حالة الأب الصحية.', status: 'pending', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 2) },
-  { id: 'task2', familyId: 'fam2', familyName: 'أسرة الأرملة تريزا لمعي', address: '30 شارع 9، المقطم', mapLocationImageUrl: 'https://picsum.photos/seed/maploc2/600/300', status: 'pending', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 24) },
-  { id: 'task3', familyId: 'fam3', familyName: 'أسرة الأب صموئيل وهيب', address: '7 شارع الكنيسة، شبرا', mapLocationImageUrl: 'https://picsum.photos/seed/maploc3/600/300', notesFromPriest: 'يحتاجون إلى دعم معنوي.', status: 'pending', assignedAt: new Date(Date.now() - 1000 * 60 * 60 * 48) },
-];
+import { getTasksForServant, completeVisitationTask } from '@/lib/visitation-tasks-store';
 
 const cardVariants = {
   initial: { opacity: 0, y: 20, scale: 0.95 },
@@ -24,25 +19,31 @@ const cardVariants = {
   exit: { opacity: 0, y: -20, scale: 0.9, transition: { duration: 0.2 } },
 };
 
-export default function TaskList() {
-  const [tasks, setTasks] = useState<ServantTask[]>(mockTasks.filter(task => task.status === 'pending'));
+interface TaskListProps {
+    servantId: string;
+}
+
+export default function TaskList({ servantId }: TaskListProps) {
+  const [tasks, setTasks] = useState<ServantTask[]>([]);
   const [editingNotesTaskId, setEditingNotesTaskId] = useState<string | null>(null);
   const [currentServantNotes, setCurrentServantNotes] = useState('');
   const { toast } = useToast();
 
+  useEffect(() => {
+    setTasks(getTasksForServant(servantId));
+  }, [servantId]);
+
   const handleMarkAsVisited = (taskId: string) => {
-    // In a real app, this would also update the backend
     const completedTask = tasks.find(t => t.id === taskId);
     if (completedTask) {
-      // Add to completed tasks (not implemented here, but for concept)
-      // Remove from pending tasks
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-      toast({
-        title: "تم تسجيل الزيارة بنجاح!",
-        description: `تم تحديث حالة زيارة ${completedTask.familyName}.`,
-      });
-      setEditingNotesTaskId(null);
-      setCurrentServantNotes('');
+        completeVisitationTask(taskId, currentServantNotes);
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+        toast({
+            title: "تم تسجيل الزيارة بنجاح!",
+            description: `تم تحديث حالة زيارة ${completedTask.familyName}.`,
+        });
+        setEditingNotesTaskId(null);
+        setCurrentServantNotes('');
     }
   };
 
@@ -51,8 +52,9 @@ export default function TaskList() {
       setEditingNotesTaskId(null);
       setCurrentServantNotes('');
     } else {
+      const task = tasks.find(t => t.id === taskId);
       setEditingNotesTaskId(taskId);
-      setCurrentServantNotes(''); // Reset notes when opening for a new task
+      setCurrentServantNotes(task?.servantNotes || ''); 
     }
   };
 
@@ -78,7 +80,7 @@ export default function TaskList() {
                     <User className="me-2 h-6 w-6 text-primary" /> {task.familyName}
                   </CardTitle>
                   <span className="text-xs text-muted-foreground">
-                    مُسندة منذ: {formatDistanceToNow(task.assignedAt, { addSuffix: true, locale: arSA })}
+                    مُسندة منذ: {formatDistanceToNow(new Date(task.assignedAt), { addSuffix: true, locale: arSA })}
                   </span>
                 </div>
                 {task.notesFromPriest && (
