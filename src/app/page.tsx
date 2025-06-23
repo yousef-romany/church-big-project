@@ -70,7 +70,7 @@ const userSections = [
     title: 'بوابة المخدومين',
     description: 'طلب مواعيد الاعتراف، الاطلاع على تعليمات الكنيسة، والمشاركة في الأنشطة الروحية.',
     iconName: 'UserCheck',
-    href: '/auth/public/login', 
+    href: '/auth/makhdoum/login', 
     animation: { type: 'slide', direction: 'bottom' },
     delay: 0.5,
     color: 'text-yellow-500', 
@@ -414,4 +414,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
