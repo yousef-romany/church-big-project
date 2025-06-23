@@ -35,3 +35,12 @@ export interface ChurchInformation {
   contactNumber: string;
   mapCoordinates?: { lat: number; lng: number }; // Optional: for Google Maps
 }
+
+export interface ChurchEvent {
+  id: string;
+  title: string;
+  description: string;
+  datetime: Date;
+  location: string;
+  points: number;
+}

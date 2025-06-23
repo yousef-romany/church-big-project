@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog, Award } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -78,6 +78,13 @@ const allNavItems: CombinedNavItem[] = [
       { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
       { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
       { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم للافتقاد" },
+    ]
+  },
+   {
+    groupTitle: "إدارة الفعاليات والنقاط",
+    icon: Award,
+    items: [
+      { href: "/priest-panel/events", icon: Award, label: "إدارة الفعاليات" },
     ]
   },
   {
