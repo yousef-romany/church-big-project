@@ -1,4 +1,5 @@
 
+
 import type { LucideIcon } from 'lucide-react';
 
 export interface ConfessionRequestFormInput {
@@ -32,4 +33,3 @@ export interface PriestData {
     name: string;
     churchName: string; // e.g., "كنيسة السيدة العذراء مريم بالزيتون"
 }
-

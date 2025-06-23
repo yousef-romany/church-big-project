@@ -1,6 +1,10 @@
-// This file was moved from a different directory and its original path is now a placeholder.
-// The active file is now located at /src/app/public-panel/confession-request/page.tsx
-// This placeholder can be removed if the file system supported deletions.
-export default function DeprecatedPublicConfessionRequestPage() {
-  return null;
+"use client";
+import ConfessionRequestForm from '@/components/public-panel/ConfessionRequestForm';
+
+export default function PublicConfessionRequestPage() {
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <ConfessionRequestForm />
+    </div>
+  );
 }

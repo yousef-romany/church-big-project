@@ -1,4 +1,5 @@
 
+
 export type ConfessionStatus = 'تم' | 'لم يحضر' | 'قادم' | 'ملغى';
 
 export interface ConfessionAppointment {
