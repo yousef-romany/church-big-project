@@ -1,9 +1,8 @@
-
 "use client";
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { CalendarCheck, ArrowLeft } from 'lucide-react';
+import { CalendarCheck, ArrowLeft, Users } from 'lucide-react';
 
 const dashboardSections = [
   {
@@ -14,7 +13,14 @@ const dashboardSections = [
     color: 'bg-green-500/10 text-green-600 dark:text-green-400',
     borderColor: 'border-green-500',
   },
-  // Add more sections relevant to Sunday School servants later if needed
+  {
+    title: 'حضور أبناء الفصل',
+    description: 'تسجيل حضور الأبناء في فصلك ومنحهم نقاطًا للمشاركة.',
+    href: '/sunday-school-servant-panel/class-attendance',
+    icon: Users,
+    color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    borderColor: 'border-blue-500',
+  },
 ];
 
 const cardVariants = {
