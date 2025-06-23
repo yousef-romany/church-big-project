@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { CalendarCheck, ArrowLeft, Users } from 'lucide-react';
+import { CalendarCheck, ArrowLeft, Users, Award } from 'lucide-react';
 
 const dashboardSections = [
   {
@@ -20,6 +20,14 @@ const dashboardSections = [
     icon: Users,
     color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     borderColor: 'border-blue-500',
+  },
+  {
+    title: 'نقاطي الخدمية',
+    description: 'عرض رصيدك من النقاط والأوسمة المكتسبة من الخدمة.',
+    href: '/sunday-school-servant-panel/points',
+    icon: Award,
+    color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    borderColor: 'border-amber-500',
   },
 ];
 
@@ -48,7 +56,7 @@ export default function SundaySchoolServantDashboardPage() {
       >
         مرحباً بك في لوحة تحكم خادم مدارس الأحد
       </motion.h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {dashboardSections.map((section, index) => (
           <motion.div key={index} variants={cardVariants} whileHover={{ y: -5 }}>
             <Link href={section.href} legacyBehavior passHref>

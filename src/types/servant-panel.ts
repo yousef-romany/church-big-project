@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 
 export type ServantTaskStatus = 'pending' | 'completed';
 
@@ -15,4 +16,26 @@ export interface ServantTask {
 export interface CompletedServantTask extends ServantTask {
   completedAt: Date;
   servantNotes?: string; // Notes added by the servant upon completion
+}
+
+// New types for servant points
+export interface ServantPointsEntry {
+    id: string;
+    reason: string;
+    points: number;
+    date: Date;
+}
+
+export interface ServantBadge {
+    name: string;
+    icon: LucideIcon;
+    date: Date;
+}
+
+export interface ServantPointsData {
+    totalPoints: number;
+    level: string;
+    pointsToNextLevel: number;
+    history: ServantPointsEntry[];
+    badges: ServantBadge[];
 }
