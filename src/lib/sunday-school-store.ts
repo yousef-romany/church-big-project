@@ -1,12 +1,14 @@
 
 'use client';
-import type { SundaySchoolServant, SundaySchoolAttendance, ServingDay, AttendanceStatus, SundaySchoolChild } from '@/types/sunday-school';
+import type { SundaySchoolServant, SundaySchoolAttendance, ServingDay, AttendanceStatus, SundaySchoolChild, SundaySchoolChildAttendance } from '@/types/sunday-school';
 import { format, parseISO, getDay } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
 const SERVANTS_KEY = 'sundaySchoolServants_v2';
 const ATTENDANCE_KEY = 'sundaySchoolAttendance_v2';
 const CHILDREN_KEY = 'sundaySchoolChildren_v1';
+const CHILDREN_ATTENDANCE_KEY = 'sundaySchoolChildrenAttendance_v1';
+
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
@@ -29,7 +31,7 @@ export const getSundaySchoolServants = (): SundaySchoolServant[] => {
     }
     localDefaultServantIds = [];
     const initialServants = defaultServantsData.map(sData => {
-      const newServant = { ...sData, id: generateId(), isActive: true };
+      const newServant = { ...sData, id: `servant${localDefaultServantIds.length + 1}_ss_mock_id`, isActive: true };
       localDefaultServantIds.push(newServant.id);
       return newServant;
     });
@@ -209,7 +211,7 @@ export const getSundaySchoolChildren = (): SundaySchoolChild[] => {
     if (stored) {
       return JSON.parse(stored);
     }
-    const initialChildren = defaultChildrenData.map(c => ({ ...c, id: `child_${generateId()}` }));
+    const initialChildren = defaultChildrenData.map(c => ({ ...c, id: `child_${c.qrCode}` }));
     saveSundaySchoolChildren(initialChildren);
     return initialChildren;
   } catch (e) {
@@ -223,21 +225,96 @@ export const saveSundaySchoolChildren = (children: SundaySchoolChild[]): void =>
   localStorage.setItem(CHILDREN_KEY, JSON.stringify(children));
 };
 
+export const getSundaySchoolChildrenAttendance = (): SundaySchoolChildAttendance[] => {
+    if (typeof window === 'undefined') return [];
+    try {
+        const stored = localStorage.getItem(CHILDREN_ATTENDANCE_KEY);
+        if (stored) return JSON.parse(stored);
+        
+        // Populate with some default data if empty
+        const children = getSundaySchoolChildren();
+        const defaultAttendance: SundaySchoolChildAttendance[] = [];
+        if (children.length > 0) {
+            const today = new Date();
+            for (let i = 0; i < 14; i++) { // last 2 weeks
+                const date = new Date();
+                date.setDate(today.getDate() - i);
+                const dayOfWeek = getDay(date);
+                if (dayOfWeek === 4 || dayOfWeek === 5) { // Thursday or Friday
+                    children.forEach(child => {
+                        if (Math.random() > 0.3) { // 70% chance of attending
+                            defaultAttendance.push({
+                                id: generateId(),
+                                childId: child.id,
+                                date: format(date, 'yyyy-MM-dd'),
+                                serviceDay: dayOfWeek === 4 ? 'Thursday' : 'Friday',
+                                pointsAwarded: 10,
+                                recordedByPriest: Math.random() > 0.5,
+                                recordedByServantId: Math.random() < 0.5 ? 'servant1_ss_mock_id' : undefined
+                            });
+                        }
+                    });
+                }
+            }
+            saveSundaySchoolChildrenAttendance(defaultAttendance);
+            return defaultAttendance;
+        }
+        return [];
+    } catch (e) {
+        console.error("Failed to parse children attendance from localStorage", e);
+        return [];
+    }
+};
+
+export const saveSundaySchoolChildrenAttendance = (records: SundaySchoolChildAttendance[]): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(CHILDREN_ATTENDANCE_KEY, JSON.stringify(records));
+};
+
+export const getChildAttendanceForDate = (childId: string, date: string): SundaySchoolChildAttendance | undefined => {
+    return getSundaySchoolChildrenAttendance().find(r => r.childId === childId && r.date === date);
+};
+
 export const findChildByQrCode = (qrCode: string): SundaySchoolChild | undefined => {
   const children = getSundaySchoolChildren();
   return children.find(child => child.qrCode === qrCode);
 };
 
-export const recordChildAttendance = (childId: string): SundaySchoolChild | null => {
+export const recordChildAttendance = (childId: string, servantId?: string, recordedByPriest?: boolean): {success: boolean, child: SundaySchoolChild | null, message: string} => {
   const children = getSundaySchoolChildren();
   const childIndex = children.findIndex(c => c.id === childId);
-  if (childIndex > -1) {
-    children[childIndex].lastAttendance = new Date().toISOString();
-    children[childIndex].points += 10;
-    saveSundaySchoolChildren(children);
-    return children[childIndex];
+  
+  if (childIndex === -1) {
+    return { success: false, child: null, message: "لم يتم العثور على الابن." };
   }
-  return null;
+
+  const today = new Date();
+  const todayDateString = format(today, 'yyyy-MM-dd');
+  const todayServiceDay = getDay(today) === 4 ? 'Thursday' : 'Friday';
+
+  const existingRecord = getChildAttendanceForDate(childId, todayDateString);
+  if (existingRecord) {
+      return { success: false, child: children[childIndex], message: "تم تسجيل حضور هذا الابن بالفعل اليوم." };
+  }
+  
+  const attendanceRecords = getSundaySchoolChildrenAttendance();
+  const newRecord: SundaySchoolChildAttendance = {
+      id: generateId(),
+      childId: childId,
+      date: todayDateString,
+      serviceDay: todayServiceDay,
+      pointsAwarded: 10,
+      recordedByServantId: servantId,
+      recordedByPriest: recordedByPriest
+  };
+  attendanceRecords.push(newRecord);
+  saveSundaySchoolChildrenAttendance(attendanceRecords);
+
+  children[childIndex].lastAttendance = today.toISOString();
+  children[childIndex].points += 10;
+  saveSundaySchoolChildren(children);
+
+  return { success: true, child: children[childIndex], message: "تم تسجيل الحضور بنجاح." };
 };
 
 export const awardPointsToChild = (childId: string, points: number): SundaySchoolChild | null => {

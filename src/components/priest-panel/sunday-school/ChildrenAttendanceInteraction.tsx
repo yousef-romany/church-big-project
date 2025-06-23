@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, Camera, Check, Star, User, Calendar, XCircle, Award } from 'lucide-react';
+import { QrCode, Camera, Check, Star, User, Calendar, XCircle, Award, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isToday } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
 import type { SundaySchoolChild } from '@/types/sunday-school';
-import { findChildByQrCode, recordChildAttendance, awardPointsToChild } from '@/lib/sunday-school-store';
+import { findChildByQrCode, recordChildAttendance, awardPointsToChild, getChildAttendanceForDate } from '@/lib/sunday-school-store';
 
 const quickPoints = [5, 10, 15, 20];
 
@@ -25,6 +25,7 @@ export default function ChildrenAttendanceInteraction() {
   const [qrCodeInput, setQrCodeInput] = useState('');
   const [scannedChild, setScannedChild] = useState<SundaySchoolChild | null>(null);
   const [pointsToAdd, setPointsToAdd] = useState<number | string>('');
+  const [alreadyRecordedToday, setAlreadyRecordedToday] = useState(false);
 
   useEffect(() => {
     const getCameraPermission = async () => {
@@ -54,6 +55,16 @@ export default function ChildrenAttendanceInteraction() {
     };
   }, []);
 
+  useEffect(() => {
+    if (scannedChild) {
+      const todayString = format(new Date(), 'yyyy-MM-dd');
+      const todaysRecord = getChildAttendanceForDate(scannedChild.id, todayString);
+      setAlreadyRecordedToday(!!todaysRecord);
+    } else {
+      setAlreadyRecordedToday(false);
+    }
+  }, [scannedChild]);
+
   const handleQrSubmit = () => {
     if (!qrCodeInput) return;
     const child = findChildByQrCode(qrCodeInput);
@@ -75,12 +86,19 @@ export default function ChildrenAttendanceInteraction() {
 
   const handleRecordAttendance = () => {
     if (!scannedChild) return;
-    const updatedChild = recordChildAttendance(scannedChild.id);
-    if (updatedChild) {
-      setScannedChild(updatedChild);
+    const result = recordChildAttendance(scannedChild.id, undefined, true);
+    if (result.success && result.child) {
+      setScannedChild(result.child);
+      setAlreadyRecordedToday(true);
       toast({
         title: "تم تسجيل الحضور",
-        description: `تم تسجيل حضور ${updatedChild.name} ومنحه 10 نقاط للمواظبة.`,
+        description: `تم تسجيل حضور ${result.child.name} ومنحه 10 نقاط للمواظبة.`,
+      });
+    } else {
+      toast({
+        title: "خطأ",
+        description: result.message,
+        variant: "destructive",
       });
     }
   };
@@ -174,13 +192,20 @@ export default function ChildrenAttendanceInteraction() {
                         </Button>
                     </CardHeader>
                     <CardContent className="space-y-4 flex-grow">
-                        <Button 
-                            onClick={handleRecordAttendance} 
-                            className="w-full bg-green-600 hover:bg-green-700" 
-                            size="lg"
-                        >
-                            <Check className="me-2 h-5 w-5" /> تسجيل حضور اليوم (+10 نقاط)
-                        </Button>
+                        {alreadyRecordedToday ? (
+                             <div className="w-full flex items-center justify-center p-3 rounded-md bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                                <CheckCircle className="me-2 h-5 w-5" /> تم تسجيل الحضور لهذا اليوم.
+                            </div>
+                        ) : (
+                             <Button 
+                                onClick={handleRecordAttendance} 
+                                className="w-full bg-green-600 hover:bg-green-700" 
+                                size="lg"
+                            >
+                                <Check className="me-2 h-5 w-5" /> تسجيل حضور اليوم (+10 نقاط)
+                            </Button>
+                        )}
+                       
                         <div className="space-y-2">
                              <h4 className="font-semibold text-center text-primary">منح نقاط إضافية (للمشاركة)</h4>
                              <div className="flex gap-2">

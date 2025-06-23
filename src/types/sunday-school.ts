@@ -1,4 +1,5 @@
 
+
 export type ServingDay = 'Thursday' | 'Friday';
 
 export interface SundaySchoolServant {
@@ -31,4 +32,14 @@ export interface SundaySchoolChild {
     points: number;
     avatarUrl: string;
     lastAttendance: string; // ISO date string
+}
+
+export interface SundaySchoolChildAttendance {
+  id: string;
+  childId: string;
+  date: string; // YYYY-MM-DD
+  serviceDay: ServingDay;
+  recordedByServantId?: string;
+  recordedByPriest?: boolean;
+  pointsAwarded: number;
 }
