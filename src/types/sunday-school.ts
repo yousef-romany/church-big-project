@@ -24,3 +24,11 @@ export interface SundaySchoolAttendance {
   isGeoVerified?: boolean; // True if servant was within geo-fence when self-recording
 }
 
+export interface SundaySchoolChild {
+    id: string;
+    name: string;
+    qrCode: string; // The unique string in the QR code
+    points: number;
+    avatarUrl: string;
+    lastAttendance: string; // ISO date string
+}

@@ -1,15 +1,16 @@
 
 'use client';
-import type { SundaySchoolServant, SundaySchoolAttendance, ServingDay, AttendanceStatus } from '@/types/sunday-school';
+import type { SundaySchoolServant, SundaySchoolAttendance, ServingDay, AttendanceStatus, SundaySchoolChild } from '@/types/sunday-school';
 import { format, parseISO, getDay } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
-const SERVANTS_KEY = 'sundaySchoolServants_v2'; // Version bump
-const ATTENDANCE_KEY = 'sundaySchoolAttendance_v2'; // Version bump
+const SERVANTS_KEY = 'sundaySchoolServants_v2';
+const ATTENDANCE_KEY = 'sundaySchoolAttendance_v2';
+const CHILDREN_KEY = 'sundaySchoolChildren_v1';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
-let localDefaultServantIds: string[] = []; // Used to link default attendance to default servants
+let localDefaultServantIds: string[] = []; 
 
 const defaultServantsData: Omit<SundaySchoolServant, 'id' | 'isActive'>[] = [
   { name: 'الخادم مينا جرجس', contactNumber: '01012345678', birthDate: '1990-05-15', servingDays: ['Thursday', 'Friday'] },
@@ -26,8 +27,7 @@ export const getSundaySchoolServants = (): SundaySchoolServant[] => {
     if (stored) {
       return JSON.parse(stored);
     }
-    // Initialize with default servants
-    localDefaultServantIds = []; // Clear before repopulating
+    localDefaultServantIds = [];
     const initialServants = defaultServantsData.map(sData => {
       const newServant = { ...sData, id: generateId(), isActive: true };
       localDefaultServantIds.push(newServant.id);
@@ -64,24 +64,22 @@ export const updateSundaySchoolServant = (updatedServant: SundaySchoolServant): 
   return null;
 };
 
-
 const populateDefaultAttendance = (): SundaySchoolAttendance[] => {
   const defaultAttendanceRecords: Omit<SundaySchoolAttendance, 'id'>[] = [];
-  // Ensure localDefaultServantIds is populated if it's empty (e.g., first call)
   if (localDefaultServantIds.length === 0) {
-     getSundaySchoolServants(); // This will populate localDefaultServantIds
+     getSundaySchoolServants();
   }
-  if (localDefaultServantIds.length === 0) return []; // Still no servants, can't create attendance
+  if (localDefaultServantIds.length === 0) return [];
 
-  const servants = getSundaySchoolServants(); // Get the full servant list to access servingDays
+  const servants = getSundaySchoolServants();
 
   const today = new Date();
   const datesToConsider: Date[] = [];
-  for (let i = 0; i < 7; i++) { // Last 7 days
+  for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const dayOfWeek = getDay(d); // 0 for Sunday, ..., 4 for Thursday, 5 for Friday
-    if (dayOfWeek === 4 || dayOfWeek === 5) { // Only Thursdays and Fridays
+    const dayOfWeek = getDay(d);
+    if (dayOfWeek === 4 || dayOfWeek === 5) {
       datesToConsider.push(d);
     }
   }
@@ -97,14 +95,14 @@ const populateDefaultAttendance = (): SundaySchoolAttendance[] => {
       const serviceDayForRecord: ServingDay = getDay(dateObj) === 4 ? 'Thursday' : 'Friday';
 
       if (servant.servingDays.includes(serviceDayForRecord)) {
-        const status = statuses[(servantIndex + dateIndex + dateObj.getDate()) % statuses.length]; // Add date for more variation
+        const status = statuses[(servantIndex + dateIndex + dateObj.getDate()) % statuses.length];
         defaultAttendanceRecords.push({
           servantId,
           date: dateStr,
           serviceDay: serviceDayForRecord,
           status: status,
           notes: status === 'absent' ? 'غائب لظرف شخصي' : (status === 'excused' ? 'معذور لطارئ صحي' : (status === 'present' && Math.random() < 0.2 ? 'حضر متأخراً قليلاً' : undefined)),
-          recordedBy: 'priest', // Default recorded by priest
+          recordedBy: 'priest',
           selfRecordedAt: status === 'present' && Math.random() < 0.3 ? dateObj.toISOString() : undefined,
           isGeoVerified: status === 'present' && Math.random() < 0.7 ? true : undefined,
         });
@@ -140,12 +138,12 @@ export const saveSundaySchoolAttendance = (attendanceRecords: SundaySchoolAttend
 
 export const recordAttendance = (
   servantId: string,
-  date: string, // YYYY-MM-DD
+  date: string, 
   serviceDay: ServingDay,
   status: AttendanceStatus,
   notes?: string,
   recordedBy?: 'priest' | 'servant',
-  selfRecordedAt?: string, // ISO string
+  selfRecordedAt?: string,
   isGeoVerified?: boolean
 ): SundaySchoolAttendance => {
   const attendanceRecords = getSundaySchoolAttendance();
@@ -193,4 +191,62 @@ export const getAttendanceForServant = (servantId: string): SundaySchoolAttendan
   const allRecords = getSundaySchoolAttendance();
   return allRecords.filter(record => record.servantId === servantId)
                    .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+};
+
+
+// New functions for children
+const defaultChildrenData: Omit<SundaySchoolChild, 'id'>[] = [
+  { name: 'بيتر جورج', qrCode: 'SS-CHILD-001', points: 125, avatarUrl: 'https://picsum.photos/seed/child1/80/80', lastAttendance: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString() },
+  { name: 'مريم عادل', qrCode: 'SS-CHILD-002', points: 90, avatarUrl: 'https://picsum.photos/seed/child2/80/80', lastAttendance: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString() },
+  { name: 'يوحنا مينا', qrCode: 'SS-CHILD-003', points: 210, avatarUrl: 'https://picsum.photos/seed/child3/80/80', lastAttendance: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString() },
+  { name: 'فبرونيا كيرلس', qrCode: 'SS-CHILD-004', points: 55, avatarUrl: 'https://picsum.photos/seed/child4/80/80', lastAttendance: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString() },
+];
+
+export const getSundaySchoolChildren = (): SundaySchoolChild[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(CHILDREN_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    const initialChildren = defaultChildrenData.map(c => ({ ...c, id: `child_${generateId()}` }));
+    saveSundaySchoolChildren(initialChildren);
+    return initialChildren;
+  } catch (e) {
+    console.error("Failed to parse children from localStorage", e);
+    return [];
+  }
+};
+
+export const saveSundaySchoolChildren = (children: SundaySchoolChild[]): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(CHILDREN_KEY, JSON.stringify(children));
+};
+
+export const findChildByQrCode = (qrCode: string): SundaySchoolChild | undefined => {
+  const children = getSundaySchoolChildren();
+  return children.find(child => child.qrCode === qrCode);
+};
+
+export const recordChildAttendance = (childId: string): SundaySchoolChild | null => {
+  const children = getSundaySchoolChildren();
+  const childIndex = children.findIndex(c => c.id === childId);
+  if (childIndex > -1) {
+    children[childIndex].lastAttendance = new Date().toISOString();
+    children[childIndex].points += 10;
+    saveSundaySchoolChildren(children);
+    return children[childIndex];
+  }
+  return null;
+};
+
+export const awardPointsToChild = (childId: string, points: number): SundaySchoolChild | null => {
+  const children = getSundaySchoolChildren();
+  const childIndex = children.findIndex(c => c.id === childId);
+  if (childIndex > -1 && points > 0) {
+    children[childIndex].points += points;
+    saveSundaySchoolChildren(children);
+    return children[childIndex];
+  }
+  return null;
 };
