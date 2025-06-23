@@ -1,6 +1,17 @@
-// This file was moved from a different directory and its original path is now a placeholder.
-// The active file is now located at /src/app/visitation-servant-panel/dashboard/page.tsx
-// This placeholder can be removed if the file system supported deletions.
-export default function DeprecatedServantDashboardPage() {
-  return null;
+
+"use client";
+import ServantDashboardContent from '@/components/servant-panel/servant-dashboard-content';
+import { motion } from 'framer-motion';
+
+export default function ServantDashboardPage() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-8"
+    >
+      <ServantDashboardContent />
+    </motion.div>
+  );
 }

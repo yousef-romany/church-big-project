@@ -9,7 +9,7 @@ const dashboardSections = [
   {
     title: 'مهام الافتقاد',
     description: 'عرض وإدارة قائمة الأسر المطلوب زيارتها.',
-    href: '/servant-panel/tasks',
+    href: '/visitation-servant-panel/tasks',
     icon: ListChecks,
     color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     borderColor: 'border-sky-500',
@@ -17,7 +17,7 @@ const dashboardSections = [
   {
     title: 'المهام المنجزة',
     description: 'مراجعة سجل الزيارات التي قمت بها سابقًا.',
-    href: '/servant-panel/history',
+    href: '/visitation-servant-panel/history',
     icon: History,
     color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
     borderColor: 'border-teal-500',
@@ -47,7 +47,7 @@ export default function ServantDashboardContent() {
         className="text-3xl font-bold mb-8 text-center text-primary"
         variants={cardVariants}
       >
-        مرحباً بك في لوحة تحكم الخادم
+        مرحباً بك في لوحة تحكم خادم الافتقاد
       </motion.h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {dashboardSections.map((section, index) => (
