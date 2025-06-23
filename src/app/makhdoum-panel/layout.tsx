@@ -29,17 +29,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePathname } from 'next/navigation';
+import { MakhdoumRoleProvider, useMakhdoumRole } from '@/contexts/MakhdoumRoleContext';
+import RoleSwitcher from '@/components/makhdoum-panel/RoleSwitcher';
 
-const navItems = [
-  { href: "/makhdoum-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
-  { href: "/makhdoum-panel/tasks", icon: ClipboardList, label: "مهامي" },
-  { href: "/makhdoum-panel/points", icon: Star, label: "نقاطي" },
-  { href: "/makhdoum-panel/schedule", icon: Calendar, label: "جدولي" },
-  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
+const allNavItems = [
+  { href: "/makhdoum-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم", roles: ['regular', 'child', 'parent'] },
+  { href: "/makhdoum-panel/tasks", icon: ClipboardList, label: "مهامي", roles: ['regular'] },
+  { href: "/makhdoum-panel/points", icon: Star, label: "نقاطي", roles: ['child', 'parent'] },
+  { href: "/makhdoum-panel/schedule", icon: Calendar, label: "جدولي", roles: ['child'] },
+  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف", roles: ['regular', 'child', 'parent'] },
 ];
 
-export default function MakhdoumPanelLayout({ children }: { children: ReactNode }) {
+function MakhdoumPanelLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { role } = useMakhdoumRole();
+
+  const visibleNavItems = allNavItems.filter(item => item.roles.includes(role));
 
   return (
     <SidebarProvider defaultOpen>
@@ -54,7 +59,7 @@ export default function MakhdoumPanelLayout({ children }: { children: ReactNode 
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <SidebarMenuItem key={item.label}>
                 <Link href={item.href} legacyBehavior passHref>
                   <SidebarMenuButton
@@ -95,7 +100,7 @@ export default function MakhdoumPanelLayout({ children }: { children: ReactNode 
                  <SidebarTrigger />
             </div>
           <div className="flex-1">
-            {/* Optional: Breadcrumbs or page title can go here */}
+            <RoleSwitcher />
           </div>
           <div className="flex items-center gap-4">
             <form className="hidden md:flex ml-auto flex-1 sm:flex-initial">
@@ -136,4 +141,13 @@ export default function MakhdoumPanelLayout({ children }: { children: ReactNode 
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+
+export default function MakhdoumPanelLayout({ children }: { children: ReactNode }) {
+    return (
+        <MakhdoumRoleProvider>
+            <MakhdoumPanelLayoutContent>{children}</MakhdoumPanelLayoutContent>
+        </MakhdoumRoleProvider>
+    )
 }

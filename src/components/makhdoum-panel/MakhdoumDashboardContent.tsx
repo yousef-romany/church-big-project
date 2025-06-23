@@ -2,10 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ClipboardList, BookOpenCheck, Star, Calendar, ShieldCheck, ArrowLeft, Users, Baby, HandHelping } from 'lucide-react';
 import MyPointsDisplay from './MyPointsDisplay';
+import { useMakhdoumRole } from '@/contexts/MakhdoumRoleContext';
 
 const dashboardSections = {
   regular: [
@@ -48,7 +49,7 @@ const dashboardSections = {
     {
       title: 'متابعة الابن/الابنة',
       description: 'اطلع على نقاط ابنك/ابنتك وتأكد من انتظامه في أنشطة الكنيسة.',
-      href: '/makhdoum-panel/points', // This will lead to their own points page, but parent view is shown below
+      href: '/makhdoum-panel/points',
       icon: ShieldCheck,
       color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
       borderColor: 'border-rose-500',
@@ -104,6 +105,7 @@ const Section = ({ title, icon: Icon, cards }: { title: string, icon: React.Elem
 );
 
 export default function MakhdoumDashboardContent() {
+  const { role } = useMakhdoumRole();
 
   return (
     <motion.div
@@ -114,20 +116,35 @@ export default function MakhdoumDashboardContent() {
     >
       <motion.div variants={cardVariants} className="mb-12 text-center">
         <h1 className="text-3xl font-bold text-primary">أهلاً بك في بوابتك الروحية</h1>
-        <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">هنا تجد كل الخدمات المخصصة لمتابعة حياتك الروحية والكنسية، سواء كنت مخدومًا عامًا، أو ابنًا، أو ولي أمر.</p>
+        <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">هنا تجد كل الخدمات المخصصة لمتابعة حياتك الروحية والكنسية. استخدم القائمة في الأعلى للتنقل بين أدوار العرض المختلفة.</p>
       </motion.div>
-
-      <Section title="خدمات عامة" icon={Users} cards={dashboardSections.regular} />
-      <Section title="خدمات الأبناء (الأطفال والشباب)" icon={Baby} cards={dashboardSections.child} />
-      <Section title="خدمات أولياء الأمور" icon={HandHelping} cards={dashboardSections.parent} />
       
-      <motion.div variants={cardVariants} className="mt-8">
-         <div className="flex items-center mb-6">
-            <ShieldCheck className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-bold text-primary ms-3">متابعة الأبناء (مثال)</h2>
-        </div>
-         <MyPointsDisplay isParentView={true} />
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+            key={role}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+        >
+            {role === 'regular' && <Section title="خدماتي" icon={Users} cards={dashboardSections.regular} />}
+            
+            {role === 'child' && <Section title="خدمات الأبناء" icon={Baby} cards={dashboardSections.child} />}
+
+            {role === 'parent' && (
+                <>
+                <Section title="خدمات ولي الأمر" icon={HandHelping} cards={dashboardSections.parent} />
+                <motion.div variants={cardVariants} className="mt-8">
+                    <div className="flex items-center mb-6">
+                        <ShieldCheck className="h-8 w-8 text-primary" />
+                        <h2 className="text-2xl font-bold text-primary ms-3">متابعة الأبناء (مثال)</h2>
+                    </div>
+                    <MyPointsDisplay isParentView={true} />
+                </motion.div>
+                </>
+            )}
+        </motion.div>
+      </AnimatePresence>
 
     </motion.div>
   );
