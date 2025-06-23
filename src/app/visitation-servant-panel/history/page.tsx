@@ -1,21 +1,6 @@
-
-"use client";
-import CompletedTasksHistory from '@/components/servant-panel/completed-tasks-history';
-import { motion } from 'framer-motion';
-
-export default function VisitationServantHistoryPage() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-8"
-    >
-      <div>
-        <h1 className="text-3xl font-bold text-primary">المهام المنجزة (الافتقاد)</h1>
-        <p className="text-muted-foreground">سجل بالزيارات التي قمت بإتمامها والملاحظات المسجلة.</p>
-      </div>
-      <CompletedTasksHistory />
-    </motion.div>
-  );
+// This file was moved from a different directory and its original path is now a placeholder.
+// The active file is now located at /src/app/visitation-servant-panel/history/page.tsx
+// This placeholder can be removed if the file system supported deletions.
+export default function DeprecatedServantHistoryPage() {
+  return null;
 }
