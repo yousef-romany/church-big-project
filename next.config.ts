@@ -27,7 +27,7 @@ const withPWA = withPWAInit({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: false, // Explicitly enable PWA in all environments for testing install prompt
+  disable: process.env.NODE_ENV === 'development',
   runtimeCaching, 
   buildExcludes: [/middleware-manifest\.json$/], 
   fallbacks: {
