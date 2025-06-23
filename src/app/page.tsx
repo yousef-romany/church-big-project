@@ -47,8 +47,8 @@ const userSections = [
   {
     title: 'بوابة خدام الافتقاد',
     description: 'استلام مهام الافتقاد، تسجيل الزيارات، وتقديم تقارير الخدمة بشكل مبسط.',
-    iconName: 'Footprints', // Changed from Users
-    href: '/auth/servant/login', // Will now be VisitationServantLoginPage
+    iconName: 'Footprints',
+    href: '/auth/servant/login',
     animation: { type: 'fadeScale' },
     delay: 0.3,
     color: 'text-purple-500', 
@@ -58,8 +58,8 @@ const userSections = [
   {
     title: 'بوابة خدام مدارس الأحد',
     description: 'تسجيل الحضور ذاتيًا، وعرض سجل الخدمة الخاص بمدارس الأحد.',
-    iconName: 'CalendarCheck', // New icon
-    href: '/auth/sunday-school-servant/login', // New login path
+    iconName: 'CalendarCheck',
+    href: '/auth/sunday-school-servant/login',
     animation: { type: 'slide', direction: 'left' },
     delay: 0.4,
     color: 'text-orange-500', 
@@ -414,5 +414,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-
