@@ -3,10 +3,11 @@
 import type { ServantTask } from '@/types/servant-panel';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, MapPin, User, MessageSquare, Edit3 } from 'lucide-react';
+import { CheckCircle, MapPin, User, MessageSquare, Edit3, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -125,6 +126,14 @@ export default function TaskList({ servantId }: TaskListProps) {
                   <Edit3 className="me-2 h-4 w-4" /> 
                   {editingNotesTaskId === task.id ? "إخفاء الملاحظات" : "إضافة/تعديل ملاحظة"}
                 </Button>
+                {task.latitude && task.longitude && (
+                    <Button asChild variant="secondary" className="w-full sm:w-auto">
+                        <Link href={`https://www.google.com/maps/search/?api=1&query=${task.latitude},${task.longitude}`} target="_blank" rel="noopener noreferrer">
+                            <Map className="me-2 h-4 w-4" />
+                            اذهب للموقع
+                        </Link>
+                    </Button>
+                )}
                 <Button onClick={() => handleMarkAsVisited(task.id)} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white">
                   <CheckCircle className="me-2 h-4 w-4" /> تمت الزيارة
                 </Button>

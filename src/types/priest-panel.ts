@@ -38,6 +38,8 @@ export interface PriestPanelFamily {
   visitationStatus?: VisitationFamilyStatus;
   lastVisited?: Date;
   notes?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface PriestAvailabilitySlot {

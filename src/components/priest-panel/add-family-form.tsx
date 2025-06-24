@@ -1,6 +1,7 @@
 
 "use client";
 import type { PriestPanelFamily, FamilyMember } from '@/types/priest-panel';
+import { useState } from 'react';
 import { useForm, useFieldArray, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,7 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { UserPlus, Users, MapPin, Phone, Trash2, PlusCircle } from 'lucide-react';
+import { UserPlus, Users, MapPin, Phone, Trash2, PlusCircle, Loader2 } from 'lucide-react';
+import { getGeoLocation } from '@/lib/geo-utils';
 
 const familyMemberSchema = z.object({
   id: z.string().optional(), // For existing members during edit, or default for new ones
@@ -33,6 +35,14 @@ const addFamilySchema = z.object({
   phoneNumber: z.string().regex(/^01[0-2,5]{1}[0-9]{8}$/, { message: "رقم الموبايل غير صالح" }),
   address: z.string().min(10, { message: "العنوان يجب أن يكون 10 أحرف على الأقل" }),
   region: z.string().min(2, { message: "المنطقة قصيرة جدًا"}).optional(),
+  latitude: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+    z.number({ invalid_type_error: "خط العرض يجب أن يكون رقمًا" }).optional()
+  ),
+  longitude: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+    z.number({ invalid_type_error: "خط الطول يجب أن يكون رقمًا" }).optional()
+  ),
   members: z.array(familyMemberSchema).optional(),
   notes: z.string().optional(),
 });
@@ -46,6 +56,8 @@ const sectionVariants = {
 
 export default function AddFamilyForm() {
   const { toast } = useToast();
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  
   const form = useForm<AddFamilyFormData>({
     resolver: zodResolver(addFamilySchema),
     defaultValues: {
@@ -54,6 +66,8 @@ export default function AddFamilyForm() {
       phoneNumber: '',
       address: '',
       region: '',
+      latitude: undefined,
+      longitude: undefined,
       members: [],
       notes: '',
     },
@@ -72,6 +86,28 @@ export default function AddFamilyForm() {
     });
     form.reset(); // Reset form after submission
   };
+
+  const handleFetchLocation = async () => {
+    setIsFetchingLocation(true);
+    try {
+        const { latitude, longitude } = await getGeoLocation();
+        form.setValue('latitude', parseFloat(latitude.toFixed(6)));
+        form.setValue('longitude', parseFloat(longitude.toFixed(6)));
+        toast({
+            title: "تم تحديد الموقع بنجاح!",
+            description: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+        });
+    } catch (error) {
+        toast({
+            title: "فشل تحديد الموقع",
+            description: (error as Error).message || "يرجى التأكد من تفعيل خدمات الموقع.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsFetchingLocation(false);
+    }
+  };
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }}>
@@ -154,7 +190,7 @@ export default function AddFamilyForm() {
           <motion.section variants={sectionVariants} initial="hidden" animate="visible" transition={{delay:0.2}}>
             <Card className="shadow-xl overflow-hidden">
               <CardHeader className="bg-primary/10">
-                <CardTitle className="flex items-center"><MapPin className="me-2 h-6 w-6 text-primary" /> العنوان والتفاصيل الإضافية</CardTitle>
+                <CardTitle className="flex items-center"><MapPin className="me-2 h-6 w-6 text-primary" /> العنوان والموقع الجغرافي</CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 <FormField control={form.control} name="address" render={({ field }) => (
@@ -163,12 +199,20 @@ export default function AddFamilyForm() {
                 <FormField control={form.control} name="region" render={({ field }) => (
                   <FormItem><FormLabel>المنطقة/الحي</FormLabel><FormControl><Input placeholder="مثال: شبرا، المعادي، ..." {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <div className="space-y-2">
-                  <Label>الموقع على الخريطة (تقريبي)</Label>
-                  <div className="aspect-video w-full rounded-lg overflow-hidden border shadow-sm">
-                    <Image src="https://picsum.photos/seed/churchmapform/800/450" alt="خريطة الموقع" width={800} height={450} className="w-full h-full object-cover" data-ai-hint="map location picker" />
-                  </div>
-                   <p className="text-xs text-muted-foreground">ملاحظة: سيتم تفعيل اختيار الموقع الدقيق على الخريطة قريبًا.</p>
+                 <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="latitude" render={({ field }) => (
+                            <FormItem><FormLabel>خط العرض (Latitude)</FormLabel><FormControl><Input type="number" step="any" placeholder="يتم تحديده تلقائيًا" {...field} readOnly className="bg-background" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="longitude" render={({ field }) => (
+                            <FormItem><FormLabel>خط الطول (Longitude)</FormLabel><FormControl><Input type="number" step="any" placeholder="يتم تحديده تلقائيًا" {...field} readOnly className="bg-background" /></FormControl><FormMessage /></FormItem>
+                        )} />
+                    </div>
+                    <Button type="button" variant="outline" onClick={handleFetchLocation} disabled={isFetchingLocation} className="w-full">
+                        {isFetchingLocation ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <MapPin className="me-2 h-4 w-4" />}
+                        {isFetchingLocation ? 'جاري تحديد الموقع...' : 'تحديد الموقع الحالي للجهاز'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">ملاحظة: هذا الخيار يسجل موقعك الحالي كموقع للأسرة. للدقة، استخدم هذا الخيار أثناء تواجدك في منزل الأسرة.</p>
                 </div>
                 <FormField control={form.control} name="notes" render={({ field }) => (
                     <FormItem><FormLabel>ملاحظات إضافية</FormLabel><FormControl><Textarea placeholder="أي تفاصيل أخرى عن الأسرة ( اختيارية )..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>

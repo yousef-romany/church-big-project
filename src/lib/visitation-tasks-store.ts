@@ -35,6 +35,8 @@ export function assignVisitationTask(taskData: Omit<ServantTask, 'id' | 'status'
     id: generateId(),
     status: 'pending',
     assignedAt: new Date(),
+    latitude: taskData.latitude,
+    longitude: taskData.longitude,
   };
   const updatedTasks = [...allTasks, newTask];
   saveVisitationTasks(updatedTasks);

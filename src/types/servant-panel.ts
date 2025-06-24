@@ -1,4 +1,5 @@
 
+
 import type { LucideIcon } from 'lucide-react';
 
 export type ServantTaskStatus = 'pending' | 'completed';
@@ -14,6 +15,8 @@ export interface ServantTask {
   assignedAt: Date;
   servantId: string; // The ID of the servant this task is assigned to
   servantNotes?: string; // Notes can be added before completion
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface CompletedServantTask extends ServantTask {

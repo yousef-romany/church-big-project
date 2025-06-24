@@ -12,12 +12,12 @@ import { SendHorizonal, Users, MapPin, Search } from 'lucide-react';
 import { assignVisitationTask } from '@/lib/visitation-tasks-store';
 
 const mockFamilies: PriestPanelFamily[] = [
-  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم.' },
-  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [{id: 'c3', name: 'فادي', age: 16, gender: 'ذكر', educationLevel: 'أولى ثانوي'}], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5) },
-  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا', visitationStatus: 'تواصل فقط'},
-  { id: 'fam4', fatherName: 'بولس حليم', motherName: 'أماني ذكي', members: [{id: 'c4', name: 'ميرنا', age: 22, gender: 'أنثى', educationLevel: 'خريجة جامعية'}], address: '120 شارع التحرير، الدقي', phoneNumber: '01587654300', region: 'الدقي', visitationStatus: 'تمت الزيارة', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)},
-  { id: 'fam5', fatherName: 'المرحوم مراد فوزي', motherName: 'الأم أنجيل', members: [{id: 'c6', name: 'يوستينا', age: 12, gender: 'أنثى', educationLevel: 'سادسة ابتدائي'}], address: 'عمارة 5، مساكن الزهور، مدينة نصر', phoneNumber: '01011223344', region: 'مدينة نصر', visitationStatus: 'عاجل'},
-  { id: 'fam6', fatherName: 'فايز كرم', motherName: 'سلوى إبراهيم', members: [{id:'c7', name:'ديفيد', age:5, gender:'ذكر', educationLevel:'KG2'}], address: '23 شارع الحرية، عين شمس', phoneNumber: '01276543210', region: 'عين شمس', visitationStatus: 'عادي'},
+  { id: 'fam1', fatherName: 'جرجس رؤوف', motherName: 'مارينا أسعد', members: [{id: 'c1', name: 'بيتر', age: 10, gender: 'ذكر', educationLevel: 'رابع ابتدائي'}, {id: 'c2', name: 'سارة', age: 7, gender: 'أنثى', educationLevel: 'أولى ابتدائي'}], address: '15 شارع النصر، المعادي', phoneNumber: '01234567890', region: 'المعادي', visitationStatus: 'عاجل', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), notes: 'الأب مريض ويحتاج دعم.', latitude: 29.9739, longitude: 31.2582 },
+  { id: 'fam2', fatherName: 'مينا فكري', motherName: 'تريزا لمعي', members: [{id: 'c3', name: 'فادي', age: 16, gender: 'ذكر', educationLevel: 'أولى ثانوي'}], address: '30 شارع 9، المقطم', phoneNumber: '01098765431', region: 'المقطم', visitationStatus: 'عادي', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), latitude: 30.0075, longitude: 31.3111 },
+  { id: 'fam3', fatherName: 'صموئيل وهيب', motherName: 'إيرين فهيم', members: [], address: '7 شارع الكنيسة، شبرا', phoneNumber: '01123456782', region: 'شبرا', visitationStatus: 'تواصل فقط', latitude: 30.0821, longitude: 31.2483 },
+  { id: 'fam4', fatherName: 'بولس حليم', motherName: 'أماني ذكي', members: [{id: 'c4', name: 'ميرنا', age: 22, gender: 'أنثى', educationLevel: 'خريجة جامعية'}], address: '120 شارع التحرير، الدقي', phoneNumber: '01587654300', region: 'الدقي', visitationStatus: 'تمت الزيارة', lastVisited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), latitude: 30.0384, longitude: 31.2069 },
+  { id: 'fam5', fatherName: 'المرحوم مراد فوزي', motherName: 'الأم أنجيل', members: [{id: 'c6', name: 'يوستينا', age: 12, gender: 'أنثى', educationLevel: 'سادسة ابتدائي'}], address: 'عمارة 5، مساكن الزهور، مدينة نصر', phoneNumber: '01011223344', region: 'مدينة نصر', visitationStatus: 'عاجل', latitude: 30.0688, longitude: 31.3364 },
+  { id: 'fam6', fatherName: 'فايز كرم', motherName: 'سلوى إبراهيم', members: [{id:'c7', name:'ديفيد', age:5, gender:'ذكر', educationLevel:'KG2'}], address: '23 شارع الحرية، عين شمس', phoneNumber: '01276543210', region: 'عين شمس', visitationStatus: 'عادي', latitude: 30.1173, longitude: 31.3204 },
 ];
 
 const mockServants = [
@@ -76,6 +76,8 @@ export default function SendServantForm() {
         mapLocationImageUrl: `https://picsum.photos/seed/${family.id}/600/300`, // Placeholder image
         notesFromPriest: family.notes,
         servantId: servant.id,
+        latitude: family.latitude,
+        longitude: family.longitude,
     });
     
     toast({
