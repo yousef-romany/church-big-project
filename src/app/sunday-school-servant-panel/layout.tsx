@@ -1,7 +1,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, CalendarCheck, Settings, Church, Search, ArrowRightToLine, Users, Award } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Settings, Church, Search, ArrowRightToLine, Users, Award, BookCopy } from 'lucide-react'; // Added BookCopy
 import {
   SidebarProvider,
   Sidebar,
@@ -33,6 +33,7 @@ const navItems = [
   { href: "/sunday-school-servant-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/sunday-school-servant-panel/my-attendance", icon: CalendarCheck, label: "سجل حضوري" },
   { href: "/sunday-school-servant-panel/class-attendance", icon: Users, label: "حضور الفصل" },
+  { href: "/sunday-school-servant-panel/content-management", icon: BookCopy, label: "إدارة المحتوى" }, // New Item
   { href: "/sunday-school-servant-panel/points", icon: Award, label: "نقاطي" },
 ];
 
