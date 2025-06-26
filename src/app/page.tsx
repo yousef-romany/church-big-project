@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone, Download, ExternalLink, Footprints, CalendarCheck } from 'lucide-react';
+import { Church, Building, UserSquare, Users, UserCheck, LogIn, Menu, Twitter, Facebook, Instagram, Youtube, ScrollText, Megaphone, Download, ExternalLink, Footprints, CalendarCheck, Baby, Shield, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import InstallPWAButton from '@/components/shared/InstallPWAButton';
@@ -26,23 +26,56 @@ const userSections = [
     title: 'بوابة إدارة الكنيسة',
     description: 'أدوات شاملة لإدارة شؤون الكنيسة، الإعلانات، والبيانات العامة بكفاءة وسهولة.',
     iconName: 'Building',
-    href: '/auth/admin/login', 
+    href: '/auth/admin/login',
     animation: { type: 'slide', direction: 'top' },
     delay: 0.1,
-    color: 'text-primary', 
-    bg: 'bg-primary/10', 
+    color: 'text-primary',
+    bg: 'bg-primary/10',
     buttonText: 'دخول الإدارة',
   },
   {
     title: 'بوابة الكهنة',
     description: 'متابعة خدمة الافتقاد، تنظيم مواعيد الاعترافات، وإدارة بيانات الأسر المخدومة وخدام مدارس الأحد.',
     iconName: 'UserSquare',
-    href: '/auth/priest/login', 
+    href: '/auth/priest/login',
     animation: { type: 'bounce' },
     delay: 0.2,
-    color: 'text-green-500', 
-    bg: 'bg-green-500/10', 
+    color: 'text-green-500',
+    bg: 'bg-green-500/10',
     buttonText: 'دخول الكهنة',
+  },
+  {
+    title: 'بوابة أولياء الأمور',
+    description: 'تابع حضور ونقاط أبنائك في مدارس الأحد والأنشطة الكنسية المختلفة.',
+    iconName: 'Shield',
+    href: '/auth/parent/login',
+    animation: { type: 'fadeScale' },
+    delay: 0.3,
+    color: 'text-rose-500',
+    bg: 'bg-rose-500/10',
+    buttonText: 'دخول ولي الأمر',
+  },
+  {
+    title: 'بوابة الأبناء',
+    description: 'اجمع النقاط، تابع جدولك، وشارك في الأنشطة الروحية والتعليمية.',
+    iconName: 'Baby',
+    href: '/auth/child/login',
+    animation: { type: 'slide', direction: 'left' },
+    delay: 0.4,
+    color: 'text-yellow-500',
+    bg: 'bg-yellow-500/10',
+    buttonText: 'دخول الأبناء',
+  },
+  {
+    title: 'بوابة المخدومين',
+    description: 'اطلب مواعيد الاعتراف، وتابع مهامك الروحية والخدمية.',
+    iconName: 'UserIcon',
+    href: '/auth/makhdoum/login',
+    animation: { type: 'slide', direction: 'bottom' },
+    delay: 0.5,
+    color: 'text-sky-500',
+    bg: 'bg-sky-500/10',
+    buttonText: 'دخول المخدومين',
   },
   {
     title: 'بوابة خدام الافتقاد',
@@ -50,9 +83,9 @@ const userSections = [
     iconName: 'Footprints',
     href: '/auth/servant/login',
     animation: { type: 'fadeScale' },
-    delay: 0.3,
-    color: 'text-purple-500', 
-    bg: 'bg-purple-500/10', 
+    delay: 0.6,
+    color: 'text-purple-500',
+    bg: 'bg-purple-500/10',
     buttonText: 'دخول خدام الافتقاد',
   },
   {
@@ -60,34 +93,26 @@ const userSections = [
     description: 'تسجيل الحضور ذاتيًا، وعرض سجل الخدمة الخاص بمدارس الأحد.',
     iconName: 'CalendarCheck',
     href: '/auth/sunday-school-servant/login',
-    animation: { type: 'slide', direction: 'left' },
-    delay: 0.4,
-    color: 'text-orange-500', 
-    bg: 'bg-orange-500/10', 
+    animation: { type: 'slide', direction: 'right' },
+    delay: 0.7,
+    color: 'text-orange-500',
+    bg: 'bg-orange-500/10',
     buttonText: 'دخول خدام م. الأحد',
-  },
-  {
-    title: 'بوابة المخدومين',
-    description: 'طلب مواعيد الاعتراف، الاطلاع على تعليمات الكنيسة، والمشاركة في الأنشطة الروحية.',
-    iconName: 'UserCheck',
-    href: '/auth/makhdoum/login', 
-    animation: { type: 'slide', direction: 'bottom' },
-    delay: 0.5,
-    color: 'text-yellow-500', 
-    bg: 'bg-yellow-500/10', 
-    buttonText: 'دخول المخدومين',
   },
 ];
 
 const iconComponents: { [key: string]: React.ElementType } = {
   Building,
   UserSquare,
-  Users, // Still used by "إدارة الرعية" in services section
+  Users,
   UserCheck,
   Megaphone,
   ScrollText,
-  Footprints, // Added
-  CalendarCheck, // Added
+  Footprints,
+  CalendarCheck,
+  Baby,
+  Shield,
+  UserIcon,
 };
 
 
@@ -112,8 +137,13 @@ const sectionAnimationVariants = {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6, ease: 'easeOut' }
   },
-  slide_left: { // New animation
+  slide_left: {
     initial: { opacity: 0, x: -50 },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.6, ease: 'easeOut' }
+  },
+  slide_right: {
+    initial: { opacity: 0, x: 50 },
     animate: { opacity: 1, x: 0 },
     transition: { duration: 0.6, ease: 'easeOut' }
   },
@@ -328,10 +358,10 @@ export default function LandingPage() {
               </p>
             </motion.div>
             
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8">
               {userSections.map((section) => {
                 const animationProps = section.animation.type === 'slide' 
-                  ? sectionAnimationVariants[`slide_${section.animation.direction as 'top' | 'bottom' | 'left'}`]
+                  ? sectionAnimationVariants[`slide_${section.animation.direction as 'top' | 'bottom' | 'left' | 'right'}`]
                   : sectionAnimationVariants[section.animation.type as 'bounce' | 'fadeScale'];
                 const IconComponent = iconComponents[section.iconName];
                 

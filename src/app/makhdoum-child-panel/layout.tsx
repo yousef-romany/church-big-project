@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookOpenCheck, Settings, Church, Search, ArrowRightToLine, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Star, Calendar, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -31,22 +31,22 @@ import {
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { href: "/makhdoum-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
-  { href: "/makhdoum-panel/tasks", icon: ClipboardList, label: "مهامي" },
-  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
+  { href: "/makhdoum-child-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
+  { href: "/makhdoum-child-panel/points", icon: Star, label: "نقاطي" },
+  { href: "/makhdoum-child-panel/schedule", icon: Calendar, label: "جدولي" },
 ];
 
-export default function RegularMakhdoumPanelLayout({ children }: { children: ReactNode }) {
+export default function ChildPanelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
     <SidebarProvider defaultOpen>
       <Sidebar side="right" collapsible="icon">
         <SidebarHeader className="p-4">
-          <Link href="/makhdoum-panel/dashboard" className="flex items-center gap-2">
+          <Link href="/makhdoum-child-panel/dashboard" className="flex items-center gap-2">
             <Church className="h-8 w-8 text-primary" />
             <h1 className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-              بوابة المخدوم
+              بوابة الأبناء
             </h1>
           </Link>
         </SidebarHeader>
@@ -112,8 +112,8 @@ export default function RegularMakhdoumPanelLayout({ children }: { children: Rea
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src="https://picsum.photos/seed/makhdoumuser/40/40" alt="مستخدم" data-ai-hint="user avatar" />
-                    <AvatarFallback>م</AvatarFallback>
+                    <AvatarImage src="https://picsum.photos/seed/childuser/40/40" alt="ابن" data-ai-hint="child avatar" />
+                    <AvatarFallback>أ</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -121,8 +121,6 @@ export default function RegularMakhdoumPanelLayout({ children }: { children: Rea
                 <DropdownMenuLabel>حسابي</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>الإعدادات</DropdownMenuItem>
-                <DropdownMenuItem>الدعم</DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

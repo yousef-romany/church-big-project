@@ -1,5 +1,4 @@
 
-
 import type { LucideIcon } from 'lucide-react';
 
 export interface ConfessionRequestFormInput {
@@ -32,4 +31,22 @@ export interface PriestData {
     id: string;
     name: string;
     churchName: string; // e.g., "كنيسة السيدة العذراء مريم بالزيتون"
+}
+
+// Types for Parent-Child Linking
+export interface LinkRequest {
+  id: string;
+  parentId: string;
+  parentName: string;
+  childId: string;
+  childName: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  requestedAt: string; // ISO date string
+}
+
+export interface LinkedChild {
+    id: string; // child's id
+    name: string;
+    avatarUrl: string;
+    points: number;
 }
