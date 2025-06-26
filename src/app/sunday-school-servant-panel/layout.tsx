@@ -83,7 +83,7 @@ export default function SundaySchoolServantPanelLayout({ children }: { children:
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/sunday-school-servant-panel/profile'}>
                     <Link href="/sunday-school-servant-panel/profile">
                         <UserIcon className="h-5 w-5 me-2" />
                         <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>

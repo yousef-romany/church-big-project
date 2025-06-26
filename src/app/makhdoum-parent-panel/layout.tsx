@@ -80,7 +80,7 @@ export default function ParentPanelLayout({ children }: { children: ReactNode })
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/makhdoum-parent-panel/profile'}>
                     <Link href="/makhdoum-parent-panel/profile">
                         <UserIcon className="h-5 w-5 me-2" />
                         <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>

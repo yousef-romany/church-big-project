@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePathname } from 'next/navigation';
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "الرئيسية" },
@@ -38,6 +39,8 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar side="right" collapsible="icon">
@@ -57,6 +60,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <SidebarMenuButton
                     className="w-full justify-start"
                     tooltip={{ children: item.label, side: "left" }}
+                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                   >
                     <item.icon className="h-5 w-5 me-2" />
                     <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -77,7 +81,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/dashboard/profile'}>
                     <Link href="/dashboard/profile">
                         <UserIcon className="h-5 w-5 me-2" />
                         <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>

@@ -59,7 +59,7 @@ export default function RegularMakhdoumPanelLayout({ children }: { children: Rea
                   <SidebarMenuButton
                     className="w-full justify-start"
                     tooltip={{ children: item.label, side: "left" }}
-                    isActive={pathname === item.href}
+                    isActive={pathname === item.href || (item.href !== "/makhdoum-panel/dashboard" && pathname.startsWith(item.href))}
                   >
                     <item.icon className="h-5 w-5 me-2" />
                     <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
@@ -80,7 +80,7 @@ export default function RegularMakhdoumPanelLayout({ children }: { children: Rea
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                 <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                 <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/makhdoum-panel/profile'}>
                     <Link href="/makhdoum-panel/profile">
                         <UserIcon className="h-5 w-5 me-2" />
                         <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>

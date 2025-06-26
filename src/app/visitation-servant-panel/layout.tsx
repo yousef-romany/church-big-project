@@ -82,7 +82,7 @@ export default function VisitationServantPanelLayout({ children }: { children: R
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/visitation-servant-panel/profile'}>
                     <Link href="/visitation-servant-panel/profile">
                         <UserIcon className="h-5 w-5 me-2" />
                         <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>
