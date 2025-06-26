@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog, Award } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog, Award, Plane } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -85,6 +85,13 @@ const allNavItems: CombinedNavItem[] = [
     icon: Award,
     items: [
       { href: "/priest-panel/events", icon: Award, label: "إدارة الفعاليات" },
+    ]
+  },
+  {
+    groupTitle: "إدارة الرحلات",
+    icon: Plane,
+    items: [
+      { href: "/priest-panel/trips", icon: Plane, label: "عرض وإدارة الرحلات" },
     ]
   },
   {

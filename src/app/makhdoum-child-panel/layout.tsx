@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Star, Calendar, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
+import { LayoutDashboard, Star, Calendar, Settings, Church, Search, ArrowRightToLine, Plane } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -34,6 +34,7 @@ const navItems = [
   { href: "/makhdoum-child-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/makhdoum-child-panel/points", icon: Star, label: "نقاطي" },
   { href: "/makhdoum-child-panel/schedule", icon: Calendar, label: "جدولي" },
+  { href: "/public-panel/trips", icon: Plane, label: "الرحلات المتاحة" },
 ];
 
 export default function ChildPanelLayout({ children }: { children: ReactNode }) {

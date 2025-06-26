@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookOpenCheck, Info, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
+import { LayoutDashboard, BookOpenCheck, Info, Settings, Church, Search, ArrowRightToLine, Plane } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -34,6 +34,7 @@ const navItems = [
   { href: "/public-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
   { href: "/public-panel/instructions", icon: Info, label: "تعليمات الكنيسة" },
+  { href: "/public-panel/trips", icon: Plane, label: "الرحلات المتاحة" },
 ];
 
 export default function PublicPanelLayout({ children }: { children: ReactNode }) {
