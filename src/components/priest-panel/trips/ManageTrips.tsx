@@ -21,7 +21,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DatePickerWithPresets } from '@/components/ui/DatePickerWithPresets';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { PlusCircle, Plane, Calendar, Users, BadgeDollarSign, Eye } from 'lucide-react';
+import { PlusCircle, Plane, Calendar, Users, BadgeDollarSign, Eye, ChevronDown } from 'lucide-react';
 import TripBookingsView from './TripBookingsView';
 
 const tripSchema = z.object({
@@ -92,6 +92,7 @@ export default function ManageTrips() {
                       <AccordionItem value="item-1" className="border-b-0">
                         <AccordionTrigger className="p-4 hover:no-underline bg-primary/5 rounded-t-lg">
                           <div className="font-semibold text-primary">1. المعلومات الأساسية</div>
+                          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionTrigger>
                         <AccordionContent className="p-4 pt-2 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -117,6 +118,7 @@ export default function ManageTrips() {
                       <AccordionItem value="item-2" className="border-b-0">
                         <AccordionTrigger className="p-4 hover:no-underline bg-primary/5">
                           <div className="font-semibold text-primary">2. السعة والتكلفة</div>
+                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionTrigger>
                         <AccordionContent className="p-4 pt-2 space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -134,6 +136,7 @@ export default function ManageTrips() {
                       <AccordionItem value="item-3" className="border-b-0">
                         <AccordionTrigger className="p-4 hover:no-underline bg-primary/5 rounded-b-lg">
                            <div className="font-semibold text-primary">3. تفاصيل الرحلة</div>
+                           <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                         </AccordionTrigger>
                         <AccordionContent className="p-4 pt-2 space-y-4">
                           <FormField control={form.control} name="overview" render={({ field }) => (
