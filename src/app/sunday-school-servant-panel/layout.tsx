@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, CalendarCheck, Settings, Church, Search, ArrowRightToLine, Users, Award, BookCopy, BookOpenCheck, Plane } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Settings, Church, Search, ArrowRightToLine, Users, Award, BookCopy, BookOpenCheck, Plane, User as UserIcon } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -83,9 +83,11 @@ export default function SundaySchoolServantPanelLayout({ children }: { children:
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "الإعدادات", side: "left" }}>
-                    <Settings className="h-5 w-5 me-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">الإعدادات</span>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                    <Link href="/sunday-school-servant-panel/profile">
+                        <UserIcon className="h-5 w-5 me-2" />
+                        <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>
+                    </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
            </SidebarMenu>
@@ -124,7 +126,7 @@ export default function SundaySchoolServantPanelLayout({ children }: { children:
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>حسابي</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>الإعدادات</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/sunday-school-servant-panel/profile">الملف الشخصي</Link></DropdownMenuItem>
                 <DropdownMenuItem>الدعم</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>

@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Link2, Settings, Church, Search, ArrowRightToLine, BookOpenCheck, Plane } from 'lucide-react';
+import { LayoutDashboard, Link2, Settings, Church, Search, ArrowRightToLine, BookOpenCheck, Plane, User as UserIcon } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -80,9 +80,11 @@ export default function ParentPanelLayout({ children }: { children: ReactNode })
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "الإعدادات", side: "left" }}>
-                    <Settings className="h-5 w-5 me-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">الإعدادات</span>
+                <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }}>
+                    <Link href="/makhdoum-parent-panel/profile">
+                        <UserIcon className="h-5 w-5 me-2" />
+                        <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>
+                    </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
            </SidebarMenu>
@@ -121,7 +123,7 @@ export default function ParentPanelLayout({ children }: { children: ReactNode })
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>حسابي</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>الإعدادات</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/makhdoum-parent-panel/profile">الملف الشخصي</Link></DropdownMenuItem>
                 <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
