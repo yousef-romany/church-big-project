@@ -1,39 +1,36 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getRandomDevotionalMessage, devotionalMessages } from '@/lib/devotional-messages';
+import { getDevotionalMessage } from '@/ai/flows/devotional-message-flow'; // Import the new AI flow
 import { RefreshCw, Sparkles } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const devotionalTopics = ['الإيمان', 'الرجاء', 'المحبة', 'الغفران', 'الشكر', 'الصبر', 'السلام'];
 
 export default function DevotionalMessageDisplay() {
   const [currentMessage, setCurrentMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchNewMessage = useCallback(() => {
+  const fetchNewMessage = useCallback(async () => {
     setIsLoading(true);
-    // Simulate a small delay for visual feedback if needed, or remove for instant change
-    setTimeout(() => {
-      setCurrentMessage(getRandomDevotionalMessage());
+    try {
+      const randomTopic = devotionalTopics[Math.floor(Math.random() * devotionalTopics.length)];
+      const message = await getDevotionalMessage(randomTopic);
+      setCurrentMessage(message);
+    } catch (error) {
+      console.error("Failed to fetch devotional message:", error);
+      setCurrentMessage("لا يمكن تحميل الرسالة الآن. حاول مرة أخرى.");
+    } finally {
       setIsLoading(false);
-    }, 300); // Short delay for animation
+    }
   }, []);
 
   useEffect(() => {
-    setCurrentMessage(getRandomDevotionalMessage()); // Initial message
-
-    const intervalId = setInterval(() => {
-      fetchNewMessage();
-    }, 5 * 60 * 1000); // Refresh every 5 minutes
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    fetchNewMessage(); // Fetch on initial load
   }, [fetchNewMessage]);
-
-  if (devotionalMessages.length === 0) {
-    return null; // Don't render if no messages are available
-  }
 
   return (
     <motion.div
@@ -47,7 +44,7 @@ export default function DevotionalMessageDisplay() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-primary flex items-center">
               <Sparkles className="h-4 w-4 me-1.5" />
-              رسالة اليوم
+              رسالة اليوم (AI)
             </CardTitle>
             <Button
               variant="ghost"
@@ -63,7 +60,10 @@ export default function DevotionalMessageDisplay() {
         </CardHeader>
         <CardContent className="text-xs text-primary/90 px-3 pb-3 min-h-[40px] flex items-center justify-center text-center">
           {isLoading ? (
-            <span className="italic">جاري تحميل رسالة جديدة...</span>
+            <div className="w-full space-y-1">
+                <Skeleton className="h-2 w-3/4 mx-auto bg-primary/20"/>
+                <Skeleton className="h-2 w-1/2 mx-auto bg-primary/20"/>
+            </div>
           ) : (
             <motion.p
               key={currentMessage} // Ensures animation on message change
