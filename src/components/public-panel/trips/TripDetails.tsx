@@ -19,6 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { BadgeDollarSign, Calendar, Check, CircleX, Info, List, Loader2, Map, MapPin, Ticket, User, Users, Plane } from 'lucide-react';
 
 interface TripDetailsProps {
@@ -81,7 +82,7 @@ export default function TripDetails({ tripId }: TripDetailsProps) {
   };
 
   const renderTextAsList = (text: string) => {
-      return text.split('\n').map((item, index) => item.trim() && <li key={index}>{item.trim()}</li>);
+      return text.split('\n').map((item, index) => item.trim() && <li key={index} className="mb-1">{item.trim()}</li>);
   }
 
   if (isLoading) {
@@ -113,21 +114,31 @@ export default function TripDetails({ tripId }: TripDetailsProps) {
           </CardContent>
         </Card>
 
-        <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Map className="h-5 w-5"/>خط سير الرحلة</CardTitle></CardHeader>
-            <CardContent><ul className="list-disc ps-5 space-y-1 text-muted-foreground">{renderTextAsList(trip.itinerary)}</ul></CardContent>
-        </Card>
+        <Accordion type="multiple" defaultValue={['item-1', 'item-2']} className="w-full space-y-4">
+            <Card as="div"><AccordionItem value="item-1" className="border-0">
+                <AccordionTrigger className="p-4 hover:no-underline font-semibold text-lg">
+                    <div className="flex items-center gap-2"><Map className="h-5 w-5"/>خط سير الرحلة</div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4"><ul className="list-disc ps-8 space-y-1 text-muted-foreground">{renderTextAsList(trip.itinerary)}</ul></AccordionContent>
+            </AccordionItem></Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-green-600"><Check className="h-5 w-5"/>الاشتراك يشمل</CardTitle></CardHeader>
-                <CardContent><ul className="list-disc ps-5 space-y-1 text-muted-foreground">{renderTextAsList(trip.included)}</ul></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-red-600"><CircleX className="h-5 w-5"/>الاشتراك لا يشمل</CardTitle></CardHeader>
-                <CardContent><ul className="list-disc ps-5 space-y-1 text-muted-foreground">{renderTextAsList(trip.excluded)}</ul></CardContent>
-            </Card>
-        </div>
+            <Card as="div"><AccordionItem value="item-2" className="border-0">
+                <AccordionTrigger className="p-4 hover:no-underline font-semibold text-lg">
+                    <div className="flex items-center gap-2"><Info className="h-5 w-5"/>تفاصيل الاشتراك</div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-4">
+                     <div>
+                        <h4 className="font-semibold text-green-600 flex items-center gap-2 mb-2"><Check className="h-5 w-5"/>الاشتراك يشمل</h4>
+                        <ul className="list-disc ps-8 space-y-1 text-muted-foreground">{renderTextAsList(trip.included)}</ul>
+                     </div>
+                     <Separator/>
+                     <div>
+                        <h4 className="font-semibold text-red-600 flex items-center gap-2 mb-2"><CircleX className="h-5 w-5"/>الاشتراك لا يشمل</h4>
+                        <ul className="list-disc ps-8 space-y-1 text-muted-foreground">{renderTextAsList(trip.excluded)}</ul>
+                     </div>
+                </AccordionContent>
+            </AccordionItem></Card>
+        </Accordion>
       </div>
 
       {/* Booking and Stats Side */}

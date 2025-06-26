@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Link2, Settings, Church, Search, ArrowRightToLine } from 'lucide-react';
+import { LayoutDashboard, Link2, Settings, Church, Search, ArrowRightToLine, BookOpenCheck, Plane } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -33,6 +33,8 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: "/makhdoum-parent-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
   { href: "/makhdoum-parent-panel/link-child", icon: Link2, label: "ربط حساب ابن" },
+  { href: "/public-panel/trips", icon: Plane, label: "الرحلات المتاحة" },
+  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
 ];
 
 export default function ParentPanelLayout({ children }: { children: ReactNode }) {

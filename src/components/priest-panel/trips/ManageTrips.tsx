@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { DatePickerWithPresets } from '@/components/ui/DatePickerWithPresets';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PlusCircle, Plane, Calendar, Users, BadgeDollarSign, Eye } from 'lucide-react';
 import TripBookingsView from './TripBookingsView';
 
@@ -85,45 +86,74 @@ export default function ManageTrips() {
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader><DialogTitle>إنشاء رحلة جديدة</DialogTitle></DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleCreateTrip)} className="space-y-4 py-4 max-h-[80vh] overflow-y-auto px-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="title" render={({ field }) => (
-                    <FormItem><FormLabel>عنوان الرحلة</FormLabel><FormControl><Input placeholder="مثال: رحلة دير الأنبا أنطونيوس" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField control={form.control} name="destination" render={({ field }) => (
-                    <FormItem><FormLabel>الوجهة</FormLabel><FormControl><Input placeholder="مثال: البحر الأحمر" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="startDate" render={({ field }) => (
-                        <FormItem><FormLabel>تاريخ البدء</FormLabel><FormControl><DatePickerWithPresets date={field.value} setDate={field.onChange} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="endDate" render={({ field }) => (
-                        <FormItem><FormLabel>تاريخ الانتهاء</FormLabel><FormControl><DatePickerWithPresets date={field.value} setDate={field.onChange} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="price" render={({ field }) => (
-                        <FormItem><FormLabel>السعر (بالجنيه)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="capacity" render={({ field }) => (
-                        <FormItem><FormLabel>السعة (عدد الأفراد)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </div>
-                <FormField control={form.control} name="overview" render={({ field }) => (
-                    <FormItem><FormLabel>نظرة عامة على الرحلة</FormLabel><FormControl><Textarea placeholder="وصف موجز للرحلة وأهدافها الروحية والترفيهية..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="itinerary" render={({ field }) => (
-                    <FormItem><FormLabel>خط سير الرحلة (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="اليوم الأول: الوصول والتسكين&#10;اليوم الثاني: زيارة الدير..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="included" render={({ field }) => (
-                        <FormItem><FormLabel>الاشتراك يشمل (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="الانتقالات&#10;الإقامة..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="excluded" render={({ field }) => (
-                        <FormItem><FormLabel>الاشتراك لا يشمل (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="المصاريف الشخصية&#10;الوجبات الإضافية..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                </div>
+              <form onSubmit={form.handleSubmit(handleCreateTrip)} className="py-4 max-h-[80vh] overflow-y-auto px-2">
+                 <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-3">
+                    <Card as="div" className="overflow-hidden">
+                      <AccordionItem value="item-1" className="border-b-0">
+                        <AccordionTrigger className="p-4 hover:no-underline bg-primary/5 rounded-t-lg">
+                          <div className="font-semibold text-primary">1. المعلومات الأساسية</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-4 pt-2 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="title" render={({ field }) => (
+                              <FormItem><FormLabel>عنوان الرحلة</FormLabel><FormControl><Input placeholder="مثال: رحلة دير الأنبا أنطونيوس" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="destination" render={({ field }) => (
+                              <FormItem><FormLabel>الوجهة</FormLabel><FormControl><Input placeholder="مثال: البحر الأحمر" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField control={form.control} name="startDate" render={({ field }) => (
+                                  <FormItem><FormLabel>تاريخ البدء</FormLabel><FormControl><DatePickerWithPresets date={field.value} setDate={field.onChange} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                              <FormField control={form.control} name="endDate" render={({ field }) => (
+                                  <FormItem><FormLabel>تاريخ الانتهاء</FormLabel><FormControl><DatePickerWithPresets date={field.value} setDate={field.onChange} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Card>
+                     <Card as="div" className="overflow-hidden">
+                      <AccordionItem value="item-2" className="border-b-0">
+                        <AccordionTrigger className="p-4 hover:no-underline bg-primary/5">
+                          <div className="font-semibold text-primary">2. السعة والتكلفة</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-4 pt-2 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField control={form.control} name="price" render={({ field }) => (
+                                  <FormItem><FormLabel>السعر (بالجنيه)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                              <FormField control={form.control} name="capacity" render={({ field }) => (
+                                  <FormItem><FormLabel>السعة (عدد الأفراد)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Card>
+                     <Card as="div" className="overflow-hidden">
+                      <AccordionItem value="item-3" className="border-b-0">
+                        <AccordionTrigger className="p-4 hover:no-underline bg-primary/5 rounded-b-lg">
+                           <div className="font-semibold text-primary">3. تفاصيل الرحلة</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-4 pt-2 space-y-4">
+                          <FormField control={form.control} name="overview" render={({ field }) => (
+                              <FormItem><FormLabel>نظرة عامة على الرحلة</FormLabel><FormControl><Textarea placeholder="وصف موجز للرحلة وأهدافها الروحية والترفيهية..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
+                          )} />
+                          <FormField control={form.control} name="itinerary" render={({ field }) => (
+                              <FormItem><FormLabel>خط سير الرحلة (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="اليوم الأول: الوصول والتسكين&#10;اليوم الثاني: زيارة الدير..." rows={4} {...field} /></FormControl><FormMessage /></FormItem>
+                          )} />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField control={form.control} name="included" render={({ field }) => (
+                                  <FormItem><FormLabel>الاشتراك يشمل (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="الانتقالات&#10;الإقامة..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                              <FormField control={form.control} name="excluded" render={({ field }) => (
+                                  <FormItem><FormLabel>الاشتراك لا يشمل (كل سطر عنصر)</FormLabel><FormControl><Textarea placeholder="المصاريف الشخصية&#10;الوجبات الإضافية..." rows={3} {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Card>
+                </Accordion>
                 <DialogFooter className="pt-4"><DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose><Button type="submit">إنشاء الرحلة</Button></DialogFooter>
               </form>
             </Form>

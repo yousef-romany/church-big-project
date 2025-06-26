@@ -1,7 +1,8 @@
+
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, ListChecks, History, Settings, Church, Search, ArrowRightToLine, Award } from 'lucide-react';
+import { LayoutDashboard, ListChecks, History, Settings, Church, Search, ArrowRightToLine, Award, BookOpenCheck, Plane } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -34,6 +35,8 @@ const navItems = [
   { href: "/visitation-servant-panel/tasks", icon: ListChecks, label: "مهام الافتقاد" },
   { href: "/visitation-servant-panel/history", icon: History, label: "مهام الافتقاد المنجزة" },
   { href: "/visitation-servant-panel/points", icon: Award, label: "نقاطي" },
+  { href: "/public-panel/trips", icon: Plane, label: "الرحلات المتاحة" },
+  { href: "/public-panel/confession-request", icon: BookOpenCheck, label: "طلب اعتراف" },
 ];
 
 export default function VisitationServantPanelLayout({ children }: { children: ReactNode }) {
