@@ -1,3 +1,4 @@
+
 "use client";
 import ManageEvents from '@/components/priest-panel/events/ManageEvents';
 import { motion } from 'framer-motion';

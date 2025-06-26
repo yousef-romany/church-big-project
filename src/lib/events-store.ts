@@ -1,21 +1,11 @@
+
 'use client';
 import type { ChurchEvent } from '@/types';
 import { addDays } from 'date-fns';
+import { combineDateAndTime } from './appointments-store';
 
 const EVENTS_KEY = 'churchSpecialEvents_v1';
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
-
-// We need a robust way to combine date and time without timezone issues.
-// Let's reuse the one from appointments-store for consistency.
-// Since it's a small utility, it's okay to have it here as well for now.
-// For a larger app, it should be in a shared utils/date file.
-const combineDateAndTime = (dateObj: Date, timeStr: string): Date => {
-  const newDate = new Date(dateObj);
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  newDate.setHours(hours, minutes, 0, 0); // Set hours and minutes, reset seconds/ms
-  return newDate;
-};
-
 
 const createDefaultEvents = (): ChurchEvent[] => {
   return [

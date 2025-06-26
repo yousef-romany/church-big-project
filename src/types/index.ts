@@ -1,3 +1,4 @@
+
 export type PriestStatus = "active" | "stressed" | "sanctioned";
 
 export interface Priest {
