@@ -10,7 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ===================================
 // ENUMS
+// ===================================
 
 enum Role {
   ADMIN
@@ -19,7 +21,13 @@ enum Role {
   SUNDAY_SCHOOL_SERVANT
   PARENT
   CHILD
-  MAKHDOUM
+  REGULAR_MAKHDOUM
+}
+
+enum PriestStatus {
+  ACTIVE
+  STRESSED
+  SANCTIONED
 }
 
 enum FamilyStatus {
@@ -35,10 +43,23 @@ enum Gender {
   FEMALE
 }
 
-enum ConfessionStatus {
-  SCHEDULED
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
   COMPLETED
+  CANCELLED
   NO_SHOW
+}
+
+enum LinkStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum BookingStatus {
+  BOOKED
+  PAID
   CANCELLED
 }
 
@@ -48,7 +69,7 @@ enum AttendanceStatus {
   EXCUSED
 }
 
-enum ServiceDay {
+enum ServingDay {
   THURSDAY
   FRIDAY
 }
@@ -58,221 +79,303 @@ enum ContentType {
   QUESTION
 }
 
-enum LinkStatus {
+enum TaskStatus {
   PENDING
-  ACCEPTED
-  REJECTED
+  COMPLETED
 }
 
-enum PaymentStatus {
-  PAID
-  UNPAID
-}
-
+// ===================================
 // MODELS
+// ===================================
 
 model User {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  passwordHash            String
-  name                    String
-  role                    Role
-  avatarUrl               String?
-  bloodType               String?
-  mobileNumber            String?
-  qrCode                  String?   @unique // For children to be linked
-  points                  Int       @default(0)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  id        String  @id @default(cuid())
+  email     String  @unique
+  password  String // Hashed password
+  name      String
+  role      Role
+  avatarUrl String?
 
-  // Relations
-  confessionPriest        User?     @relation("PriestConfessions", fields: [confessionPriestId], references: [id])
-  confessionPriestId      String?
-  confessants             User[]    @relation("PriestConfessions")
+  // Profile links (One-to-One)
+  priestProfile   PriestProfile?
+  servantProfile  ServantProfile?
+  childProfile    ChildProfile?
 
-  priestProfile           PriestProfile?
-  familyInCare            Family[]  @relation("PriestFamilies")
+  // Relationships as a requester/participant
+  confessionAppointments Appointment[]     @relation("ConfessorAppointments")
+  tripBookings           TripBooking[]
+  sentParentLinks        ParentChildLink[] @relation("ParentLinks")
+  receivedParentLinks    ParentChildLink[] @relation("ChildLinks")
+  makhdoumTasks          MakhdoumTask[]    @relation("AssignedTasks")
 
-  announcements           Announcement[] @relation("AnnouncementAuthor")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  confessionAppointments  ConfessionAppointment[] @relation("UserAppointments")
-  priestAppointments      ConfessionAppointment[] @relation("PriestAppointments")
-
-  assignedVisitationTasks VisitationTask[] @relation("AssignedServant")
-  assignedByPriestTasks   VisitationTask[] @relation("AssignedByPriest")
-
-  servantAttendance       SundaySchoolServantAttendance[] @relation("ServantAttendance")
-  childAttendanceRecordedByServant SundaySchoolChildAttendance[] @relation("RecordedByServant")
-  childAttendanceRecordedByPriest  SundaySchoolChildAttendance[] @relation("RecordedByPriest")
-
-  childAttendance         SundaySchoolChildAttendance[] @relation("ChildAttendance")
-  
-  parentLinks             ParentChildLink[] @relation("ParentLinks")
-  childLinks              ParentChildLink[] @relation("ChildLinks")
-
-  tripBookings            TripBooking[]
-  
-  createdContent          WeeklyContent[]
-
-  pointsAwarded           PointsLog[] @relation("AwardedPoints")
-  pointsReceived          PointsLog[] @relation("ReceivedPoints")
+  @@map("users")
 }
 
+// --- Role-Specific Profiles ---
 
 model PriestProfile {
-  id              String      @id @default(cuid())
-  user            User        @relation(fields: [userId], references: [id])
-  userId          String      @unique
-  ordinationDate  DateTime?
-  bishopName      String?
+  id      String   @id @default(cuid())
+  user    User     @relation(fields: [userId], references: [id])
+  userId  String   @unique
+  status  PriestStatus @default(ACTIVE)
+  bio     String?
+
+  // Relationships as a manager/assigner
+  assignedFamilies          Family[]
+  confessionAppointments    Appointment[]     @relation("PriestAppointments")
+  createdTrips              Trip[]
+  assignedMakhdoumTasks     MakhdoumTask[]    @relation("AssignedByPriest")
+  assignedVisitationTasks   VisitationTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("priest_profiles")
 }
 
-model Family {
-  id              String    @id @default(cuid())
-  fatherName      String
-  motherName      String
-  address         String
-  region          String
-  contactNumber   String    @unique
-  status          FamilyStatus @default(NORMAL)
-  notes           String?
-  latitude        Float?
-  longitude       Float?
-  lastVisited     DateTime?
+model ServantProfile {
+  id           String @id @default(cuid())
+  user         User   @relation(fields: [userId], references: [id])
+  userId       String @unique
+  servantType  String // "VISITATION" or "SUNDAY_SCHOOL"
+  points       Int    @default(0)
 
-  priestInCharge  User?     @relation("PriestFamilies", fields: [priestInChargeId], references: [id])
-  priestInChargeId String?
+  // Sunday School Servant Specific
+  servingDays       ServingDay[]
+  attendanceRecords ServantAttendance[]
+  createdContent    WeeklyContent[]
+
+  // Visitation Servant Specific
+  visitationTasks   VisitationTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("servant_profiles")
+}
+
+model ChildProfile {
+  id         String @id @default(cuid())
+  user       User   @relation(fields: [userId], references: [id])
+  userId     String @unique
+  qrCode     String @unique
+  points     Int    @default(0)
+  bloodType  String?
+
+  // Relationships
+  familyMember          FamilyMember?
+  attendanceRecords     ChildAttendance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("child_profiles")
+}
+
+model ParentProfile {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("parent_profiles")
+}
+
+
+// --- Core App Models ---
+
+model Family {
+  id          String      @id @default(cuid())
+  fatherName  String
+  motherName  String
+  phoneNumber String
+  address     String
+  region      String
+  status      FamilyStatus
+  notes       String?
+  lastVisited DateTime?
+
+  priest        PriestProfile @relation(fields: [priestId], references: [id])
+  priestId      String
 
   members         FamilyMember[]
   visitationTasks VisitationTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([priestId])
+  @@map("families")
 }
 
 model FamilyMember {
-  id              String  @id @default(cuid())
-  name            String
-  age             Int
-  gender          Gender
-  educationLevel  String?
+  id        String  @id @default(cuid())
+  name      String
+  age       Int
+  gender    Gender
+  notes     String?
 
-  family          Family  @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  familyId        String
+  family      Family        @relation(fields: [familyId], references: [id])
+  familyId    String
+  childProfile ChildProfile?  @relation(fields: [childProfileId], references: [id])
+  childProfileId String?     @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([familyId])
+  @@map("family_members")
 }
 
 model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  @@map("announcements")
+}
+
+model ChurchInformation {
+  id            String  @id @default(cuid())
+  name          String
+  address       String
+  contactNumber String
+  latitude      Float?
+  longitude     Float?
+
+  @@map("church_information")
+}
+
+model Appointment {
   id          String   @id @default(cuid())
-  title       String
-  content     String
-  createdAt   DateTime @default(now())
-
-  author      User     @relation("AnnouncementAuthor", fields: [authorId], references: [id])
-  authorId    String
-}
-
-model ConfessionAppointment {
-  id                String            @id @default(cuid())
-  datetime          DateTime
-  durationMinutes   Int               @default(30)
-  status            ConfessionStatus  @default(SCHEDULED)
-  notes             String?
-  bookedBySystem    Boolean           @default(false)
+  datetime    DateTime
+  duration    Int      @default(30) // in minutes
+  status      AppointmentStatus @default(PENDING)
+  notes       String?
+  bookedBySystem Boolean @default(false)
   
-  user              User?             @relation("UserAppointments", fields: [userId], references: [id])
-  userId            String?
+  confessor   User     @relation("ConfessorAppointments", fields: [confessorId], references: [id])
+  confessorId String
 
-  priest            User              @relation("PriestAppointments", fields: [priestId], references: [id])
-  priestId          String
-}
+  priest      PriestProfile @relation("PriestAppointments", fields: [priestId], references: [id])
+  priestId    String
 
-model VisitationTask {
-  id                String   @id @default(cuid())
-  status            String   // pending, completed
-  assignedAt        DateTime @default(now())
-  completedAt       DateTime?
-  notesFromPriest   String?
-  servantNotes      String?
-  
-  family            Family   @relation(fields: [familyId], references: [id])
-  familyId          String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  assignedServant   User     @relation("AssignedServant", fields: [assignedServantId], references: [id])
-  assignedServantId String
-
-  assignedByPriest  User     @relation("AssignedByPriest", fields: [assignedByPriestId], references: [id])
-  assignedByPriestId String
-}
-
-model SundaySchoolServantAttendance {
-  id              String           @id @default(cuid())
-  date            DateTime
-  serviceDay      ServiceDay
-  status          AttendanceStatus
-  notes           String?
-  recordedByPriest Boolean         @default(false)
-  isGeoVerified   Boolean?
-
-  servant         User             @relation("ServantAttendance", fields: [servantId], references: [id])
-  servantId       String
-}
-
-model SundaySchoolChildAttendance {
-  id                String   @id @default(cuid())
-  date              DateTime
-  serviceDay        ServiceDay
-  pointsAwarded     Int
-  
-  child             User     @relation("ChildAttendance", fields: [childId], references: [id])
-  childId           String
-
-  recordedByServant User?    @relation("RecordedByServant", fields: [recordedByServantId], references: [id])
-  recordedByServantId String?
-  
-  recordedByPriest  User?    @relation("RecordedByPriest", fields: [recordedByPriestId], references: [id])
-  recordedByPriestId String?
+  @@index([confessorId])
+  @@index([priestId])
+  @@map("appointments")
 }
 
 model ParentChildLink {
-  id          String     @id @default(cuid())
-  status      LinkStatus @default(PENDING)
-  requestedAt DateTime   @default(now())
-
-  parent      User       @relation("ParentLinks", fields: [parentId], references: [id])
-  parentId    String
-
-  child       User       @relation("ChildLinks", fields: [childId], references: [id])
-  childId     String
+  id        String   @id @default(cuid())
+  status    LinkStatus @default(PENDING)
   
+  parent    User     @relation("ParentLinks", fields: [parentId], references: [id])
+  parentId  String
+
+  child     User     @relation("ChildLinks", fields: [childId], references: [id])
+  childId   String
+
+  requestedAt DateTime @default(now())
+  respondedAt DateTime?
+
   @@unique([parentId, childId])
+  @@index([parentId])
+  @@index([childId])
+  @@map("parent_child_links")
 }
 
 
+// --- Trips ---
+
 model Trip {
-  id              String      @id @default(cuid())
-  title           String
-  destination     String
-  startDate       DateTime
-  endDate         DateTime
-  price           Float
-  capacity        Int
-  overview        String
-  itinerary       String
-  included        String
-  excluded        String
-  createdAt       DateTime    @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  destination String
+  startDate   DateTime
+  endDate     DateTime
+  price       Float
+  capacity    Int
+  overview    String
+  itinerary   String
+  included    String
+  excluded    String
   
-  bookings        TripBooking[]
+  creator     PriestProfile @relation(fields: [creatorId], references: [id])
+  creatorId   String
+
+  bookings    TripBooking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([creatorId])
+  @@map("trips")
 }
 
 model TripBooking {
-  id              String        @id @default(cuid())
-  bookingCode     String        @unique
-  paymentStatus   PaymentStatus @default(UNPAID)
-  bookedAt        DateTime      @default(now())
+  id          String    @id @default(cuid())
+  bookingCode String    @unique
+  status      BookingStatus @default(BOOKED)
 
-  trip            Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  tripId          String
+  trip        Trip      @relation(fields: [tripId], references: [id])
+  tripId      String
 
-  user            User          @relation(fields: [userId], references: [id])
-  userId          String
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String
+  
+  bookedAt    DateTime  @default(now())
+  paidAt      DateTime?
+
+  @@index([tripId])
+  @@index([userId])
+  @@map("trip_bookings")
+}
+
+// --- Sunday School ---
+
+model ServantAttendance {
+  id              String      @id @default(cuid())
+  date            DateTime
+  serviceDay      ServingDay
+  status          AttendanceStatus
+  notes           String?
+  recordedBy      String // "priest" or "servant"
+  isGeoVerified   Boolean?  @default(false)
+  
+  servant         ServantProfile @relation(fields: [servantId], references: [id])
+  servantId       String
+
+  @@index([servantId])
+  @@map("servant_attendance")
+}
+
+model ChildAttendance {
+  id              String      @id @default(cuid())
+  date            DateTime
+  serviceDay      ServingDay
+  pointsAwarded   Int
+
+  child           ChildProfile @relation(fields: [childId], references: [id])
+  childId         String
+
+  recordedByServant   ServantProfile? @relation(fields: [recordedByServantId], references: [id])
+  recordedByServantId String?
+
+  recordedByPriest    Boolean         @default(false)
+
+  @@index([childId])
+  @@index([recordedByServantId])
+  @@map("child_attendance")
 }
 
 model WeeklyContent {
@@ -284,29 +387,56 @@ model WeeklyContent {
   correctAnswer String?
   points        Int
   isActive      Boolean     @default(true)
+
+  creator       ServantProfile @relation(fields: [creatorId], references: [id])
+  creatorId     String
+
   createdAt     DateTime    @default(now())
-  
-  createdBy     User        @relation(fields: [createdById], references: [id])
-  createdById   String
+
+  @@index([creatorId])
+  @@map("weekly_content")
 }
 
-model PointsLog {
-  id            String    @id @default(cuid())
-  points        Int
-  reason        String
-  createdAt     DateTime  @default(now())
-  
-  awardedBy     User?     @relation("AwardedPoints", fields: [awardedById], references: [id])
-  awardedById   String?
+// --- Visitation & Makhdoum Tasks ---
 
-  receivedBy    User      @relation("ReceivedPoints", fields: [receivedById], references: [id])
-  receivedById  String
+model VisitationTask {
+  id           String      @id @default(cuid())
+  status       TaskStatus  @default(PENDING)
+  priestNotes  String?
+  servantNotes String?
+  assignedAt   DateTime    @default(now())
+  completedAt  DateTime?
+
+  family       Family        @relation(fields: [familyId], references: [id])
+  familyId     String
+
+  servant      ServantProfile @relation(fields: [servantId], references: [id])
+  servantId    String
+
+  assignedBy   PriestProfile @relation(fields: [assignedById], references: [id])
+  assignedById String
+  
+  @@index([familyId])
+  @@index([servantId])
+  @@index([assignedById])
+  @@map("visitation_tasks")
 }
 
+model MakhdoumTask {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus  @default(PENDING)
+  assignedAt   DateTime    @default(now())
+  completedAt  DateTime?
 
-model ChurchInfo {
-  id            String @id @default("singleton")
-  name          String
-  address       String
-  contactNumber String
+  assignee     User          @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  assigneeId   String
+
+  assigner     PriestProfile @relation("AssignedByPriest", fields: [assignerId], references: [id])
+  assignerId   String
+
+  @@index([assigneeId])
+  @@index([assignerId])
+  @@map("makhdoum_tasks")
 }
