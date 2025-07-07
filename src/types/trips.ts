@@ -1,4 +1,3 @@
-
 // src/types/trips.ts
 
 export interface Trip {
