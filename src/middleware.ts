@@ -54,7 +54,18 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Exclude files that aren't routes and the public register API
-    '/((?!api/(?:register|auth/verify-email)|_next/static|_next/image|favicon.ico|manifest.json|icons).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - manifest.json (PWA manifest)
+     * - icons (PWA icons folder)
+     *
+     * This uses a non-capturing group `(?:...)` at the start of the regex
+     * to prevent the "Capturing groups are not allowed" parsing error.
+     */
+    '/(?:(?!api/|_next/static|_next/image|favicon.ico|manifest.json|icons).*)',
   ],
 };
