@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -7,13 +6,16 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users, Footprints, CalendarCheck } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users, Footprints, CalendarCheck, Baby, Shield, AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "البريد الإلكتروني غير صالح" }),
@@ -26,7 +28,7 @@ interface LoginFormProps {
   title: string;
   description?: string;
   redirectPath: string;
-  userRoleIconName?: 'Building' | 'UserSquare' | 'UserCheck' | 'Users' | 'Footprints' | 'CalendarCheck';
+  userRoleIconName?: 'Building' | 'UserSquare' | 'UserCheck' | 'Users' | 'Footprints' | 'CalendarCheck' | 'Baby' | 'Shield';
 }
 
 const cardVariants = {
@@ -42,6 +44,7 @@ const fieldVariants = (delay: number) => ({
 export default function LoginForm({ title, description, redirectPath, userRoleIconName }: LoginFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
@@ -51,14 +54,47 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormInputs> = (data) => {
-    // Simulate login
-    console.log("Login attempt:", data);
-    toast({
-      title: "تم تسجيل الدخول بنجاح!",
-      description: `مرحبًا بك، جاري توجيهك...`,
-    });
-    router.push(redirectPath);
+  const {
+    handleSubmit,
+    formState: { isSubmitting },
+  } = form;
+
+  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
+    setError(null);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+        callbackUrl: redirectPath,
+      });
+
+      if (result?.error) {
+        let errorMessage = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+        if (result.error === 'CredentialsSignin') {
+            errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+        } else if (result.error.includes('Email not verified')) {
+            errorMessage = 'الحساب غير مفعل. الرجاء مراجعة بريدك الإلكتروني لتفعيل الحساب.';
+        }
+        setError(errorMessage);
+        toast({
+          title: 'فشل تسجيل الدخول',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'تم تسجيل الدخول بنجاح!', description: `مرحبًا بك، جاري توجيهك...` });
+        router.push(redirectPath);
+      }
+    } catch (err: any) {
+        const errorMessage = err.message || 'An unexpected error occurred.';
+        setError(errorMessage);
+        toast({
+          title: 'فشل تسجيل الدخول',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+    }
   };
 
   const renderIcon = () => {
@@ -71,6 +107,8 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
       case 'Users': return <Users {...commonProps} />;
       case 'Footprints': return <Footprints {...commonProps} />;
       case 'CalendarCheck': return <CalendarCheck {...commonProps} />;
+      case 'Baby': return <Baby {...commonProps} />;
+      case 'Shield': return <Shield {...commonProps} />;
       default: return null;
     }
   };
@@ -84,8 +122,15 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
           {description && <CardDescription className="text-sm md:text-base mt-1">{description}</CardDescription>}
         </CardHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6 p-6 md:p-8">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4 p-6 md:p-8">
+               {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>خطأ</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
               <motion.div variants={fieldVariants(0.1)}>
                 <FormField
                   control={form.control}
@@ -143,10 +188,10 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                 <Button 
                   type="submit" 
                   className="w-full h-12 text-lg font-semibold transition-transform hover:scale-105 active:scale-95" 
-                  disabled={form.formState.isSubmitting}
+                  disabled={isSubmitting}
                   size="lg"
                 >
-                  {form.formState.isSubmitting ? (
+                  {isSubmitting ? (
                     <>
                      <motion.div
                         animate={{ rotate: 360 }}
@@ -164,7 +209,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
               </motion.div>
               <motion.div variants={fieldVariants(0.5)} className="text-sm text-center">
                 ليس لديك حساب؟{' '}
-                <Link href="#" className="font-semibold text-primary hover:underline">
+                <Link href="/auth/register" className="font-semibold text-primary hover:underline">
                   إنشاء حساب جديد
                 </Link>
               </motion.div>
