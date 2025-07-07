@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 
-import { findAndBookNextAvailableSlot } from '@/lib/appointments-store';
+import { findAndBookNextAvailableSlot } from '@/lib/actions/appointments';
 import type { ConfessionRequestFormInput, PriestData } from '@/types/public';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,7 +31,7 @@ const requestSchema = z.object({
 
 // Mock data, in a real app this would come from a database
 const availablePriests: PriestData[] = [
-    { id: 'priest_default_01', name: 'الكاهن الافتراضي', churchName: 'الكنيسة الرئيسية' },
+    { id: 'clx0jw22g000108l4cyj07tc0', name: 'الكاهن الافتراضي', churchName: 'الكنيسة الرئيسية' },
     // Add more priests here if needed
 ];
 
@@ -48,31 +49,39 @@ export default function ConfessionRequestForm() {
         setIsSubmitting(true);
         setSubmissionResult(null);
 
-        // Simulate a network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            const bookedAppointment = await findAndBookNextAvailableSlot(data, data.selectedPriestId, 30, 60);
 
-        const bookedAppointment = await findAndBookNextAvailableSlot(data, data.selectedPriestId, 30, 60);
-
-        if (bookedAppointment && bookedAppointment.datetime) {
-            const successMessage = `تم حجز موعدك بنجاح يوم ${format(bookedAppointment.datetime, "EEEE, d MMMM", { locale: arSA })} الساعة ${format(bookedAppointment.datetime, "hh:mm a", { locale: arSA })}. سيتم إرسال تذكير لك.`;
-            setSubmissionResult({ success: true, message: successMessage });
-            toast({
-                title: "تم الحجز بنجاح!",
-                description: `موعدك يوم ${format(bookedAppointment.datetime, "PPPp", { locale: arSA })}`,
-                duration: 10000,
-            });
-            form.reset();
-        } else {
-            const errorMessage = "عذرًا، لا توجد مواعيد متاحة في الفترة القادمة. يرجى المحاولة مرة أخرى لاحقًا أو التواصل مع الكنيسة مباشرة.";
+            if (bookedAppointment && bookedAppointment.datetime) {
+                const successMessage = `تم حجز موعدك بنجاح يوم ${format(bookedAppointment.datetime, "EEEE, d MMMM", { locale: arSA })} الساعة ${format(bookedAppointment.datetime, "hh:mm a", { locale: arSA })}. سيتم إرسال تذكير لك.`;
+                setSubmissionResult({ success: true, message: successMessage });
+                toast({
+                    title: "تم الحجز بنجاح!",
+                    description: `موعدك يوم ${format(bookedAppointment.datetime, "PPPp", { locale: arSA })}`,
+                    duration: 10000,
+                });
+                form.reset();
+            } else {
+                const errorMessage = "عذرًا، لا توجد مواعيد متاحة في الفترة القادمة. يرجى المحاولة مرة أخرى لاحقًا أو التواصل مع الكنيسة مباشرة.";
+                setSubmissionResult({ success: false, message: errorMessage });
+                toast({
+                    title: "لا توجد مواعيد متاحة",
+                    description: "يرجى المحاولة مرة أخرى لاحقًا.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+             const errorMessage = "حدث خطأ غير متوقع أثناء محاولة الحجز.";
             setSubmissionResult({ success: false, message: errorMessage });
             toast({
-                title: "لا توجد مواعيد متاحة",
-                description: "يرجى المحاولة مرة أخرى لاحقًا.",
+                title: "خطأ في الخادم",
+                description: "لم نتمكن من معالجة طلبك، يرجى المحاولة لاحقاً.",
                 variant: "destructive",
             });
+            console.error("Booking Error:", error);
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setIsSubmitting(false);
     };
 
     return (

@@ -28,17 +28,15 @@ import {
 } from "@/components/ui/select";
 import { 
   getAppointments, 
-  addAppointment as addAppointmentToStore, 
-  updateAppointment as updateAppointmentInStore, 
-  deleteAppointment as deleteAppointmentFromStore,
+  addAppointment, 
+  updateAppointment, 
+  deleteAppointment,
   getPriestAvailability, 
-  setPriestAvailability as setPriestAvailabilityInStore,
+  setPriestAvailability,
   combineDateAndTime,
-  saveAppointments,
-  isSlotOverlapping
-} from '@/lib/appointments-store';
+  isSlotOverlapping,
+} from '@/lib/actions/appointments';
 import AppointmentsListDisplay from './AppointmentsListDisplay'; 
-
 
 const appointmentSchema = z.object({
   name: z.string().min(3, { message: "الاسم يجب أن يكون 3 أحرف على الأقل" }),
@@ -52,13 +50,12 @@ const appointmentSchema = z.object({
      .min(15, {message: "مدة الاعتراف يجب ألا تقل عن 15 دقيقة"})
      .max(120, {message: "مدة الاعتراف يجب ألا تزيد عن 120 دقيقة"})
   ).default(30),
-  bookedBySystem: z.boolean().optional(), // To track if system booked it
+  bookedBySystem: z.boolean().optional(),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
 
 const daysOfWeek = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-
 
 export default function ConfessionSchedule() {
   const [appointments, setAppointments] = useState<ConfessionAppointment[]>([]);
@@ -74,36 +71,27 @@ export default function ConfessionSchedule() {
   const [newDateForReschedule, setNewDateForReschedule] = useState<Date | undefined>();
   const [newTimeForReschedule, setNewTimeForReschedule] = useState<string>("");
 
-  useEffect(() => {
-    const loadedAppointments = getAppointments().sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
-    setAppointments(loadedAppointments);
-    
-    const loadedAvailability = getPriestAvailability();
-    setLocalPriestAvailability(loadedAvailability);
-    availabilityForm.reset(loadedAvailability); 
+  const fetchAllData = async () => {
+      const [appts, availability] = await Promise.all([
+          getAppointments(),
+          getPriestAvailability()
+      ]);
+      setAppointments(appts);
+      setLocalPriestAvailability(availability);
+      availabilityForm.reset(availability);
+  };
 
+  useEffect(() => {
+    fetchAllData();
   }, []);
-
-  // Refresh appointments from store if it changes elsewhere (e.g. public request)
-  // This is a simple polling, more robust would be event-based or context/global state
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentStoredAppointments = getAppointments();
-      if (JSON.stringify(currentStoredAppointments) !== JSON.stringify(appointments)) {
-        setAppointments(currentStoredAppointments.sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
-      }
-    }, 5000); // Check every 5 seconds
-    return () => clearInterval(interval);
-  }, [appointments]);
-
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
-    defaultValues: { name: '', time: '', status: 'قادم', notes: '', durationMinutes: 30, bookedBySystem: false}
+    defaultValues: { name: '', time: '', status: 'قادم', notes: '', date: undefined, durationMinutes: 30, bookedBySystem: false}
   });
 
   const availabilityForm = useForm<PriestAvailability>({
-    defaultValues: getPriestAvailability() 
+    defaultValues: {} 
   });
   
   useEffect(() => {
@@ -112,66 +100,37 @@ export default function ConfessionSchedule() {
     }
   }, [isAvailabilityModalOpen, priestAvailability, availabilityForm]);
 
-
-  const handleSaveAvailability: SubmitHandler<PriestAvailability> = (data) => {
-    const newAvailability: PriestAvailability = {};
+  const handleSaveAvailability: SubmitHandler<PriestAvailability> = async (data) => {
+    // Client-side validation before sending to server action
     let hasError = false;
+     daysOfWeek.forEach(day => {
+       const dayData = data[day as keyof PriestAvailability];
+       if (dayData?.enabled) {
+         if (!dayData.startTime || !dayData.endTime) {
+           toast({ title: `خطأ في يوم ${day}`, description: "يجب تحديد وقت البداية والنهاية لليوم المفعّل.", variant: "destructive" });
+           hasError = true;
+           return;
+         }
+         if (isBefore(parse(dayData.endTime, 'HH:mm', new Date()), parse(dayData.startTime, 'HH:mm', new Date()))) {
+           toast({ title: `خطأ في يوم ${day}`, description: "وقت النهاية يجب أن يكون بعد وقت البداية.", variant: "destructive" });
+           hasError = true;
+           return;
+         }
+       }
+     });
 
-    daysOfWeek.forEach(day => {
-      const dayKey = day as keyof PriestAvailability;
-      const dayData = data[dayKey] as PriestAvailabilitySlot | undefined | null;
+    if (hasError) return;
 
-      if (dayData && dayData.enabled) {
-        if (!dayData.startTime || !dayData.endTime) {
-          toast({ title: `خطأ في يوم ${day}`, description: "يجب تحديد وقت البداية والنهاية لليوم المفعّل.", variant: "destructive" });
-          hasError = true;
-          newAvailability[dayKey] = { startTime: dayData.startTime || "", endTime: dayData.endTime || "", enabled: true }; 
-          return; 
-        }
-
-        const baseDate = new Date();
-        const parsedStartTime = parse(dayData.startTime, 'HH:mm', baseDate);
-        const parsedEndTime = parse(dayData.endTime, 'HH:mm', baseDate);
-
-        if (!isValid(parsedStartTime) || !isValid(parsedEndTime)) {
-            toast({ title: `خطأ في يوم ${day}`, description: "صيغة الوقت غير صالحة.", variant: "destructive" });
-            hasError = true;
-            newAvailability[dayKey] = { ...dayData }; 
-            return; 
-        }
-
-        if (isBefore(parsedEndTime, parsedStartTime) || isEqual(parsedEndTime, parsedStartTime)) {
-            toast({ title: `خطأ في يوم ${day}`, description: "وقت النهاية يجب أن يكون بعد وقت البداية وبفارق زمني.", variant: "destructive" });
-            hasError = true;
-            newAvailability[dayKey] = { ...dayData }; 
-            return; 
-        }
-        newAvailability[dayKey] = { startTime: dayData.startTime, endTime: dayData.endTime, enabled: true };
-      } else {
-        newAvailability[dayKey] = { startTime: dayData?.startTime || "", endTime: dayData?.endTime || "", enabled: false };
-      }
-    });
-
-    if (hasError) {
-      availabilityForm.reset(newAvailability); 
-      setLocalPriestAvailability(newAvailability); 
-      toast({ title: "خطأ في الحفظ", description: "يرجى تصحيح أخطاء التوافر الموضحة ثم حاول الحفظ مرة أخرى.", variant: "destructive", duration: 7000 });
-      return;
-    }
-
-    setPriestAvailabilityInStore(newAvailability);
-    setLocalPriestAvailability(newAvailability); 
-    availabilityForm.reset(newAvailability); 
+    await setPriestAvailability(data);
+    setLocalPriestAvailability(data);
     toast({ title: "تم حفظ إعدادات التوافر بنجاح!" });
     setIsAvailabilityModalOpen(false);
   };
 
-
-  const onSubmit: SubmitHandler<AppointmentFormData> = (data) => {
+  const onSubmit: SubmitHandler<AppointmentFormData> = async (data) => {
     const newDatetime = combineDateAndTime(data.date, data.time);
-    const dayName = format(data.date, 'EEEE', { locale: arSA });
-
-    if (isSlotOverlapping(newDatetime, data.durationMinutes, getAppointments(), editingAppointment?.id)) {
+    
+    if (await isSlotOverlapping(newDatetime, data.durationMinutes, editingAppointment?.id)) {
         toast({
             title: "تداخل في المواعيد",
             description: "الوقت المحدد يتعارض مع موعد آخر. يرجى اختيار وقت أو مدة مختلفة.",
@@ -180,46 +139,23 @@ export default function ConfessionSchedule() {
         });
         return; 
     }
-
-    const dayAvailability = priestAvailability[dayName];
-    let availabilityWarning = false;
-    if (dayAvailability && dayAvailability.enabled) {
-        if (data.time < dayAvailability.startTime || format(addMinutes(newDatetime, data.durationMinutes), 'HH:mm') > dayAvailability.endTime) {
-            availabilityWarning = true;
-        }
-    } else { 
-      if (Object.values(priestAvailability).some(slot => slot && slot.enabled)) { 
-        availabilityWarning = true;
-      }
-    }
-
-    if (availabilityWarning && !data.bookedBySystem) { // Only show warning for manual adds outside availability
-        toast({
-            title: "تحذير: الوقت خارج أوقات التوافر",
-            description: `الموعد المحدد (${dayName} الساعة ${data.time} لمدة ${data.durationMinutes} دقيقة) قد يكون خارج أوقات التوافر المحددة أو في يوم غير متاح. تم حفظ الموعد على أي حال.`,
-            variant: "default", 
-            duration: 7000,
-        });
-    }
     
-    const appointmentData = { 
+    const appointmentData: Omit<ConfessionAppointment, 'id' | 'day' | 'time'> = { 
         ...data, 
         datetime: newDatetime, 
-        day: dayName, 
         durationMinutes: data.durationMinutes || 30,
         bookedBySystem: data.bookedBySystem || false, 
     };
 
     if (editingAppointment) {
-      const updatedAppt = { ...editingAppointment, ...appointmentData };
-      updateAppointmentInStore(updatedAppt);
-      setAppointments(prev => prev.map(app => app.id === editingAppointment.id ? updatedAppt : app).sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+      await updateAppointment({ ...editingAppointment, ...appointmentData, datetime: newDatetime });
       toast({ title: "تم تعديل الموعد بنجاح!" });
     } else {
-      const newAppointment = addAppointmentToStore(appointmentData);
-      setAppointments(prev => [...prev, newAppointment].sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
+      await addAppointment(appointmentData);
       toast({ title: "تم إضافة الموعد يدويًا بنجاح!" });
     }
+    
+    await fetchAllData();
     form.reset({ name: '', time: '', status: 'قادم', notes: '', date: undefined, durationMinutes: 30, bookedBySystem: false });
     setEditingAppointment(null);
     setIsModalOpen(false);
@@ -231,7 +167,7 @@ export default function ConfessionSchedule() {
       name: appointment.name,
       date: new Date(appointment.datetime),
       time: appointment.time,
-      status: appointment.status,
+      status: appointment.status as any, // Zod enum doesn't like the string type
       notes: appointment.notes || '',
       durationMinutes: appointment.durationMinutes || 30,
       bookedBySystem: appointment.bookedBySystem || false,
@@ -239,9 +175,9 @@ export default function ConfessionSchedule() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    deleteAppointmentFromStore(id);
-    setAppointments(prev => prev.filter(app => app.id !== id));
+  const handleDelete = async (id: string) => {
+    await deleteAppointment(id);
+    await fetchAllData();
     toast({ title: "تم حذف الموعد", variant: "destructive" });
   };
   
@@ -257,42 +193,35 @@ export default function ConfessionSchedule() {
     return appointments.filter(app => isValid(new Date(app.datetime)) && isEqual(startOfDay(new Date(app.datetime)), selectedDateStart) && app.status === 'قادم');
   }, [dateToCancel, appointments]);
 
-  const handleConfirmReschedule = () => {
+  const handleConfirmReschedule = async () => {
     if (!dateToCancel || !newDateForReschedule || !newTimeForReschedule || appointmentsOnDateToCancel.length === 0) {
       toast({ title: "بيانات غير مكتملة", description: "يرجى تحديد اليوم المُراد إلغاؤه واليوم والوقت الجديد للترحيل.", variant: "destructive" });
       return;
     }
 
-    const updatedAppointmentsList = [...appointments]; 
-
-    appointmentsOnDateToCancel.forEach(appToReschedule => {
+    const updates = appointmentsOnDateToCancel.map(appToReschedule => {
         const newDatetime = combineDateAndTime(newDateForReschedule, newTimeForReschedule);
         const rescheduledApp: ConfessionAppointment = {
           ...appToReschedule,
           datetime: newDatetime,
           day: format(newDateForReschedule, 'EEEE', { locale: arSA }),
           time: newTimeForReschedule,
-          status: 'قادم', // Keep as 'قادم'
+          status: 'قادم',
           notes: `${appToReschedule.notes || ''} (تم الترحيل من ${format(dateToCancel, 'PPPp', { locale: arSA })} إلى ${format(newDatetime, 'PPPp', {locale: arSA})})`.trim(),
-          originalDatetime: appToReschedule.datetime, // Store original for reference
+          originalDatetime: appToReschedule.datetime,
         };
-        
-        const index = updatedAppointmentsList.findIndex(a => a.id === appToReschedule.id);
-        if (index > -1) {
-            updatedAppointmentsList[index] = rescheduledApp;
-        }
+        return updateAppointment(rescheduledApp);
     });
-    
-    saveAppointments(updatedAppointmentsList.sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()));
-    setAppointments(updatedAppointmentsList.sort((a,b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())); 
 
+    await Promise.all(updates);
+    
+    await fetchAllData();
     toast({ title: "تم ترحيل المواعيد بنجاح!" });
     setIsCancelRescheduleModalOpen(false);
     setDateToCancel(undefined);
     setNewDateForReschedule(undefined);
     setNewTimeForReschedule("");
   };
-
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
@@ -306,17 +235,17 @@ export default function ConfessionSchedule() {
                 <DialogHeader><DialogTitle>إدارة أوقات التوافر للاعترافات</DialogTitle></DialogHeader>
                 <Form {...availabilityForm}>
                   <form onSubmit={availabilityForm.handleSubmit(handleSaveAvailability)} className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                    {!Object.values(availabilityForm.watch()).some(daySlot => daySlot && daySlot.enabled) && (
+                     {Object.values(availabilityForm.watch()).length === 0 && (
                         <p className="text-sm text-center text-muted-foreground p-3 bg-muted/30 rounded-md border border-dashed">
                             <AlertCircle className="inline h-4 w-4 me-1 mb-0.5"/>
-                            لم يتم تفعيل أي أيام توافر. يرجى تحديد أيام وساعات عملك لاستقبال الاعترافات.
+                            جاري تحميل إعدادات التوافر...
                         </p>
                     )}
                     {daysOfWeek.map((day) => (
                       <Card key={day} className="p-4 bg-background/70">
                          <FormField
                             control={availabilityForm.control}
-                            name={`${day}.enabled` as keyof PriestAvailability}
+                            name={`${day}.enabled`}
                             render={({ field }) => (
                                 <FormItem className="flex flex-row items-center space-x-3 rtl:space-x-reverse space-y-0 mb-3">
                                  <FormControl>
@@ -324,10 +253,6 @@ export default function ConfessionSchedule() {
                                       checked={!!field.value} 
                                       onCheckedChange={(checked) => {
                                           field.onChange(checked);
-                                          if (checked && !availabilityForm.getValues(`${day}.startTime` as keyof PriestAvailability)) {
-                                              availabilityForm.setValue(`${day}.startTime` as keyof PriestAvailability, "09:00" as any);
-                                              availabilityForm.setValue(`${day}.endTime` as keyof PriestAvailability, "17:00" as any);
-                                          }
                                       }}
                                     />
                                 </FormControl>
@@ -335,21 +260,21 @@ export default function ConfessionSchedule() {
                                 </FormItem>
                             )}
                             />
-                        {availabilityForm.watch(`${day}.enabled` as keyof PriestAvailability) && (
+                        {availabilityForm.watch(`${day}.enabled` as any) && (
                           <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             transition={{ duration: 0.3 }}
                             className="grid grid-cols-2 gap-x-4 gap-y-2"
                           >
-                            <FormField control={availabilityForm.control} name={`${day}.startTime` as keyof PriestAvailability} render={({ field }) => (
+                            <FormField control={availabilityForm.control} name={`${day}.startTime`} render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-xs">من الساعة</FormLabel>
                                 <FormControl><Input type="time" {...field} className="h-9" /></FormControl>
                                 <FormMessage />
                               </FormItem>
                             )} />
-                            <FormField control={availabilityForm.control} name={`${day}.endTime` as keyof PriestAvailability}  render={({ field }) => (
+                            <FormField control={availabilityForm.control} name={`${day}.endTime`}  render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-xs">حتى الساعة</FormLabel>
                                 <FormControl><Input type="time" {...field} className="h-9" /></FormControl>
@@ -486,37 +411,12 @@ export default function ConfessionSchedule() {
                         )}
                       />
                     
-                    {form.watch("date") && form.watch("time") && (() => {
-                        const selectedDate = form.watch("date");
-                        const selectedTime = form.watch("time");
-                        const selectedDuration = form.watch("durationMinutes");
-                        if (!selectedDate || !selectedTime) return null;
-
-                        const dayName = format(selectedDate, 'EEEE', { locale: arSA });
-                        const dayAvail = priestAvailability[dayName];
-                        const currentAppointmentStart = combineDateAndTime(selectedDate, selectedTime);
-
-                        if (isSlotOverlapping(currentAppointmentStart, selectedDuration, getAppointments(), editingAppointment?.id)) {
-                             return <p className="text-xs text-red-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا الوقت يتعارض مع موعد آخر مسجل.</p>;
-                        }
-
-                        if (dayAvail === null || !dayAvail?.enabled) {
-                             if (Object.values(priestAvailability).some(slot => slot && slot.enabled)) { // Check if any day is enabled at all
-                                return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>هذا اليوم غير محدد ضمن أيام التوافر.</p>;
-                             }
-                        } else if (dayAvail && dayAvail.enabled && (selectedTime < dayAvail.startTime || format(addMinutes(currentAppointmentStart, selectedDuration), 'HH:mm') > dayAvail.endTime)) {
-                            return <p className="text-xs text-yellow-600 flex items-center"><AlertCircle className="h-4 w-4 me-1"/>الوقت المحدد خارج نطاق التوافر لهذا اليوم ({dayAvail.startTime} - {dayAvail.endTime}).</p>;
-                        }
-                        return null;
-                    })()}
-
-
-                    <FormField control={form.control} name="status" render={({ field }) => (
+                     <FormField control={form.control} name="status" render={({ field }) => (
                       <FormItem><FormLabel>الحالة</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="اختر الحالة" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            {(['قادم', 'تم', 'لم يحضر', 'ملغى'] as ConfessionStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            {(['قادم', 'تم', 'لم يحضر', 'ملغى'] as const).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           </SelectContent>
                         </Select><FormMessage />
                       </FormItem>
