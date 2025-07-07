@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { UserRole } from '@prisma/client';
 
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
@@ -54,6 +55,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Exclude files that aren't routes and the public register API
-    '/((?!api/(register|auth/verify-email)|_next/static|_next/image|favicon.ico|manifest.json|icons).*)',
+    '/((?!api/(?:register|auth/verify-email)|_next/static|_next/image|favicon.ico|manifest.json|icons).*)',
   ],
 };
