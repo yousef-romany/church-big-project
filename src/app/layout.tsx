@@ -1,8 +1,8 @@
-// No "use client" here
 import type { Metadata, Viewport } from 'next';
 import { Tajawal } from 'next/font/google';
 import './globals.css';
-import AppSetup from '@/components/shared/AppSetup'; // Import the new client component
+import AppSetup from '@/components/shared/AppSetup';
+import AuthProvider from './auth/AuthProvider';
 
 const tajawal = Tajawal({
   weight: ['400', '500', '700'],
@@ -68,9 +68,11 @@ export default function RootLayout({
         {/* Metadata API handles most PWA meta tags. Viewport is separate. */}
       </head>
       <body className={`${tajawal.variable} font-sans antialiased`}>
-        <AppSetup>
-          {children}
-        </AppSetup>
+        <AuthProvider>
+          <AppSetup>
+            {children}
+          </AppSetup>
+        </AuthProvider>
       </body>
     </html>
   );

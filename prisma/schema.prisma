@@ -6,329 +6,66 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql" // or "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model User {
-  id                      String    @id @default(cuid())
-  email                   String    @unique
-  name                    String
-  hashedPassword          String
-  role                    Role
-  phoneNumber             String?
-  avatarUrl               String?
-  bloodType               String?
-  lastConfessionDate      DateTime?
-  points                  Int       @default(0)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  // Profile relationships
-  priestProfile           PriestProfile?
-  servantProfile          ServantProfile?
-  
-  // Family relationships
-  familyId                String?
-  family                  Family?    @relation("FamilyMembers", fields: [familyId], references: [id])
-  roleInFamily            FamilyRole?
-
-  // Confession relationships
-  confessionFatherId      String?
-  confessionFather        PriestProfile? @relation("ConfessionsAsFather", fields: [confessionFatherId], references: [id])
-  confessionsAsPenitent   ConfessionAppointment[] @relation("ConfessionsForUser")
-
-  // Parent-child link relationships
-  parentLinks             ParentChildLink[] @relation("ParentLinks")
-  childLinks              ParentChildLink[] @relation("ChildLinks")
-
-  // Booking relationship
-  bookings                Booking[]
-
-  // Child-specific attendance
-  attendanceAsChild       SundaySchoolChildAttendance[] @relation("ChildAttendance")
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          UserRole        @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
-model PriestProfile {
-  id              String      @id @default(cuid())
-  userId          String      @unique
-  user            User        @relation(fields: [userId], references: [id])
-  status          PriestStatus @default(ACTIVE)
-  ordinationDate  DateTime?
-  diocese         String?
-
-  familiesManaged       Family[] @relation("FamilyPriest")
-  confessionsGiven      ConfessionAppointment[] @relation("ConfessionsAsFather")
-  tasksAssigned         VisitationTask[] @relation("TaskAssigner")
-  tripsCreated          Trip[]
-  announcementsCreated  Announcement[]
-  eventsCreated         Event[]
-}
-
-model ServantProfile {
-  id              String      @id @default(cuid())
-  userId          String      @unique
-  user            User        @relation(fields: [userId], references: [id])
-  type            ServantType
-  servingDays     ServingDay[]
-  isActive        Boolean     @default(true)
-
-  visitationTasks       VisitationTask[] @relation("TaskAssignee")
-  attendanceRecords     SundaySchoolServantAttendance[]
-  createdContent        WeeklyContent[]
-  childAttendanceTaken  SundaySchoolChildAttendance[] @relation("ServantRecorder")
-}
-
-model Family {
-  id                      String    @id @default(cuid())
-  name                    String    // e.g., "Family of George R.", "St. Mary's household"
-  address                 String
-  region                  String?
-  latitude                Float?
-  longitude               Float?
-  visitationStatus        VisitationStatus @default(NORMAL)
-  lastVisited             DateTime?
-  notes                   String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  priestId                String?
-  priest                  PriestProfile?   @relation("FamilyPriest", fields: [priestId], references: [id])
-  
-  members                 User[] @relation("FamilyMembers")
-  visitationTasks         VisitationTask[]
-}
-
-model Announcement {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  createdAt   DateTime @default(now())
-  
-  authorId    String
-  author      PriestProfile @relation(fields: [authorId], references: [id])
-}
-
-model Event {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  location    String
-  datetime    DateTime
-  points      Int
-
-  creatorId   String
-  creator     PriestProfile @relation(fields: [creatorId], references: [id])
-}
-
-model Trip {
-  id          String   @id @default(cuid())
-  title       String
-  destination String
-  startDate   DateTime
-  endDate     DateTime
-  price       Float
-  capacity    Int
-  overview    String
-  itinerary   String
-  included    String
-  excluded    String
-  createdAt   DateTime @default(now())
-  
-  creatorId   String
-  creator     PriestProfile @relation(fields: [creatorId], references: [id])
-  
-  bookings    Booking[]
-}
-
-model Booking {
-  id          String   @id @default(cuid())
-  bookingCode String   @unique
-  status      BookingStatus @default(BOOKED)
-  bookedAt    DateTime @default(now())
-  
-  tripId      String
-  trip        Trip     @relation(fields: [tripId], references: [id])
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-}
-
-model ConfessionAppointment {
-  id                String      @id @default(cuid())
-  datetime          DateTime
-  durationMinutes   Int
-  status            ConfessionStatus @default(UPCOMING)
-  notes             String?
-  bookedBySystem    Boolean     @default(false)
-
+model Account {
+  id                String  @id @default(cuid())
   userId            String
-  user              User        @relation("ConfessionsForUser", fields: [userId], references: [id])
-  
-  priestId          String
-  priest            PriestProfile @relation("ConfessionsAsFather", fields: [priestId], references: [id])
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
-model VisitationTask {
-  id                String      @id @default(cuid())
-  status            TaskStatus  @default(PENDING)
-  assignedAt        DateTime    @default(now())
-  completedAt       DateTime?
-  notesFromPriest   String?
-  servantNotes      String?
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  familyId          String
-  family            Family      @relation(fields: [familyId], references: [id])
-
-  priestId          String
-  priest            PriestProfile @relation("TaskAssigner", fields: [priestId], references: [id])
-
-  servantId         String
-  servant           ServantProfile @relation("TaskAssignee", fields: [servantId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model SundaySchoolServantAttendance {
-  id                String    @id @default(cuid())
-  date              DateTime
-  serviceDay        ServingDay
-  status            AttendanceStatus
-  notes             String?
-  recordedBy        RecordedBy
-  selfRecordedAt    DateTime?
-  isGeoVerified     Boolean?
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
 
-  servantId         String
-  servant           ServantProfile @relation(fields: [servantId], references: [id])
-}
-
-model SundaySchoolChildAttendance {
-  id                String    @id @default(cuid())
-  date              DateTime
-  serviceDay        ServingDay
-  pointsAwarded     Int
-
-  childId           String
-  child             User      @relation("ChildAttendance", fields: [childId], references: [id])
-  
-  recordedByServantId String?
-  recordedByServant   ServantProfile? @relation("ServantRecorder", fields: [recordedByServantId], references: [id])
-}
-
-model WeeklyContent {
-  id                String      @id @default(cuid())
-  type              ContentType
-  title             String
-  content           String
-  points            Int
-  options           String[]
-  correctAnswer     String?
-  isActive          Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-
-  creatorId         String
-  creator           ServantProfile @relation(fields: [creatorId], references: [id])
-}
-
-model ParentChildLink {
-  id            String   @id @default(cuid())
-  status        LinkStatus @default(PENDING)
-  requestedAt   DateTime @default(now())
-
-  parentId      String
-  parent        User     @relation("ParentLinks", fields: [parentId], references: [id])
-  
-  childId       String
-  child         User     @relation("ChildLinks", fields: [childId], references: [id])
-}
-
-model ChurchInfo {
-  id              String @id @default("singleton")
-  name            String
-  address         String
-  contactNumber   String
-  latitude        Float?
-  longitude       Float?
-}
-
-// ENUMS
-
-enum Role {
-  ADMIN
-  PRIEST
-  VISITATION_SERVANT
-  SUNDAY_SCHOOL_SERVANT
-  PARENT
-  CHILD
-  MAKHDOUM // Regular user
-}
-
-enum FamilyRole {
-  FATHER
-  MOTHER
-  CHILD
-  OTHER
-}
-
-enum PriestStatus {
-  ACTIVE
-  STRESSED
-  SANCTIONED
-}
-
-enum ServantType {
-  VISITATION
-  SUNDAY_SCHOOL
-}
-
-enum ServingDay {
-  Thursday
-  Friday
-}
-
-enum VisitationStatus {
-  URGENT
-  NORMAL
-  CONTACT_ONLY
-  VISITED
-  NOT_VISITED
-}
-
-enum TaskStatus {
-  PENDING
-  COMPLETED
-}
-
-enum BookingStatus {
-  BOOKED
-  PAID
-  CANCELLED
-}
-
-enum ConfessionStatus {
-  UPCOMING
-  COMPLETED
-  NO_SHOW
-  CANCELLED
-}
-
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  EXCUSED
-}
-
-enum RecordedBy {
-  PRIEST
-  SERVANT
-}
-
-enum ContentType {
-  VERSE
-  QUESTION
-}
-
-enum LinkStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
+  @@unique([identifier, token])
 }
