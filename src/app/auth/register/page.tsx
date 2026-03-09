@@ -7,14 +7,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, CheckCircle, AlertCircle, Facebook } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import PasswordInputWithStrength from '@/components/auth/password-input-with-strength';
 
 
 const registerSchema = z.object({
@@ -83,6 +84,36 @@ export default function RegisterPage() {
     }
   };
 
+  const handleFacebookSignUp = async () => {
+    setError(null);
+    try {
+      const result = await signIn('facebook', {
+        redirect: false,
+        callbackUrl: '/auth/select-role',
+      });
+
+      if (result?.error) {
+        setError('فشل التسجيل عبر فيسبوك. يرجى المحاولة مرة أخرى.');
+        toast({
+          title: 'فشل التسجيل',
+          description: 'فشل التسجيل عبر فيسبوك. يرجى المحاولة مرة أخرى.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'تم التسجيل بنجاح!', description: `جاري توجيهك لإكمال بياناتك...` });
+        router.push('/auth/select-role');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'An unexpected error occurred with Facebook sign up.';
+      setError(errorMessage);
+      toast({
+        title: 'فشل التسجيل',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full max-w-md">
       <Card className="shadow-2xl">
@@ -114,7 +145,12 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><User className="me-2 h-4 w-4" />الاسم الكامل</FormLabel>
                     <FormControl>
-                      <Input placeholder="اسمك" {...field} />
+                      <input
+                        type="text"
+                        placeholder="اسمك"
+                        {...field}
+                        className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +163,12 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><Mail className="me-2 h-4 w-4" />البريد الإلكتروني</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="email@example.com" {...field} />
+                      <input
+                        type="email"
+                        placeholder="email@example.com"
+                        {...field}
+                        className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,7 +181,11 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel className="flex items-center"><Lock className="me-2 h-4 w-4" />كلمة المرور</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <PasswordInputWithStrength
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="********"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -150,6 +195,16 @@ export default function RegisterPage() {
             <CardFooter className="flex flex-col gap-4 p-8 pt-0">
               <Button type="submit" className="w-full" disabled={isSubmitting || !!success}>
                 {isSubmitting ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب'}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2" 
+                onClick={handleFacebookSignUp}
+                disabled={!!success}
+              >
+                <Facebook className="h-5 w-5 text-blue-600" />
+                التسجيل عبر فيسبوك
               </Button>
               <div className="text-sm text-center">
                 لديك حساب بالفعل؟{' '}

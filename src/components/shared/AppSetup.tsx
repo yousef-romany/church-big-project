@@ -18,10 +18,16 @@ export default function AppSetup({ children }: { children: ReactNode }) {
       requestNotificationPermission().then(token => {
         if (token) {
           console.info('%c🔔 FCM Token obtained in AppSetup: %s', 'color: blue; font-weight: bold;', token);
-          // TODO: Send this token to your server and associate it with the current user (if logged in)
+          
+          // Token is automatically sent to server in requestNotificationPermission
+          // It will be associated with the authenticated user automatically
         } else {
           // This often means permission was denied or not granted.
-          // console.warn("Failed to get FCM token or permission denied in AppSetup.");
+          toast({
+            title: "الإشعارات",
+            description: "لم يتمكن من تفعيل الإشعارات. يرجى السماح بالإشعارات في إعدادات المتصفح.",
+            variant: "destructive",
+          });
         }
       }).catch(error => {
         console.error("Error requesting notification permission in AppSetup:", error);

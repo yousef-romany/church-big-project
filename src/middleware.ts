@@ -1,28 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { UserRole } from '@prisma/client';
+import { auth } from '@/lib/auth';
+
+type UserRole = 'USER' | 'ADMIN' | 'PRIEST' | 'SERVANT' | 'SUNDAY_SCHOOL_SERVANT' | 'PARENT' | 'CHILD';
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+  const session = await auth();
+  const token = session?.user;
   const { pathname } = request.nextUrl;
 
   const isAuthRoute =
     pathname.startsWith('/auth/login') ||
     pathname.startsWith('/auth/register') ||
-    pathname.startsWith('/auth/verify-email');
+    pathname.startsWith('/auth/verify-email') ||
+    pathname.startsWith('/auth/forgot-password') ||
+    pathname.startsWith('/auth/reset-password') ||
+    pathname.startsWith('/auth/2fa');
 
   // If the user is logged in (token exists)
   if (token) {
-    // If they are on an auth page, redirect them to the dashboard.
+    // If they are on an auth page, redirect them based on their role
     if (isAuthRoute) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      let redirectPath = '/dashboard';
+      
+      switch (token.role) {
+        case 'ADMIN':
+          redirectPath = '/admin';
+          break;
+        case 'PRIEST':
+          redirectPath = '/priest-panel/dashboard';
+          break;
+        case 'SERVANT':
+          redirectPath = '/visitation-servant-panel/dashboard';
+          break;
+        case 'SUNDAY_SCHOOL_SERVANT':
+          redirectPath = '/sunday-school-servant-panel/dashboard';
+          break;
+        case 'PARENT':
+          redirectPath = '/makhdoum-parent-panel/dashboard';
+          break;
+        case 'CHILD':
+          redirectPath = '/makhdoum-child-panel/dashboard';
+          break;
+        default:
+          redirectPath = '/dashboard';
+      }
+      
+      return NextResponse.redirect(new URL(redirectPath, request.url));
     }
 
     // If a non-admin user tries to access an admin route, redirect them.
     if (pathname.startsWith('/admin') && token.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      let redirectPath = '/dashboard';
+      
+      switch (token.role) {
+        case 'PRIEST':
+          redirectPath = '/priest-panel/dashboard';
+          break;
+        case 'SERVANT':
+          redirectPath = '/visitation-servant-panel/dashboard';
+          break;
+        case 'SUNDAY_SCHOOL_SERVANT':
+          redirectPath = '/sunday-school-servant-panel/dashboard';
+          break;
+        case 'PARENT':
+          redirectPath = '/makhdoum-parent-panel/dashboard';
+          break;
+        case 'CHILD':
+          redirectPath = '/makhdoum-child-panel/dashboard';
+          break;
+        default:
+          redirectPath = '/dashboard';
+      }
+      
+      return NextResponse.redirect(new URL(redirectPath, request.url));
     }
-    
+
     // Otherwise, allow access
     return NextResponse.next();
   }
@@ -66,6 +118,7 @@ export const config = {
      * This uses a non-capturing group `(?:...)` at the start of the regex
      * to prevent the "Capturing groups are not allowed" parsing error.
      */
-    '/(?:(?!api/|_next/static|_next/image|favicon.ico|manifest.json|icons).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons|_next/data).*)',
   ],
 };
+

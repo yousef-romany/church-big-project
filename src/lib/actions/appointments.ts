@@ -5,16 +5,10 @@ import type { ConfessionAppointment, PriestAvailability } from '@/types/priest-p
 import type { ConfessionRequestFormInput } from '@/types/public';
 import { addMinutes, isValid, parse, format, isBefore, isEqual, startOfDay, addDays, getDay, setHours, setMinutes, isAfter } from 'date-fns';
 import { arSA } from 'date-fns/locale';
+import { combineDateAndTime } from '@/lib/utils/date-helpers';
 
 const DEFAULT_CONFESSION_DURATION_MINUTES = 30;
-const PRIEST_AVAILABILITY_ID = 'singleton_priest_availability'; // Using a fixed ID for the single priest for now
-
-export const combineDateAndTime = (dateObj: Date, timeStr: string): Date => {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  let newDate = new Date(dateObj);
-  newDate = setHours(newDate, hours, minutes, 0, 0);
-  return newDate;
-};
+const PRIEST_AVAILABILITY_ID = 'singleton_priest_availability'; // Using a fixed ID for single priest for now
 
 // --- Priest Availability ---
 
@@ -66,7 +60,7 @@ export async function getAppointments(): Promise<ConfessionAppointment[]> {
     });
     // This is a bit of a hack to reconcile the DB schema with the app's type expectations
     // A proper fix would be to align the types and schema more closely
-    return appointments.map(appt => ({
+    return appointments.map((appt: any) => ({
         ...appt,
         day: format(appt.datetime, 'EEEE', { locale: arSA }),
         time: format(appt.datetime, 'HH:mm'),
@@ -118,6 +112,102 @@ export async function deleteAppointment(appointmentId: string): Promise<void> {
   });
 }
 
+export async function bulkUpdateAppointments(
+  appointmentIds: string[],
+  updates: Partial<ConfessionAppointment>
+): Promise<void> {
+  try {
+    await prisma.confessionAppointment.updateMany({
+      where: { id: { in: appointmentIds } },
+      data: {
+        status: updates.status,
+        notes: updates.notes,
+      },
+    });
+  } catch (error) {
+    console.error("Error in bulk update appointments:", error);
+    throw error;
+  }
+}
+
+export async function bulkDeleteAppointments(appointmentIds: string[]): Promise<void> {
+  try {
+    await prisma.confessionAppointment.deleteMany({
+      where: { id: { in: appointmentIds } },
+    });
+  } catch (error) {
+    console.error("Error in bulk delete appointments:", error);
+    throw error;
+  }
+}
+
+export async function exportAppointmentsToCalendar(): Promise<string> {
+  try {
+    const appointments = await getAppointments();
+    
+    // Create iCalendar format
+    let icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Church Management System//Confession Appointments//AR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:مواعيد الاعتراف
+X-WR-CALDESC:مواعيد الاعتراف من نظام إدارة الكنيسة
+`;
+
+    appointments.forEach((appointment: any) => {
+      const startTime = new Date(appointment.datetime);
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + (appointment.durationMinutes || 30));
+      
+      const formatICalDate = (date: Date) => {
+        return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+      };
+      
+      icalContent += `
+BEGIN:VEVENT
+UID:${appointment.id}@church-management.org
+DTSTART:${formatICalDate(startTime)}
+DTEND:${formatICalDate(endTime)}
+SUMMARY:اعتراف - ${appointment.name}
+DESCRIPTION:موعد اعتراف\\n\\nالحالة: ${appointment.status}\\n${appointment.notes ? `ملاحظات: ${appointment.notes}` : ''}
+STATUS:CONFIRMED
+END:VEVENT
+`;
+    });
+
+    icalContent += `END:VCALENDAR`;
+    
+    return icalContent;
+  } catch (error) {
+    console.error("Error exporting appointments to calendar:", error);
+    throw error;
+  }
+}
+
+export async function sendAppointmentReminders(appointmentIds: string[]): Promise<void> {
+  try {
+    const appointments = await prisma.confessionAppointment.findMany({
+      where: { id: { in: appointmentIds } },
+      include: {
+        user: true,
+      },
+    });
+
+    // In a real implementation, this would send emails/SMS
+    // For now, we'll just log that reminders were sent
+    console.log(`Sending reminders for ${appointments.length} appointments:`, 
+      appointments.map((app: any) => `${app.name} - ${app.datetime}`));
+    
+    // Here you would integrate with your email/SMS service
+    // For example:
+    // await emailService.sendReminders(appointments);
+  } catch (error) {
+    console.error("Error sending appointment reminders:", error);
+    throw error;
+  }
+}
+
 export async function isSlotOverlapping(
   newSlotStart: Date,
   newSlotDurationMinutes: number,
@@ -161,18 +251,18 @@ export async function isSlotOverlapping(
   });
 
   // A more accurate check after fetching potential overlaps
-   const potentialOverlaps = await prisma.confessionAppointment.findMany({
-    where: {
-      priestId: priestIdForSlot,
-      id: { not: excludeAppointmentId },
-      datetime: {
-        gte: addMinutes(newSlotStart, -120),
-        lt: addMinutes(newSlotEnd, 120),
-      }
-    }
-   });
-   
-   const hasOverlap = potentialOverlaps.some(app => {
+    const potentialOverlaps = await prisma.confessionAppointment.findMany({
+     where: {
+       priestId: priestIdForSlot,
+       id: { not: excludeAppointmentId },
+       datetime: {
+         gte: addMinutes(newSlotStart, -120),
+         lt: addMinutes(newSlotEnd, 120),
+       }
+     }
+    });
+    
+   const hasOverlap = potentialOverlaps.some((app: any) => {
         const existingStart = app.datetime;
         const existingEnd = addMinutes(existingStart, app.durationMinutes);
         return (newSlotStart < existingEnd) && (newSlotEnd > existingStart);

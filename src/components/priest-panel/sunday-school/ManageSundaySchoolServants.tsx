@@ -14,8 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Edit, Trash2, UserCog, Users, CalendarDays as BirthDateIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, UserCog, Users, CalendarDays as BirthDateIcon, Filter } from 'lucide-react';
 import { DatePickerWithPresets } from '@/components/ui/DatePickerWithPresets';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   addSundaySchoolServant,
   getSundaySchoolServants,
@@ -43,6 +44,8 @@ export default function ManageSundaySchoolServants() {
   const [servants, setServants] = useState<SundaySchoolServant[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingServant, setEditingServant] = useState<SundaySchoolServant | null>(null);
+  const [filterClass, setFilterClass] = useState<string>('all');
+  const [filterDay, setFilterDay] = useState<string>('all');
   const { toast } = useToast();
 
   const form = useForm<ServantFormData>({
@@ -53,6 +56,15 @@ export default function ManageSundaySchoolServants() {
   useEffect(() => {
     setServants(getSundaySchoolServants());
   }, []);
+
+  // Filter servants based on selected filters
+  const filteredServants = servants.filter(servant => {
+    const matchesDay = filterDay === 'all' || servant.servingDays.includes(filterDay as ServingDay);
+    const matchesActive = filterClass === 'all' || 
+                         (filterClass === 'active' && servant.isActive) || 
+                         (filterClass === 'inactive' && !servant.isActive);
+    return matchesDay && matchesActive;
+  });
 
   const openModalForEdit = (servant: SundaySchoolServant) => {
     setEditingServant(servant);
@@ -104,16 +116,50 @@ export default function ManageSundaySchoolServants() {
 
   return (
     <Card className="shadow-lg">
-      <CardHeader className="flex flex-row justify-between items-center">
-        <div>
-          <CardTitle className="flex items-center"><UserCog className="me-2 h-6 w-6 text-primary"/>إدارة خدام مدارس الأحد</CardTitle>
-          <CardDescription>إضافة، تعديل، وعرض قائمة خدام مدارس الأحد.</CardDescription>
+      <CardHeader className="flex flex-col items-start gap-4">
+        <div className="flex flex-row justify-between items-center w-full">
+          <div>
+            <CardTitle className="flex items-center"><UserCog className="me-2 h-6 w-6 text-primary"/>إدارة خدام مدارس الأحد</CardTitle>
+            <CardDescription>إضافة، تعديل، وعرض قائمة خدام مدارس الأحد.</CardDescription>
+          </div>
+          <Button onClick={openModalForAdd}><PlusCircle className="me-2 h-5 w-5" /> إضافة خادم جديد</Button>
         </div>
-        <Button onClick={openModalForAdd}><PlusCircle className="me-2 h-5 w-5" /> إضافة خادم جديد</Button>
+        
+        <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">تصفية حسب:</span>
+          </div>
+          <Select value={filterDay} onValueChange={setFilterDay}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="اختر يوم الخدمة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الأيام</SelectItem>
+              <SelectItem value="Thursday">الخميس</SelectItem>
+              <SelectItem value="Friday">الجمعة</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={filterClass} onValueChange={setFilterClass}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="اختر الحالة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الخدام</SelectItem>
+              <SelectItem value="active">الخدام النشطون</SelectItem>
+              <SelectItem value="inactive">الخدام غير النشطين</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
-        {servants.length === 0 ? (
-          <p className="text-center text-muted-foreground py-6">لا يوجد خدام مضافون حاليًا.</p>
+        {filteredServants.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">
+            {servants.length === 0 
+              ? "لا يوجد خدام مضافون حاليًا." 
+              : "لا توجد نتائج تطابق الفلتر المحدد."}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -127,29 +173,33 @@ export default function ManageSundaySchoolServants() {
                   <TableHead className="text-left">إجراءات</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {servants.map((servant) => (
-                  <TableRow key={servant.id}>
-                    <TableCell className="font-medium">{servant.name}</TableCell>
-                    <TableCell>{servant.servingDays.map(day => servingDaysOptions.find(opt => opt.id === day)?.label).join('، ')}</TableCell>
-                    <TableCell>
-                      {servant.birthDate && isValid(parseISO(servant.birthDate))
-                        ? format(parseISO(servant.birthDate), 'd MMMM yyyy', { locale: arSA })
-                        : '-'}
-                    </TableCell>
-                    <TableCell dir="ltr">{servant.contactNumber || '-'}</TableCell>
-                    <TableCell>{servant.isActive ? 'نشط' : 'غير نشط'}</TableCell>
-                    <TableCell className="text-left space-x-1 rtl:space-x-reverse">
-                      <Button variant="ghost" size="icon" onClick={() => openModalForEdit(servant)} className="text-blue-500 hover:text-blue-700">
-                        <Edit className="h-4 w-4" /> <span className="sr-only">تعديل</span>
-                      </Button>
-                       <Button variant="ghost" size="icon" onClick={() => handleDeleteServant(servant.id)} className="text-red-500 hover:text-red-700">
-                        <Trash2 className="h-4 w-4" /> <span className="sr-only">حذف</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+               <TableBody>
+                 {filteredServants.map((servant) => (
+                   <TableRow key={servant.id} className={!servant.isActive ? "opacity-60" : ""}>
+                     <TableCell className="font-medium">{servant.name}</TableCell>
+                     <TableCell>{servant.servingDays.map(day => servingDaysOptions.find(opt => opt.id === day)?.label).join('، ')}</TableCell>
+                     <TableCell>
+                       {servant.birthDate && isValid(parseISO(servant.birthDate))
+                         ? format(parseISO(servant.birthDate), 'd MMMM yyyy', { locale: arSA })
+                         : '-'}
+                     </TableCell>
+                     <TableCell dir="ltr">{servant.contactNumber || '-'}</TableCell>
+                     <TableCell>
+                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${servant.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                         {servant.isActive ? 'نشط' : 'غير نشط'}
+                       </span>
+                     </TableCell>
+                     <TableCell className="text-left space-x-1 rtl:space-x-reverse">
+                       <Button variant="ghost" size="icon" onClick={() => openModalForEdit(servant)} className="text-blue-500 hover:text-blue-700">
+                         <Edit className="h-4 w-4" /> <span className="sr-only">تعديل</span>
+                       </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteServant(servant.id)} className="text-red-500 hover:text-red-700">
+                         <Trash2 className="h-4 w-4" /> <span className="sr-only">حذف</span>
+                       </Button>
+                     </TableCell>
+                   </TableRow>
+                 ))}
+               </TableBody>
             </Table>
           </div>
         )}
@@ -212,39 +262,33 @@ export default function ManageSundaySchoolServants() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                 />
+                 
                  {editingServant && (
-                    <FormField
-                      control={form.control} // Use the main form's control
-                      name="isActive" // This field is not in servantSchema, so it won't be validated by Zod directly here.
-                                      // It's managed via the `editingServant` state.
-                      render={({ field }) => ( // `field` here won't directly control isActive, it's illustrative
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/50">
-                          <div className="space-y-0.5">
-                            <FormLabel>حالة الخادم</FormLabel>
-                            <FormDescription>
-                              هل هذا الخادم نشط حاليًا في الخدمة؟
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Checkbox // This checkbox updates the local `editingServant` state, not react-hook-form directly for this field.
-                              checked={editingServant.isActive}
-                              onCheckedChange={(checked) => {
-                                setEditingServant(prev => prev ? {...prev, isActive: Boolean(checked)} : null);
-                              }}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-muted/50">
+                      <div className="space-y-0.5">
+                        <FormLabel>حالة الخادم</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          هل هذا الخادم نشط حاليًا في الخدمة؟
+                        </p>
+                      </div>
+                      <div>
+                        <Checkbox
+                          checked={editingServant.isActive}
+                          onCheckedChange={(checked) => {
+                            setEditingServant(prev => prev ? {...prev, isActive: Boolean(checked)} : null);
+                          }}
+                        />
+                      </div>
+                    </FormItem>
                   )}
 
-                <DialogFooter className="pt-4">
-                  <DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose>
-                  <Button type="submit">{editingServant ? 'حفظ التعديلات' : 'إضافة الخادم'}</Button>
-                </DialogFooter>
-              </form>
-            </Form>
+                 <DialogFooter className="pt-4">
+                   <DialogClose asChild><Button type="button" variant="outline">إلغاء</Button></DialogClose>
+                   <Button type="submit">{editingServant ? 'حفظ التعديلات' : 'إضافة الخادم'}</Button>
+                 </DialogFooter>
+               </form>
+             </Form>
           </DialogContent>
         </Dialog>
       </CardContent>

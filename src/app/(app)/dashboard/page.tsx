@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { UserRole } from '@prisma/client';
+
+type UserRole = 'USER' | 'ADMIN' | 'PRIEST' | 'SERVANT' | 'PARENT' | 'CHILD';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -41,7 +42,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {session?.user?.role === UserRole.ADMIN && (
+          {session?.user?.role === 'ADMIN' && (
             <div className="p-4 bg-primary/10 rounded-md">
               <h3 className="font-bold text-lg text-primary">Admin Access</h3>
               <p>You have access to the admin area.</p>

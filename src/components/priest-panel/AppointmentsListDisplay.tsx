@@ -7,11 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Search, ListFilter, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange } from 'lucide-react';
+import { Edit2, Trash2, Bell, CheckCircle, XCircle, Clock, CalendarDays, Search, ListFilter, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange, Download, Send, SquareCheck } from 'lucide-react';
 import { format, addMinutes, isWithinInterval, differenceInMinutes, isValid, startOfDay, parse, isBefore, isEqual, isAfter, endOfDay, addDays, isToday, isTomorrow } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { arSA } from 'date-fns/locale';
@@ -35,18 +47,30 @@ interface AppointmentsListDisplayProps {
   onEdit: (appointment: ConfessionAppointment) => void;
   onDelete: (id: string) => void;
   showUpcomingAlerts?: boolean;
+  onBulkUpdate?: (ids: string[], updates: Partial<ConfessionAppointment>) => void;
+  onBulkDelete?: (ids: string[]) => void;
+  onExportCalendar?: () => void;
+  onSendReminders?: (ids: string[]) => void;
 }
 
 export default function AppointmentsListDisplay({ 
   appointments, 
   onEdit, 
   onDelete,
-  showUpcomingAlerts = false 
+  showUpcomingAlerts = false,
+  onBulkUpdate,
+  onBulkDelete,
+  onExportCalendar,
+  onSendReminders
 }: AppointmentsListDisplayProps) {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<ConfessionStatus | 'الكل'>('الكل');
   const [filterDateRange, setFilterDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedAppointments, setSelectedAppointments] = useState<Set<string>>(new Set());
+  const [isBulkActionDialogOpen, setIsBulkActionDialogOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'update' | 'delete' | 'remind' | null>(null);
+  const [bulkStatusUpdate, setBulkStatusUpdate] = useState<ConfessionStatus>('قادم');
 
   useEffect(() => {
     setCurrentTime(new Date());
@@ -90,6 +114,52 @@ export default function AppointmentsListDisplay({
     setSearchTerm('');
     setFilterStatus('الكل');
     setFilterDateRange(undefined);
+  };
+
+  const toggleAppointmentSelection = (id: string) => {
+    const newSelected = new Set(selectedAppointments);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedAppointments(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedAppointments.size === filteredAppointments.length) {
+      setSelectedAppointments(new Set());
+    } else {
+      setSelectedAppointments(new Set(filteredAppointments.map(app => app.id)));
+    }
+  };
+
+  const executeBulkAction = () => {
+    if (selectedAppointments.size === 0) return;
+    
+    const selectedIds = Array.from(selectedAppointments);
+    
+    switch (bulkAction) {
+      case 'update':
+        if (onBulkUpdate) {
+          onBulkUpdate(selectedIds, { status: bulkStatusUpdate });
+        }
+        break;
+      case 'delete':
+        if (onBulkDelete) {
+          onBulkDelete(selectedIds);
+        }
+        break;
+      case 'remind':
+        if (onSendReminders) {
+          onSendReminders(selectedIds);
+        }
+        break;
+    }
+    
+    setSelectedAppointments(new Set());
+    setIsBulkActionDialogOpen(false);
+    setBulkAction(null);
   };
 
   const upcomingSummary = useMemo(() => {
@@ -235,9 +305,107 @@ export default function AppointmentsListDisplay({
               </Popover>
             </div>
           </div>
-          <Button onClick={clearFilters} variant="outline" size="sm">
-            <ClearFilterIcon className="me-2 h-4 w-4" /> مسح الفلاتر
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={clearFilters} variant="outline" size="sm">
+              <ClearFilterIcon className="me-2 h-4 w-4" /> مسح الفلاتر
+            </Button>
+            
+            {onExportCalendar && (
+              <Button onClick={onExportCalendar} variant="outline" size="sm">
+                <Download className="me-2 h-4 w-4" /> تصدير التقويم
+              </Button>
+            )}
+            
+            {selectedAppointments.size > 0 && (
+              <>
+                <Badge variant="secondary" className="px-3 py-1">
+                  {selectedAppointments.size} محدد
+                </Badge>
+                
+                <Dialog open={isBulkActionDialogOpen} onOpenChange={setIsBulkActionDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      إجراءات مجمعة
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>إجراءات مجمعة ({selectedAppointments.size} موعد)</DialogTitle>
+                      <DialogDescription>
+                        اختر الإجراء الذي تريد تطبيقه على المواعيد المحددة
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button
+                          variant="outline"
+                          className="justify-start"
+                          onClick={() => setBulkAction('update')}
+                        >
+                          <Edit2 className="ml-2 h-4 w-4" />
+                          تحديث الحالة
+                        </Button>
+                        
+                        {onSendReminders && (
+                          <Button
+                            variant="outline"
+                            className="justify-start"
+                            onClick={() => setBulkAction('remind')}
+                          >
+                            <Send className="ml-2 h-4 w-4" />
+                            إرسال تذكيرات
+                          </Button>
+                        )}
+                        
+                        <Button
+                          variant="outline"
+                          className="justify-start text-red-600 hover:text-red-700"
+                          onClick={() => setBulkAction('delete')}
+                        >
+                          <Trash2 className="ml-2 h-4 w-4" />
+                          حذف المواعيد
+                        </Button>
+                      </div>
+                      
+                      {bulkAction === 'update' && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">الحالة الجديدة:</label>
+                          <Select value={bulkStatusUpdate} onValueChange={(value) => setBulkStatusUpdate(value as ConfessionStatus)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(['قادم', 'تم', 'لم يحضر', 'ملغى'] as ConfessionStatus[]).map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      {bulkAction === 'delete' && (
+                        <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md">
+                          <p className="text-sm text-red-800 dark:text-red-200">
+                            هل أنت متأكد من حذف {selectedAppointments.size} موعد؟ هذا الإجراء لا يمكن التراجع عنه.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsBulkActionDialogOpen(false)}>
+                        إلغاء
+                      </Button>
+                      <Button onClick={executeBulkAction} disabled={!bulkAction}>
+                        تنفيذ الإجراء
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -254,48 +422,62 @@ export default function AppointmentsListDisplay({
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>اسم المعترف</TableHead>
-                    <TableHead>اليوم والتاريخ</TableHead>
-                    <TableHead>الساعة</TableHead>
-                    <TableHead>المدة</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead>ملاحظات</TableHead>
-                    <TableHead className="text-left">إجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
+                 <TableHeader>
+                   <TableRow>
+                     <TableHead className="w-12">
+                       <Checkbox
+                         checked={selectedAppointments.size === filteredAppointments.length && filteredAppointments.length > 0}
+                         onCheckedChange={toggleSelectAll}
+                         aria-label="تحديد الكل"
+                       />
+                     </TableHead>
+                     <TableHead>اسم المعترف</TableHead>
+                     <TableHead>اليوم والتاريخ</TableHead>
+                     <TableHead>الساعة</TableHead>
+                     <TableHead>المدة</TableHead>
+                     <TableHead>الحالة</TableHead>
+                     <TableHead>ملاحظات</TableHead>
+                     <TableHead className="text-left">إجراءات</TableHead>
+                   </TableRow>
+                 </TableHeader>
                 <TableBody>
                   <AnimatePresence>
                     {filteredAppointments.map((appointment) => (
-                      <motion.tr
-                        key={appointment.id}
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        className="hover:bg-muted/50"
-                      >
-                        <TableCell className="font-medium">{appointment.name}</TableCell>
-                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), "EEEE, PPP", { locale: arSA }) : 'تاريخ غير صالح'}</TableCell>
-                        <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), 'hh:mm a', { locale: arSA }) : '--:--'}</TableCell>
-                        <TableCell>{appointment.durationMinutes || 30} د</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center w-fit ${statusStyles[appointment.status]}`}>
-                            {statusIcons[appointment.status]}
-                            <span className="ms-1">{appointment.status}</span>
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={appointment.notes}>{appointment.notes || '-'}</TableCell>
-                        <TableCell className="text-left space-x-1 rtl:space-x-reverse">
-                          <Button variant="ghost" size="icon" onClick={() => onEdit(appointment)} className="text-blue-500 hover:text-blue-700">
-                            <Edit2 className="h-4 w-4" /> <span className="sr-only">تعديل</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => onDelete(appointment.id)} className="text-red-500 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" /> <span className="sr-only">حذف</span>
-                          </Button>
-                        </TableCell>
-                      </motion.tr>
+                       <motion.tr
+                         key={appointment.id}
+                         layout
+                         initial={{ opacity: 0 }}
+                         animate={{ opacity: 1 }}
+                         exit={{ opacity: 0, x: -50 }}
+                         className={`hover:bg-muted/50 ${selectedAppointments.has(appointment.id) ? 'bg-primary/5' : ''}`}
+                       >
+                         <TableCell>
+                           <Checkbox
+                             checked={selectedAppointments.has(appointment.id)}
+                             onCheckedChange={() => toggleAppointmentSelection(appointment.id)}
+                             aria-label={`حدد موعد ${appointment.name}`}
+                           />
+                         </TableCell>
+                         <TableCell className="font-medium">{appointment.name}</TableCell>
+                         <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), "EEEE, PPP", { locale: arSA }) : 'تاريخ غير صالح'}</TableCell>
+                         <TableCell>{isValid(new Date(appointment.datetime)) ? format(new Date(appointment.datetime), 'hh:mm a', { locale: arSA }) : '--:--'}</TableCell>
+                         <TableCell>{appointment.durationMinutes || 30} د</TableCell>
+                         <TableCell>
+                           <span className={`px-2 py-1 text-xs font-semibold rounded-full flex items-center w-fit ${statusStyles[appointment.status]}`}>
+                             {statusIcons[appointment.status]}
+                             <span className="ms-1">{appointment.status}</span>
+                           </span>
+                         </TableCell>
+                         <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={appointment.notes}>{appointment.notes || '-'}</TableCell>
+                         <TableCell className="text-left space-x-1 rtl:space-x-reverse">
+                           <Button variant="ghost" size="icon" onClick={() => onEdit(appointment)} className="text-blue-500 hover:text-blue-700">
+                             <Edit2 className="h-4 w-4" /> <span className="sr-only">تعديل</span>
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => onDelete(appointment.id)} className="text-red-500 hover:text-red-700">
+                             <Trash2 className="h-4 w-4" /> <span className="sr-only">حذف</span>
+                           </Button>
+                         </TableCell>
+                       </motion.tr>
                     ))}
                   </AnimatePresence>
                 </TableBody>

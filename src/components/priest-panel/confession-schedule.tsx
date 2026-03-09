@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { PlusCircle, CalendarDays, Settings, AlertCircle, XCircle as ClearFilterIcon, CalendarClock, CalendarPlus, CalendarRange, Edit2, Trash2 } from 'lucide-react';
-import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays, addMinutes } from 'date-fns';
+import { format, isValid, parse, isBefore, isEqual, startOfDay, addDays, addMinutes, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
 import { arSA } from 'date-fns/locale';
 import { 
   Select,
@@ -31,12 +31,17 @@ import {
   addAppointment, 
   updateAppointment, 
   deleteAppointment,
+  bulkUpdateAppointments,
+  bulkDeleteAppointments,
   getPriestAvailability, 
   setPriestAvailability,
-  combineDateAndTime,
   isSlotOverlapping,
-} from '@/lib/actions/appointments';
-import AppointmentsListDisplay from './AppointmentsListDisplay'; 
+  exportAppointmentsToCalendar,
+  sendAppointmentReminders,
+ } from '@/lib/actions/appointments';
+import { combineDateAndTime } from '@/lib/utils/date-helpers';
+import AppointmentsListDisplay from './AppointmentsListDisplay';
+import CalendarView from './CalendarView'; 
 
 const appointmentSchema = z.object({
   name: z.string().min(3, { message: "الاسم يجب أن يكون 3 أحرف على الأقل" }),
@@ -70,6 +75,8 @@ export default function ConfessionSchedule() {
   const [dateToCancel, setDateToCancel] = useState<Date | undefined>();
   const [newDateForReschedule, setNewDateForReschedule] = useState<Date | undefined>();
   const [newTimeForReschedule, setNewTimeForReschedule] = useState<string>("");
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const fetchAllData = async () => {
       const [appts, availability] = await Promise.all([
@@ -221,6 +228,69 @@ export default function ConfessionSchedule() {
     setDateToCancel(undefined);
     setNewDateForReschedule(undefined);
     setNewTimeForReschedule("");
+  };
+
+  const handleBulkUpdate = async (ids: string[], updates: Partial<ConfessionAppointment>) => {
+    try {
+      await bulkUpdateAppointments(ids, updates);
+      await fetchAllData();
+      toast({ title: "تم التحديث بنجاح", description: `تم تحديث ${ids.length} موعد` });
+    } catch (error) {
+      toast({ 
+        title: "خطأ في التحديث", 
+        description: "حدث خطأ أثناء تحديث المواعيد",
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      await bulkDeleteAppointments(ids);
+      await fetchAllData();
+      toast({ title: "تم الحذف بنجاح", description: `تم حذف ${ids.length} موعد`, variant: "destructive" });
+    } catch (error) {
+      toast({ 
+        title: "خطأ في الحذف", 
+        description: "حدث خطأ أثناء حذف المواعيد",
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleExportCalendar = async () => {
+    try {
+      const icalContent = await exportAppointmentsToCalendar();
+      const blob = new Blob([icalContent], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `confession-appointments-${format(new Date(), 'yyyy-MM-dd')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "تم تصدير التقويم بنجاح" });
+    } catch (error) {
+      toast({ 
+        title: "خطأ في التصدير", 
+        description: "حدث خطأ أثناء تصدير التقويم",
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleSendReminders = async (ids: string[]) => {
+    try {
+      await sendAppointmentReminders(ids);
+      toast({ title: "تم إرسال التذكيرات", description: `تم إرسال تذكيرات لـ ${ids.length} موعد` });
+    } catch (error) {
+      toast({ 
+        title: "خطأ في الإرسال", 
+        description: "حدث خطأ أثناء إرسال التذكيرات",
+        variant: "destructive" 
+      });
+    }
   };
 
   return (
@@ -434,12 +504,46 @@ export default function ConfessionSchedule() {
             </Dialog>
       </div>
       
-      <AppointmentsListDisplay 
-        appointments={appointments}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        showUpcomingAlerts={true}
-      />
+      {/* View Mode Toggle */}
+      <div className="flex justify-end mb-4">
+        <div className="bg-muted p-1 rounded-lg flex">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            قائمة
+          </Button>
+          <Button
+            variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('calendar')}
+          >
+            تقويم
+          </Button>
+        </div>
+      </div>
+      
+      {viewMode === 'list' ? (
+        <AppointmentsListDisplay 
+          appointments={appointments}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          showUpcomingAlerts={true}
+          onBulkUpdate={handleBulkUpdate}
+          onBulkDelete={handleBulkDelete}
+          onExportCalendar={handleExportCalendar}
+          onSendReminders={handleSendReminders}
+        />
+      ) : (
+        <CalendarView 
+          appointments={appointments}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          month={calendarMonth}
+          onMonthChange={setCalendarMonth}
+        />
+      )}
     </motion.div>
   );
 }

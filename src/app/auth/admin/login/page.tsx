@@ -6,7 +6,7 @@ export default function AdminLoginPage() {
     <LoginForm
       title="تسجيل دخول الإدارة"
       description="مرحباً بك! يرجى إدخال بيانات الاعتماد الخاصة بك للوصول إلى لوحة تحكم الإدارة."
-      redirectPath="/dashboard"
+      redirectPath="/admin"
       userRoleIconName="Building"
     />
   );

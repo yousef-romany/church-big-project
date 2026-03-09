@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog, Award, Plane, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, BookUser, Footprints, UsersRound, SendHorizonal, Settings, Church, Search, ArrowRightToLine, ClipboardList, ChevronDown, UserCog, Award, Plane, User as UserIcon, MapPin, MessageSquare } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -72,14 +72,15 @@ const allNavItems: CombinedNavItem[] = [
     ]
   },
   {
-    groupTitle: "خدمات الرعية",
-    icon: UsersRound,
-    items: [
-      { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
-      { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
-      { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم للافتقاد" },
-    ]
-  },
+     groupTitle: "خدمات الرعية",
+     icon: UsersRound,
+     items: [
+       { href: "/priest-panel/visitations", icon: Footprints, label: "خدمة الافتقاد" },
+       { href: "/priest-panel/families/add", icon: UsersRound, label: "إضافة أسرة" },
+       { href: "/priest-panel/send-servant", icon: SendHorizonal, label: "إرسال خادم للافتقاد" },
+       { href: "/priest-panel/map", icon: MapPin, label: "الخرائط والمواقع" },
+     ]
+   },
    {
     groupTitle: "إدارة الفعاليات والنقاط",
     icon: Award,
@@ -99,6 +100,13 @@ const allNavItems: CombinedNavItem[] = [
     icon: UserCog,
     items: [
       { href: "/priest-panel/sunday-school", icon: UserCog, label: "الإدارة والحضور" },
+    ]
+  },
+  {
+    groupTitle: "أدوات الاتصال",
+    icon: MessageSquare,
+    items: [
+      { href: "/priest-panel/communications", icon: MessageSquare, label: "الرسائل والإشعارات" },
     ]
   },
 ];

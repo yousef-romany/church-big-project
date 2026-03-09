@@ -57,7 +57,27 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       const currentToken = await getToken(messagingInstance, { vapidKey: vapidKey });
       if (currentToken) {
         console.info('%c🔔 FCM Token Obtained: %s', 'color: green; font-weight: bold;', currentToken);
-        // TODO: أرسل هذا التوكن إلى خادمك وقم بتخزينه مقابل المستخدم لإرسال الإشعارات
+        
+        // Send token to server
+        try {
+          const response = await fetch('/api/notifications/register-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: currentToken }),
+          });
+          
+          if (response.ok) {
+            console.info('FCM token registered successfully');
+            localStorage.setItem('fcmTokenRegistered', 'true');
+          } else {
+            console.error('Failed to register FCM token:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error registering FCM token:', error);
+        }
+        
         localStorage.setItem('fcmToken', currentToken); // لغرض العرض التوضيحي فقط
         return currentToken;
       } else {

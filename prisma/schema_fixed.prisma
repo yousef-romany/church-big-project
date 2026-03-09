@@ -1,0 +1,399 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  family        Family?   @relation("UserFamily", fields: [familyId], references: [id])
+  familyId      String?
+  createdFamilies Family[] @relation("FamilyCreator")
+
+  priestProfile    PriestProfile?
+  servantProfile   ServantProfile?
+  parentProfile    ParentProfile?
+  childProfile     ChildProfile?
+  createdEvents    Event[]
+  createdTrips     Trip[]
+  tripBookings     Booking[]
+  sentLinkRequests LinkRequest[] @relation("ParentLinkRequests")
+  receivedLinkRequests LinkRequest[] @relation("ChildLinkRequests")
+  auditLogs         AuditLog[]
+  confessionAppointments ConfessionAppointment[]
+  sundaySchoolChildAttendance SundaySchoolChildAttendance[]
+  
+  // Notification relationships - using simple foreign keys without @relation to avoid cycles
+  sentNotifications     Notification[]       @relation("SentNotifications")
+  receivedNotifications Notification[]       @relation("ReceivedNotifications")
+  deviceTokens          UserDeviceToken[]
+  notificationPreferences NotificationPreference?
+}
+
+model PriestProfile {
+  id      String @id @default(cuid())
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @unique
+
+  confessionAppointments ConfessionAppointment[]
+  assignedVisitations    VisitationTask[]
+}
+
+model ServantProfile {
+  id        String       @id @default(cuid())
+  user      User         @relation(fields: [userId], references: [id])
+  userId    String       @unique
+  servantType   ServantType
+  visitationTasks VisitationTask[]
+  attendance      SundaySchoolAttendance[]
+}
+
+model ParentProfile {
+  id         String @id @default(cuid())
+  user       User   @relation(fields: [userId], references: [id])
+  userId     String @unique
+  linkedChildren User[] @relation("ParentChildLink")
+}
+
+model ChildProfile {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String @unique
+  points   Int    @default(0)
+  qrCode   String @unique @default(cuid())
+  parents  User[] @relation("ParentChildLink")
+  attendance SundaySchoolChildAttendance[]
+}
+
+model Family {
+  id          String @id @default(cuid())
+  familyName  String
+  address     String
+  region      String?
+  phoneNumber String?
+  notes       String?
+  latitude    Float?
+  longitude   Float?
+  createdBy   User   @relation("FamilyCreator", fields: [createdById], references: [id])
+  createdById String
+}
+
+model ConfessionAppointment {
+  id               String   @id @default(cuid())
+  name             String
+  datetime         DateTime
+  durationMinutes  Int      @default(30)
+  status           String // e.g., 'قادم', 'تم', 'ملغى'
+  notes            String?
+  bookedBySystem   Boolean  @default(false)
+  
+  priest           PriestProfile @relation(fields: [priestId], references: [id])
+  priestId         String
+  user             User    @relation("ConfessionAppointmentUser", fields: [userId], references: [id])
+  userId           String?  // The user who booked it
+}
+
+model PriestAvailability {
+  id        String   @id @default(cuid())
+  priestId  String   @unique // Foreign key to PriestProfile or User
+  // Storing availability as a JSON string for simplicity
+  // A more normalized approach would be a separate table for slots
+  availabilityJson String
+}
+
+model VisitationTask {
+  id          String   @id @default(cuid())
+  familyId    String
+  familyName  String
+  address     String
+  notesFromPriest String?
+  status      String   @default("pending") // pending, completed
+  assignedAt  DateTime @default(now())
+  completedAt DateTime?
+
+  assignedBy   PriestProfile @relation(fields: [assignedById], references: [id])
+  assignedById String
+  servant      ServantProfile @relation(fields: [servantId], references: [id])
+  servantId    String
+  servantNotes String?
+}
+
+model SundaySchoolAttendance {
+  id            String  @id @default(cuid())
+  date          DateTime
+  status        String // present, absent, excused
+  notes         String?
+  recordedByPriest Boolean @default(false)
+  
+  servant       ServantProfile @relation(fields: [servantId], references: [id])
+  servantId     String
+}
+
+model SundaySchoolChildAttendance {
+    id String @id @default(cuid())
+    date DateTime
+    pointsAwarded Int @default(10)
+    
+    child User @relation("SundaySchoolChildAttendanceChild", fields: [childId], references: [id])
+    childId String
+    recordedByServantId String?
+    recordedByPriest Boolean @default(false)
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  datetime    DateTime
+  location    String
+  points      Int
+
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById String
+}
+
+model Trip {
+  id          String    @id @default(cuid())
+  title       String
+  destination String
+  startDate   DateTime
+  endDate     DateTime
+  price       Float
+  capacity    Int
+  overview    String
+  itinerary   String
+  included    String
+  excluded    String
+
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdById String
+  bookings    Booking[]
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  bookingCode String   @unique
+  status      String   @default("booked") // booked, paid
+
+  trip        Trip     @relation(fields: [tripId], references: [id])
+  tripId      String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+}
+
+model LinkRequest {
+  id          String @id @default(cuid())
+  status      String @default("pending") // pending, accepted, rejected
+  requestedAt DateTime @default(now())
+
+  parent      User   @relation("ParentLinkRequests", fields: [parentId], references: [id])
+  parentId    String
+  child       User   @relation("ChildLinkRequests", fields: [childId], references: [id])
+  childId     String
+
+  @@unique([parentId, childId])
+}
+
+model ChurchInfo {
+  id            String @id @default("singleton") // Ensures only one row can exist
+  name          String
+  address       String
+  contactNumber String
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Passkey {
+  id       String    @id @default(cuid())
+  key      String    @unique
+  isActive Boolean    @default(true)
+  userId   String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  PRIEST
+  SERVANT
+  PARENT
+  CHILD
+}
+
+enum ServantType {
+    VISITATION
+    SUNDAY_SCHOOL
+}
+
+// Models for NextAuth.js
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  oldValues   Json?
+  newValues   Json?
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+}
+
+// Notification System Models
+model UserDeviceToken {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  deviceInfo  Json?    // Browser, OS, device type info
+  isActive    Boolean  @default(true)
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([token])
+  @@index([isActive, lastSeenAt])
+}
+
+model Notification {
+  id              String              @id @default(cuid())
+  title           String
+  body            String
+  type            String              @default("INFO")
+  priority        String              @default("MEDIUM")
+  data            Json?                // Additional payload data
+  imageUrl        String?              // Optional image URL
+  actionUrl       String?              // Optional action URL when clicked
+  
+  // Sender and recipient
+  senderId        String?
+  recipientId     String
+  
+  // Status and tracking
+  readStatus      Boolean              @default(false)
+  readAt          DateTime?
+  deliveryStatus  String               @default("PENDING")
+  deliveredAt     DateTime?
+  
+  // Scheduling
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  
+  // Template reference
+  templateId      String?
+  
+  // Metadata
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  
+  @@index([recipientId, readStatus])
+  @@index([recipientId, createdAt])
+  @@index([deliveryStatus])
+  @@index([type])
+  @@index([priority])
+  @@index([scheduledFor])
+  
+  // Relations to avoid cycles
+  sender          User?               @relation("SentNotifications", fields: [senderId], references: [id])
+  recipient       User                 @relation("ReceivedNotifications", fields: [recipientId], references: [id])
+}
+
+model NotificationPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  emailEnabled    Boolean  @default(true)
+  pushEnabled     Boolean  @default(true)
+  smsEnabled      Boolean  @default(false)
+  
+  // Category preferences
+  urgentEnabled   Boolean  @default(true)
+  infoEnabled     Boolean  @default(true)
+  reminderEnabled Boolean  @default(true)
+  
+  // Quiet hours
+  quietHoursStart String?  // HH:MM format
+  quietHoursEnd   String?  // HH:MM format
+  timezone        String?  @default("UTC")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relation to User without creating a cycle
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationTemplate {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  titleTemplate   String   // Template with placeholders: {{userName}}, {{eventName}}, etc.
+  bodyTemplate    String   // Template with placeholders
+  type            String   @default("INFO")
+  priority        String   @default("MEDIUM")
+  description     String?  // Admin description of when to use this template
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

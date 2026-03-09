@@ -44,7 +44,7 @@ export default function DevotionalMessageDisplay() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-primary flex items-center">
               <Sparkles className="h-4 w-4 me-1.5" />
-              رسالة اليوم (AI)
+              رسالة اليوم
             </CardTitle>
             <Button
               variant="ghost"

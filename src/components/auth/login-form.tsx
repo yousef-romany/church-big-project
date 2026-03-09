@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users, Footprints, CalendarCheck, Baby, Shield, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, Building, UserSquare, UserCheck, Users, Footprints, CalendarCheck, Baby, Shield, AlertCircle, Facebook } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "البريد الإلكتروني غير صالح" }),
@@ -75,6 +75,12 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
             errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
         } else if (result.error.includes('Email not verified')) {
             errorMessage = 'الحساب غير مفعل. الرجاء مراجعة بريدك الإلكتروني لتفعيل الحساب.';
+        } else if (result.error.includes('الحساب مقفل')) {
+            // Account locked error - show the full message
+            errorMessage = result.error;
+        } else if (result.error.includes('تم تجاوز عدد المحاولات')) {
+            // Account just locked
+            errorMessage = result.error;
         }
         setError(errorMessage);
         toast({
@@ -94,6 +100,36 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
           description: errorMessage,
           variant: 'destructive',
         });
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    setError(null);
+    try {
+      const result = await signIn('facebook', {
+        redirect: false,
+        callbackUrl: redirectPath,
+      });
+
+      if (result?.error) {
+        setError('فشل تسجيل الدخول عبر فيسبوك. يرجى المحاولة مرة أخرى.');
+        toast({
+          title: 'فشل تسجيل الدخول',
+          description: 'فشل تسجيل الدخول عبر فيسبوك. يرجى المحاولة مرة أخرى.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'تم تسجيل الدخول بنجاح!', description: `مرحبًا بك، جاري توجيهك...` });
+        router.push(redirectPath);
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'An unexpected error occurred with Facebook login.';
+      setError(errorMessage);
+      toast({
+        title: 'فشل تسجيل الدخول',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -178,7 +214,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                 />
               </motion.div>
               <motion.div variants={fieldVariants(0.3)} className="text-sm">
-                <Link href="#" className="text-primary hover:underline">
+                <Link href="/auth/forgot-password" className="text-primary hover:underline">
                   هل نسيت كلمة المرور؟
                 </Link>
               </motion.div>
@@ -207,7 +243,19 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                   )}
                 </Button>
               </motion.div>
-              <motion.div variants={fieldVariants(0.5)} className="text-sm text-center">
+              <motion.div variants={fieldVariants(0.5)} className="w-full">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full h-12 text-lg font-semibold transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2" 
+                  onClick={handleFacebookSignIn}
+                  size="lg"
+                >
+                  <Facebook className="h-5 w-5 text-blue-600" />
+                  تسجيل الدخول عبر فيسبوك
+                </Button>
+              </motion.div>
+              <motion.div variants={fieldVariants(0.6)} className="text-sm text-center">
                 ليس لديك حساب؟{' '}
                 <Link href="/auth/register" className="font-semibold text-primary hover:underline">
                   إنشاء حساب جديد
