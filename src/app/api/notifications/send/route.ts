@@ -51,7 +51,11 @@ const roleBasedNotificationSchema = z.object({
 // Rate limiting
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_NOTIFICATIONS_PER_MINUTE = 50;
-const notificationCounts = new Map<string, { count: number; resetTime: number }();
+const notificationCounts = interface NotificationCount {
+  count: number;
+  resetTime: number;
+}
+const notificationCounts = new Map<string, NotificationCount>();
 
 function checkRateLimit(senderId: string): boolean {
   const now = Date.now();

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getToken } from 'next-auth/jwt';
 
 type UserRole = 'USER' | 'ADMIN' | 'PRIEST' | 'SERVANT' | 'SUNDAY_SCHOOL_SERVANT' | 'PARENT' | 'CHILD';
 
 export async function middleware(request: NextRequest) {
-  const session = await auth();
-  const token = session?.user;
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = request.nextUrl;
 
   const isAuthRoute =
@@ -14,15 +13,25 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth/verify-email') ||
     pathname.startsWith('/auth/forgot-password') ||
     pathname.startsWith('/auth/reset-password') ||
-    pathname.startsWith('/auth/2fa');
+    pathname.startsWith('/auth/2fa') ||
+    pathname.startsWith('/auth/admin') ||
+    pathname.startsWith('/auth/priest') ||
+    pathname.startsWith('/auth/servant') ||
+    pathname.startsWith('/auth/sunday-school-servant') ||
+    pathname.startsWith('/auth/parent') ||
+    pathname.startsWith('/auth/child') ||
+    pathname.startsWith('/auth/makhdoum') ||
+    pathname.startsWith('/auth/public');
 
   // If the user is logged in (token exists)
   if (token) {
+    const userRole = token.role as UserRole;
+    
     // If they are on an auth page, redirect them based on their role
     if (isAuthRoute) {
       let redirectPath = '/dashboard';
       
-      switch (token.role) {
+      switch (userRole) {
         case 'ADMIN':
           redirectPath = '/admin';
           break;
@@ -49,10 +58,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // If a non-admin user tries to access an admin route, redirect them.
-    if (pathname.startsWith('/admin') && token.role !== 'ADMIN') {
+    if (pathname.startsWith('/admin') && userRole !== 'ADMIN') {
       let redirectPath = '/dashboard';
       
-      switch (token.role) {
+      switch (userRole) {
         case 'PRIEST':
           redirectPath = '/priest-panel/dashboard';
           break;

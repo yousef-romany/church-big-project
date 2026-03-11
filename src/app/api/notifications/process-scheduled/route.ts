@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       take: 100, // Process in batches to avoid overwhelming
     });
 
-    if (scheduledNotifications.length === 0) {
+     if (scheduledNotifications.length === 0) {
       return NextResponse.json({
         message: 'لا توجد إشعارات مجدولة للمعالجة',
         processedCount: 0,
@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
 
     for (const notification of scheduledNotifications) {
       try {
-        // Get user's active device tokens
         const deviceTokens = await prisma.userDeviceToken.findMany({
           where: {
             userId: notification.recipientId,

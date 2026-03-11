@@ -372,30 +372,16 @@ export default function FamilyDatabaseOversight() {
               <Select value={involvementFilter} onValueChange={setInvolvementFilter}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="فلترة حسب المشاركة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع المستويات</SelectItem>
-                  {Object.entries(involvementLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="فلترة حسب الحالة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="active">نشطة</SelectItem>
-                  <SelectItem value="inactive">غير نشطة</SelectItem>
-                  <SelectItem value="new">جديدة</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="rounded-md border">
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="all">جميع المستويات</SelectItem>
+                   {Object.entries(involvementLabels).map(([key, label]) => (
+                     <SelectItem key={key} value={key}>{label}</SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+             </div>
+             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>

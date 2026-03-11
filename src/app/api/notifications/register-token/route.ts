@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 
 // Rate limiting for token registration
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in ms
@@ -37,7 +37,7 @@ function getDeviceInfo(userAgent?: string) {
     return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
   }
 
-  const parser = UAParser(userAgent);
+  const parser = new UAParser(userAgent);
   return {
     browser: `${parser.getBrowser().name} ${parser.getBrowser().version}`,
     os: `${parser.getOS().name} ${parser.getOS().version}`,

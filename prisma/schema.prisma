@@ -45,6 +45,7 @@ model User {
   password      String?
   image         String?
   role          UserRole  @default(USER)
+  points        Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -53,15 +54,35 @@ model User {
   lockedUntil   DateTime?
   lastLoginAt   DateTime?
 
-  accounts      Account[]
-  sessions      Session[]
+  accounts            Account[]
+  sessions            Session[]
   
-  priestProfile    PriestProfile?
-  servantProfile   ServantProfile?
-  parentProfile    ParentProfile?
-  childProfile     ChildProfile?
+  priestProfile       PriestProfile?
+  servantProfile      ServantProfile?
+  parentProfile       ParentProfile?
+  childProfile        ChildProfile?
   
-  passkeys          Passkey[]
+  passkeys            Passkey[]
+  
+  pointsTransactions  PointsTransaction[]
+  pointRedemptions    PointRedemption[]
+  userAchievements    UserAchievement[]
+  
+  notifications       Notification[]
+  notificationSettings NotificationSettings?
+  
+  sentMessages        Message[]    @relation("SentMessages")
+  receivedMessages    Message[]    @relation("ReceivedMessages")
+  
+  attendances        Attendance[]
+  familyMember       FamilyMember?
+  
+  confessionsAsPriest  Confession[]    @relation("ConfessionsAsPriest")
+  confessionsAsUser    Confession[]    @relation("ConfessionsAsUser")
+  eventRegistrations   EventRegistration[]
+  visitationTasks     VisitationTask[] @relation("VisitationTasksAsServant")
+  visitationsAssigned  VisitationTask[] @relation("VisitationTasksAsPriest")
+  sundaySchoolClasses  SundaySchoolClass[]
 }
 
 model VerificationToken {
@@ -129,15 +150,15 @@ model ParentProfile {
 }
 
 model ChildProfile {
-  id       String @id @default(cuid())
-  user     User   @relation(fields: [userId], references: [id])
-  userId   String @unique
-  points   Int    @default(0)
-  qrCode   String @unique @default(cuid())
-  grade    String?
-  birthDay DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @unique
+  points     Int      @default(0)
+  qrCode     String   @unique @default(cuid())
+  grade      String?
+  birthDay   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 enum UserRole {
@@ -148,4 +169,464 @@ enum UserRole {
   SUNDAY_SCHOOL_SERVANT
   PARENT
   CHILD
+}
+
+model PointsTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        TransactionType
+  description String
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  cost        Int
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  redemptions PointRedemption[]
+  
+  @@index([isActive])
+}
+
+model PointRedemption {
+  id          String   @id @default(cuid())
+  userId      String
+  rewardId    String
+  pointsCost  Int
+  redeemedAt  DateTime @default(now())
+  
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id])
+  
+  @@index([userId])
+  @@index([rewardId])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  points      Int
+  criteria    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  userAchievements UserAchievement[]
+  
+  @@index([isActive])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+  
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+enum TransactionType {
+  EARNED
+  REDEEMED
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        NotificationType
+  priority    NotificationPriority @default(MEDIUM)
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+}
+
+model NotificationSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  emailEnabled         Boolean  @default(true)
+  pushEnabled          Boolean  @default(true)
+  smsEnabled           Boolean  @default(false)
+  quietHoursStart      String?
+  quietHoursEnd        String?
+  receiveAnnouncements Boolean  @default(true)
+  receiveMessages      Boolean  @default(true)
+  receiveReminders     Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  targetRoles String[]
+  priority    AnnouncementPriority @default(MEDIUM)
+  isActive    Boolean  @default(true)
+  publishAt   DateTime @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([isActive])
+  @@index([publishAt])
+}
+
+enum NotificationType {
+  ANNOUNCEMENT
+  MESSAGE
+  REMINDER
+  ACHIEVEMENT
+  SYSTEM
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AnnouncementPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  userId      String
+  qrCode      String
+  checkInTime DateTime @default(now())
+  checkOutTime DateTime?
+  location    String?
+  notes       String?
+  pointsAwarded Int    @default(0)
+  sessionId   String?
+  createdAt   DateTime @default(now())
+  
+  user   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session AttendanceSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([qrCode])
+  @@index([checkInTime])
+  @@index([sessionId])
+}
+
+model AttendanceSession {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        AttendanceType
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  maxAttendees Int?
+  pointsPerAttendance Int @default(10)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  attendances Attendance[]
+}
+
+enum AttendanceType {
+  SERVICE
+  SUNDAY_SCHOOL
+  EVENT
+  MEETING
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  recipientId String
+  subject     String
+  content     String   @db.Text
+  priority    MessagePriority @default(MEDIUM)
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  
+  sender    User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  attachments MessageAttachment[]
+  
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([read])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  fileName  String
+  fileSize  Int
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@index([messageId])
+}
+
+model Conversation {
+  id           String   @id @default(cuid())
+  participants String[]
+  lastMessage  String?
+  lastMessageAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum MessagePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model ChurchInfo {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  address     String
+  city        String
+  phone       String
+  email       String
+  website     String?
+  foundedAt   DateTime?
+  pastorName  String?
+  logo        String?
+  coverImage  String?
+  workingHours String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  socialMedia  SocialMedia?
+  contactInfo  ContactInfo?
+}
+
+model SocialMedia {
+  id           String   @id @default(cuid())
+  churchInfoId  String   @unique
+  facebook     String?
+  twitter      String?
+  instagram    String?
+  youtube      String?
+  whatsapp     String?
+  telegram     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  churchInfo ChurchInfo @relation(fields: [churchInfoId], references: [id], onDelete: Cascade)
+}
+
+model ContactInfo {
+  id           String   @id @default(cuid())
+  churchInfoId  String   @unique
+  emergencyPhone String?
+  emergencyContact String?
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  churchInfo ChurchInfo @relation(fields: [churchInfoId], references: [id], onDelete: Cascade)
+}
+
+model Family {
+  id          String   @id @default(cuid())
+  familyName  String
+  address     String?
+  city        String?
+  phone       String?
+  email       String?
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  familyMembers FamilyMember[]
+  visitationTasks VisitationTask[]
+  
+  @@index([city])
+}
+
+model FamilyMember {
+  id        String   @id @default(cuid())
+  familyId  String
+  userId    String   @unique
+  role      String
+  createdAt DateTime @default(now())
+  
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([familyId])
+  @@index([userId])
+}
+
+model Confession {
+  id          String   @id @default(cuid())
+  priestId    String
+  userId      String
+  scheduledAt DateTime
+  duration    Int      @default(30)
+  status      ConfessionStatus @default(SCHEDULED)
+  notes       String?  @db.Text
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  priest User @relation("ConfessionsAsPriest", fields: [priestId], references: [id], onDelete: Cascade)
+  user   User @relation("ConfessionsAsUser", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([priestId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  type        EventType
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  capacity    Int?
+  points      Int      @default(10)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  priestId    String?
+  registrations EventRegistration[]
+  
+  @@index([startTime])
+  @@index([isActive])
+  @@index([priestId])
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  status      RegistrationStatus @default(REGISTERED)
+  checkedIn   Boolean  @default(false)
+  checkedInAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model VisitationTask {
+  id          String   @id @default(cuid())
+  priestId    String
+  servantId   String
+  familyId    String
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus @default(PENDING)
+  scheduledAt DateTime?
+  completedAt DateTime?
+  notes       String?  @db.Text
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  priest  User    @relation("VisitationTasksAsPriest", fields: [priestId], references: [id], onDelete: Cascade)
+  servant User    @relation("VisitationTasksAsServant", fields: [servantId], references: [id], onDelete: Cascade)
+  family  Family  @relation(fields: [familyId], references: [id])
+  
+  @@index([priestId])
+  @@index([servantId])
+  @@index([status])
+}
+
+model SundaySchoolClass {
+  id          String   @id @default(cuid())
+  name        String
+  grade       String
+  description String?
+  servantId   String
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  servant User @relation(fields: [servantId], references: [id], onDelete: Cascade)
+  
+  @@index([servantId])
+  @@index([grade])
+}
+
+enum ConfessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  SERVICE
+  SUNDAY_SCHOOL
+  TRIP
+  MEETING
+  CONFERENCE
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+  ATTENDED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
