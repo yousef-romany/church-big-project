@@ -14,6 +14,7 @@ import { UserRole } from '@prisma/client';
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
+  trustHost: true,
   providers: [
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID,
@@ -188,16 +189,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
       async signIn({ user, account, profile }) {
       if (account?.provider === 'facebook') {
-        // For Facebook OAuth, ensure user exists and has a role assigned
+        const email = user.email;
+        if (!email) {
+          return false;
+        }
+
+        // Check if user exists with this email
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
+          where: { email },
+          include: {
+            accounts: true,
+          },
         });
 
         if (!existingUser) {
           // Create new user with default role for Facebook signups
           const newUser = await prisma.user.create({
             data: {
-              email: user.email,
+              email,
               name: user.name,
               emailVerified: new Date(),
               role: 'USER',
@@ -217,6 +226,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Add flag for first-time login
           (user as any).isFirstTimeFacebookLogin = true;
         } else {
+          // Check if user already has this Facebook account linked
+          const hasFacebookAccount = existingUser.accounts.some(
+            (acc) => acc.provider === 'facebook' && acc.providerAccountId === account.providerAccountId
+          );
+
+          if (!hasFacebookAccount) {
+            // Link Facebook account to existing user
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              },
+            });
+
+            console.log(`Linked Facebook account to existing user: ${email}`);
+          }
+
           // Log Facebook login for existing user
           await logAuditEvent({
             userId: existingUser.id,
@@ -226,6 +261,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             details: { isNewUser: false, provider: 'facebook' },
             success: true
           });
+
+          // Update user object with existing user's ID
+          user.id = existingUser.id;
+          user.role = existingUser.role;
 
           // Check if user has USER role and no profile (indicates incomplete signup)
           if (existingUser.role === 'USER') {

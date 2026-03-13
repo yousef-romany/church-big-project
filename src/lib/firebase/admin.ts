@@ -6,7 +6,7 @@ if (!admin.apps.length) {
     // Initialize Firebase Admin SDK
     // The credentials should be loaded from environment variables or service account file
     const serviceAccount = {
-      projectId: process.env.FIREBASE_PROJECT_ID || "botbot-f929f",
+      projectId: process.env.FIREBASE_PROJECT_ID || "church-63cdd",
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     };
@@ -24,7 +24,7 @@ if (!admin.apps.length) {
     try {
       // Only for development - fallback to application default credentials
       admin.initializeApp({
-        projectId: "botbot-f929f",
+        projectId: "church-63cdd",
       });
     } catch (fallbackError) {
       console.error('Failed to initialize Firebase Admin SDK with fallback:', fallbackError);

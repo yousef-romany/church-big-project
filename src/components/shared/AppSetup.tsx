@@ -15,6 +15,17 @@ export default function AppSetup({ children }: { children: ReactNode }) {
   useEffect(() => {
     // FCM setup for all users
     if (typeof window !== 'undefined' && isFCMSupported()) {
+      // Register service worker first
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then((registration) => {
+            console.log('Service Worker registered successfully:', registration);
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      }
+
       requestNotificationPermission().then(token => {
         if (token) {
           console.info('%c🔔 FCM Token obtained in AppSetup: %s', 'color: blue; font-weight: bold;', token);

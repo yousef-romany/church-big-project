@@ -9,13 +9,13 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-comp
 // your app's Firebase config object.
 // https://firebase.google.com/docs/web/setup#config-object
 const firebaseConfigSw = {
-  apiKey: "AIzaSyCLI1l9VP5Rh3-QFt6Y8pPh8BTK-VbF7S4",
-  authDomain: "botbot-f929f.firebaseapp.com",
-  projectId: "botbot-f929f",
-  storageBucket: "botbot-f929f.firebasestorage.app", // Updated as per user's provided config
-  messagingSenderId: "350363887575",
-  appId: "1:350363887575:web:e8b2d8309ef40b97e64d92",
-  measurementId: "G-4QE2Z70X2K"
+  apiKey: "AIzaSyDrLiDnkPALsZSWkw9zJXETBp-t0CKg6Do",
+  authDomain: "church-63cdd.firebaseapp.com",
+  projectId: "church-63cdd",
+  storageBucket: "church-63cdd.firebasestorage.app",
+  messagingSenderId: "904824008138",
+  appId: "1:904824008138:web:3826dfbe0461523c5e7333",
+  measurementId: "G-LDCE69WR80"
 };
 
 firebase.initializeApp(firebaseConfigSw);

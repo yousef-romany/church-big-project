@@ -48,7 +48,7 @@ function getDeviceInfo(userAgent?: string) {
 // POST /api/notifications/register-token
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
+    // Get session first - this will trigger headers internally
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -79,14 +79,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingToken) {
-      // Update the existing token with new user and device info
+      // Update existing token with new user and device info
       if (existingToken.userId !== userId) {
         // Token belongs to another user, update it
         await prisma.userDeviceToken.update({
           where: { token },
           data: {
             userId,
-            deviceInfo,
+            deviceInfo: JSON.stringify(deviceInfo),
             isActive: true,
             lastSeenAt: new Date(),
           },
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId,
           token,
-          deviceInfo,
+          deviceInfo: JSON.stringify(deviceInfo),
           isActive: true,
           lastSeenAt: new Date(),
         },
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/notifications/register-token
 export async function DELETE(request: NextRequest) {
   try {
-    // Check authentication
+    // Check authentication - this will trigger headers internally
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // Delete the token
+    // Delete token
     const deleted = await prisma.userDeviceToken.deleteMany({
       where: {
         token,

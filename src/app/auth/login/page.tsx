@@ -29,7 +29,7 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -140,5 +140,13 @@ export default function LoginPage() {
         </Form>
       </Card>
     </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <React.Suspense fallback={<div className="w-full max-w-md animate-pulse h-96 rounded-2xl bg-muted/20" />}>
+      <LoginContent />
+    </React.Suspense>
   );
 }

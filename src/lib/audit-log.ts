@@ -25,7 +25,7 @@ export async function logAuditEvent(data: AuditLogData) {
         resourceId: data.resourceId,
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
-        details: data.details || {},
+        details: data.details ? JSON.stringify(data.details) : null,
         success: data.success ?? true,
         errorMessage: data.errorMessage,
         timestamp: new Date(),

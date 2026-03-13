@@ -39,22 +39,19 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     return null;
   }
   
-  console.log('Requesting notification permission...');
+      console.log('Requesting notification permission...');
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       console.log('Notification permission granted.');
-      // خـطـوة هـامـة: اسـتـبـدل 'YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE'
-      // بـمـفـتـاح VAPID الـعـام مـن Firebase Console (Project settings > Cloud Messaging > Web Push certificates)
-      const vapidKey = "BGyv1z2sR4J1EVcH_Ttk-PLRhI6RMoSqkbwFGwnjoUnOAqLGj90gUuIBnhJTxUuuEMVOtTQChPWAvG4ltYvdcDQ"; // User provided
       
-      // This check for placeholder VAPID key can be removed if it's confirmed to be always filled by the user or system
-      // if (vapidKey === "YOUR_PUBLIC_VAPID_KEY_PLACEHOLDER") { 
-      //   console.warn("VAPID key is not set in messagingService.ts. Please add your VAPID key.");
-      //   return null;
-      // }
+      try {
+        // خـطـوة هـامـة: اسـتـبـدل 'YOUR_PUBLIC_VAPID_KEY_FROM_FIREBASE_CONSOLE'
+        // بـمـفـتـاح VAPID الـعـام مـن Firebase Console (Project settings > Cloud Messaging > Web Push certificates)
+        // Open: https://console.firebase.google.com/project/church-63cdd/settings/cloudmessaging
+        const vapidKey = "BNmCuxpmYAo64X5jN2NrYGdB5aYthDp2lOMu8AyB6cMDgjWZRZsdxInnSpKGqbM0psrhMal1nMkxY0RNgxccpUQ"; // استبدل هذا بالقيمة الحقيقية من إعدادات Firebase Console
 
-      const currentToken = await getToken(messagingInstance, { vapidKey: vapidKey });
+        const currentToken = await getToken(messagingInstance, { vapidKey: vapidKey });
       if (currentToken) {
         console.info('%c🔔 FCM Token Obtained: %s', 'color: green; font-weight: bold;', currentToken);
         
@@ -72,7 +69,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
             console.info('FCM token registered successfully');
             localStorage.setItem('fcmTokenRegistered', 'true');
           } else {
-            console.error('Failed to register FCM token:', response.statusText);
+            console?.error('Failed to register FCM token:', response.statusText);
           }
         } catch (error) {
           console.error('Error registering FCM token:', error);
@@ -82,6 +79,13 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
         return currentToken;
       } else {
         console.warn('No registration token available. Request permission to generate one.');
+        return null;
+      }
+      } catch (fcmError) {
+        console.error('Error getting FCM token:', fcmError);
+        if ((fcmError as any).code === 'messaging/invalid-vapid-key') {
+          console.error('Invalid VAPID key. Please update it in messagingService.ts');
+        }
         return null;
       }
     } else {
