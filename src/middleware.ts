@@ -23,14 +23,19 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth/makhdoum') ||
     pathname.startsWith('/auth/public');
 
+  const isRoleSelectionRoute = pathname.startsWith('/auth/select-role');
+
   // If the user is logged in (token exists)
   if (token) {
     const userRole = token.role as UserRole;
-    
-    // If they are on an auth page, redirect them based on their role
-    if (isAuthRoute) {
+
+    // Allow access to role selection page for users with USER role
+    if (isRoleSelectionRoute) {
+      if (userRole === 'USER') {
+        return NextResponse.next();
+      }
+      // If user already has a role, redirect them to their dashboard
       let redirectPath = '/dashboard';
-      
       switch (userRole) {
         case 'ADMIN':
           redirectPath = '/admin';
@@ -50,10 +55,40 @@ export async function middleware(request: NextRequest) {
         case 'CHILD':
           redirectPath = '/makhdoum-child-panel/dashboard';
           break;
+      }
+      return NextResponse.redirect(new URL(redirectPath, request.url));
+    }
+
+    // If they are on an auth page, redirect them based on their role
+    if (isAuthRoute) {
+      let redirectPath = '/dashboard';
+
+      switch (userRole) {
+        case 'ADMIN':
+          redirectPath = '/admin';
+          break;
+        case 'PRIEST':
+          redirectPath = '/priest-panel/dashboard';
+          break;
+        case 'SERVANT':
+          redirectPath = '/visitation-servant-panel/dashboard';
+          break;
+        case 'SUNDAY_SCHOOL_SERVANT':
+          redirectPath = '/sunday-school-servant-panel/dashboard';
+          break;
+        case 'PARENT':
+          redirectPath = '/makhdoum-parent-panel/dashboard';
+          break;
+        case 'CHILD':
+          redirectPath = '/makhdoum-child-panel/dashboard';
+          break;
+        case 'USER':
+          redirectPath = '/auth/select-role';
+          break;
         default:
           redirectPath = '/dashboard';
       }
-      
+
       return NextResponse.redirect(new URL(redirectPath, request.url));
     }
 

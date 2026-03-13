@@ -51,7 +51,8 @@ const roleBasedNotificationSchema = z.object({
 // Rate limiting
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_NOTIFICATIONS_PER_MINUTE = 50;
-const notificationCounts = interface NotificationCount {
+
+interface NotificationCount {
   count: number;
   resetTime: number;
 }

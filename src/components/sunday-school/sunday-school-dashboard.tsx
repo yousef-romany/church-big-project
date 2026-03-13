@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Calendar, BookOpen, CheckCircle, Clock, TrendingUp, ChevronRight, Plus, Settings } from 'lucide-react';
+import { Users, Calendar, BookOpen, CheckCircle, Clock, TrendingUp, Plus, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
 interface SundaySchoolClass {
@@ -127,17 +127,16 @@ export default function SundaySchoolDashboard() {
               <Settings className="h-4 w-4" />
               الإعدادات
             </Button>
-          </CardHeader>
+          </CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v as 'classes' | 'attendance' | 'analytics')}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="classes">الفصولي</TabsTrigger>
-                <TabsTrigger value="attendance">الحضور</TabsTrigger>
-                <TabsTrigger value="analytics">الإحصائيات</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v as 'classes' | 'attendance' | 'analytics')}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="classes">الفصولي</TabsTrigger>
+              <TabsTrigger value="attendance">الحضور</TabsTrigger>
+              <TabsTrigger value="analytics">الإحصائيات</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -158,6 +157,7 @@ export default function SundaySchoolDashboard() {
                   لا توجد فصول حالياً
                 </div>
               </CardContent>
+            </Card>
           ) : (
             <>
               {classes.map((cls, index) => (
@@ -194,30 +194,30 @@ export default function SundaySchoolDashboard() {
                             <span>{cls.location}</span>
                           </div>
                         )}
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-2">
-                        {cls.description || 'لا يوجد وصف للفصل'}
-                      </div>
-                      <div>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{cls.servantName}</span>
-                      </div>
-                      <div className="flex justify-end pt-4">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRecordAttendance(cls.id)}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          تسجيل الحضور
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedClass(cls)}
-                        >
-                          تفاصيل الفصل
-                        </Button>
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {cls.description || 'لا يوجد وصف للفصل'}
+                        </div>
+                        <div>
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{cls.servantName}</span>
+                        </div>
+                        <div className="flex justify-end pt-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRecordAttendance(cls.id)}
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            تسجيل الحضور
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedClass(cls)}
+                          >
+                            تفاصيل الفصل
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -232,7 +232,7 @@ export default function SundaySchoolDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              <BookOpen className="h-5 w-5" inline-block ml-2" />
+              <BookOpen className="h-5 w-5 inline-block ml-2" />
               سجل الحضور
             </CardTitle>
           </CardHeader>
@@ -315,19 +315,19 @@ export default function SundaySchoolDashboard() {
                 </div>
                 <span className="text-sm text-muted-foreground">من 50 طالب</span>
               </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">الشهر الماضي</span>
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-muted-foreground">الشهر الماضي</span>
                   <span className="text-2xl font-bold">38</span>
                 </div>
-                  <span className="text-sm text-green-600">+10%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">عدد الحضور</span>
+                <span className="text-sm text-green-600">+10%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">عدد الحضور</span>
                   <span className="text-2xl font-bold">180</span>
                 </div>
                 <span className="text-sm text-green-600">من 240 طالب</span>
-                </div>
               </div>
+            </div>
             </CardContent>
           </Card>
           <Card className="md:col-span-1">
@@ -370,11 +370,14 @@ export default function SundaySchoolDashboard() {
                   <label className="text-sm font-medium">اليوم</label>
                   <div className="text-lg font-semibold">{getDayName(selectedClass.dayOfWeek)}</div>
                 </div>
-                <div className="text-lg font-semibold">{selectedClass.startTime} - {selectedClass.endTime}</div>
+                <div>
+                  <label className="text-sm font-medium">الوقت</label>
+                  <div className="text-lg font-semibold">{selectedClass.startTime} - {selectedClass.endTime}</div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">المكان</label>
+                  <label className="text-sm font-medium">المعلم</label>
                   <span className="text-lg font-semibold">{selectedClass.servantName}</span>
                 </div>
                 {selectedClass.location && (
@@ -384,7 +387,6 @@ export default function SundaySchoolDashboard() {
                   </div>
                 )}
               </div>
-            </div>
               {selectedClass.description && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">

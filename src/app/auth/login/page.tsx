@@ -81,8 +81,9 @@ export default function LoginPage() {
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full max-w-md">
-      <Card className="shadow-2xl">
-        <CardHeader className="text-center p-6">
+      <Card className="glass-panel border-white/40 dark:border-white/10 rounded-2xl overflow-hidden relative group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+        <CardHeader className="text-center p-8 pb-6 relative z-10">
           <CardTitle className="text-3xl font-bold">تسجيل الدخول</CardTitle>
           <CardDescription>مرحباً بك مجدداً! أدخل بياناتك للمتابعة.</CardDescription>
         </CardHeader>
@@ -101,9 +102,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center"><Mail className="me-2 h-4 w-4" />البريد الإلكتروني</FormLabel>
+                    <FormLabel className="flex items-center text-foreground/80"><Mail className="me-2 h-4 w-4" />البريد الإلكتروني</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="email@example.com" {...field} />
+                      <Input type="email" placeholder="email@example.com" className="bg-background/40 backdrop-blur-sm border-white/20 dark:border-white/10 focus-visible:ring-primary/50" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -114,18 +115,19 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center"><Lock className="me-2 h-4 w-4" />كلمة المرور</FormLabel>
+                    <FormLabel className="flex items-center text-foreground/80"><Lock className="me-2 h-4 w-4" />كلمة المرور</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input type="password" placeholder="********" className="bg-background/40 backdrop-blur-sm border-white/20 dark:border-white/10 focus-visible:ring-primary/50" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 p-8 pt-0">
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <CardFooter className="flex flex-col gap-4 p-8 pt-0 relative z-10">
+              <Button type="submit" className="w-full shadow-lg hover:shadow-primary/25 transition-all duration-300 group hover:-translate-y-1" disabled={isSubmitting}>
                 {isSubmitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+                {!isSubmitting && <LogIn className="ms-2 h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />}
               </Button>
               <div className="text-sm text-center">
                 ليس لديك حساب؟{' '}

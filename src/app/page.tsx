@@ -169,7 +169,7 @@ export default function LandingPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg"
+        className="sticky top-0 z-50 w-full glass-panel border-b-0 rounded-b-2xl mx-auto max-w-[1920px]"
       >
         <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2" aria-label="الشعار والعودة للرئيسية">
@@ -238,32 +238,37 @@ export default function LandingPage() {
       <main className="flex-grow">
         <motion.section 
           id="hero"
-          className="relative py-20 md:py-32 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://placehold.co/1600x900.png?text=Hero+Background')" }}
+          className="relative py-24 md:py-40 overflow-hidden"
           data-ai-hint="church interior congregation"
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          {/* Animated Background Mesh */}
+          <div className="absolute inset-0 bg-mesh opacity-80 dark:opacity-60 transition-opacity duration-1000"></div>
+          
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <motion.div
-                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                initial={{ opacity: 0, scale: 0.5, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
+                transition={{ duration: 0.8, delay: 0.1, type: "spring", stiffness: 100 }}
+                className="inline-block relative"
             >
-                <Church className="mx-auto h-20 w-20 text-primary mb-6" />
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
+                <Church className="relative h-24 w-24 text-primary mb-8 filter drop-shadow-lg" />
             </motion.div>
+            
             <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white"
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight pb-2"
             >
-              منصة الكنيسة الموحدة
+              <span className="text-gradient">منصة الكنيسة الموحدة</span>
             </motion.h1>
+            
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-              className="mt-6 max-w-3xl mx-auto text-lg sm:text-xl text-gray-300"
+              className="mt-6 max-w-3xl mx-auto text-xl sm:text-2xl text-foreground/80 font-medium leading-relaxed"
             >
               مكان واحد يجمع الكنيسة، الكاهن، الخدام، والمخدومين لخدمة روحية متكاملة ومنظمة.
             </motion.p>
@@ -286,7 +291,7 @@ export default function LandingPage() {
                 size="lg" 
                 variant="outline" 
                 asChild 
-                className="bg-background/20 hover:bg-background/30 text-white border-white/50 hover:border-white shadow-lg"
+                className="bg-background/40 hover:bg-background/60 backdrop-blur-md border-primary/20 hover:border-primary shadow-lg"
                 whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -327,13 +332,15 @@ export default function LandingPage() {
                   transition={{ duration: 0.5, delay: index * 0.15, ease: "easeOut" }}
                   whileHover={{ 
                     scale: 1.05, 
-                    boxShadow: "0px 8px 25px -5px hsla(var(--primary), 0.15), 0px 5px 15px -6px hsla(var(--primary), 0.1)" 
+                    boxShadow: "0px 10px 40px -10px hsla(var(--primary), 0.3)" 
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="p-6 bg-card rounded-xl shadow-lg text-center border"
+                  className="p-8 glass-card rounded-2xl text-center border-t border-l border-white/40 dark:border-white/10 group"
                 >
-                  {IconComponent && <IconComponent className="h-10 w-10 text-primary mb-4 mx-auto" />}
-                  <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
+                  <div className="inline-flex p-4 rounded-xl bg-primary/10 mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                    {IconComponent && <IconComponent className="h-10 w-10 text-primary group-hover:text-primary-foreground transition-colors duration-300 mx-auto" />}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
                   <p className="text-muted-foreground text-sm">{service.description}</p>
                 </motion.div>
               )})}
@@ -372,10 +379,13 @@ export default function LandingPage() {
                     whileInView={animationProps.animate}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ ...animationProps.transition, delay: section.delay }}
-                    className={`flex flex-col rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300 overflow-hidden border hover:border-primary/30`}
+                    className={`flex flex-col rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden glass-card group hover:-translate-y-2`}
                   >
-                    <div className={`p-8 flex flex-col items-center text-center flex-grow bg-card`}>
-                      <div className={`p-4 rounded-full ${section.bg} mb-6 inline-block`}>
+                    <div className={`p-8 flex flex-col items-center text-center flex-grow relative overflow-hidden`}>
+                      {/* Subtle hover background glow */}
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b ${section.bg.replace('/10', '/5')} to-transparent pointer-events-none`}></div>
+                      
+                      <div className={`p-5 rounded-2xl ${section.bg} mb-6 inline-block transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-white/20 dark:border-white/5`}>
                         {IconComponent && <IconComponent className={`h-12 w-12 ${section.color}`} />}
                       </div>
                       <h3 className="text-2xl font-semibold mb-3 text-foreground">{section.title}</h3>

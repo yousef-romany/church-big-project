@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
+import { Suspense } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -31,17 +32,15 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm({ token }: { token: string | null }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const token = searchParams.get('token');
   
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
-
+  
   const form = useForm<ResetPasswordFormInputs>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { 
@@ -62,7 +61,6 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Validate token on component mount
     const validateToken = async () => {
       try {
         const response = await fetch('/api/auth/validate-reset-token', {
@@ -264,4 +262,19 @@ export default function ResetPasswordPage() {
       </Card>
     </motion.div>
   );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <ResetPasswordSearchParams />
+    </Suspense>
+  );
+}
+
+function ResetPasswordSearchParams() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+  
+  return <ResetPasswordForm token={token} />;
 }

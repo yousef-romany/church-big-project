@@ -166,6 +166,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || 'USER' as UserRole;
+        token.isFirstTimeFacebookLogin = (user as any).isFirstTimeFacebookLogin;
       }
       
       // Handle device tracking
@@ -191,42 +192,64 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email! },
         });
-        
+
         if (!existingUser) {
           // Create new user with default role for Facebook signups
           const newUser = await prisma.user.create({
             data: {
               email: user.email,
               name: user.name,
-              emailVerified: new Date(), // Facebook verifies emails
+              emailVerified: new Date(),
               role: 'USER',
             },
           });
-          
+
           // Log Facebook registration
           await logAuditEvent({
             userId: newUser.id,
-            email: newUser.email,
+            email: newUser.email || undefined,
             action: 'FACEBOOK_LOGIN_SUCCESS',
             resource: 'AUTH',
             details: { isNewUser: true, provider: 'facebook' },
             success: true
           });
+
+          // Add flag for first-time login
+          (user as any).isFirstTimeFacebookLogin = true;
         } else {
           // Log Facebook login for existing user
           await logAuditEvent({
             userId: existingUser.id,
-            email: existingUser.email,
+            email: existingUser.email || undefined,
             action: 'FACEBOOK_LOGIN_SUCCESS',
             resource: 'AUTH',
             details: { isNewUser: false, provider: 'facebook' },
             success: true
           });
+
+          // Check if user has USER role and no profile (indicates incomplete signup)
+          if (existingUser.role === 'USER') {
+            const hasProfile = await prisma.user.findFirst({
+              where: {
+                id: existingUser.id,
+                OR: [
+                  { priestProfile: { isNot: null } },
+                  { servantProfile: { isNot: null } },
+                  { parentProfile: { isNot: null } },
+                  { childProfile: { isNot: null } },
+                ],
+              },
+            });
+
+            if (!hasProfile) {
+              (user as any).isFirstTimeFacebookLogin = true;
+            }
+          }
         }
-        
+
         return true;
       }
-      
+
       // For credentials provider, device token is handled in the authorize function
       return true;
     },
@@ -235,12 +258,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
       }
-      
+
       // Allow relative URLs to same origin
       if (new URL(url).origin === baseUrl) {
+        // Check if user needs to select role (USER role and first-time Facebook login)
+        if (url === '/' || url === '/auth/login') {
+          // This is the default redirect after successful OAuth
+          return `${baseUrl}/auth/select-role`;
+        }
         return url;
       }
-      
+
       // Default to base URL
       return baseUrl;
     },

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, CheckCircle, AlertTriangle, MoreVertical, ChevronRight, FileText, Phone, UserCheck, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
@@ -88,7 +88,7 @@ export default function TaskManager() {
     try {
       const response = await fetch(`/api/visitation-servant/tasks/${taskId}`, {
         method: 'PATCH',
-        headers: { 'Calendar': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus, notes }),
       });
 
@@ -171,12 +171,13 @@ export default function TaskManager() {
               <MapPin className="h-4 w-4" />
               عرض الخريطة
             </Button>
-          </CardHeader>
+          </CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <Tabs value={statusFilter} onValueChange={(v: any) => setStatusFilter(v as TaskStatus | 'all')}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all">الكل المهم</TabsTrigger>
+                <TabsTrigger value="all">كل المهام</TabsTrigger>
                 <TabsTrigger value="PENDING">قيد الانتظار</TabsTrigger>
                 <TabsTrigger value="IN_PROGRESS">جاري العمل</TabsTrigger>
                 <TabsTrigger value="COMPLETED">مكتمل</TabsTrigger>
@@ -203,6 +204,7 @@ export default function TaskManager() {
               لا توجد مهام حالياً
             </div>
           </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTasks.map((task, index) => (
@@ -230,6 +232,12 @@ export default function TaskManager() {
                           {task.servantName}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost">
+                      <MapPin className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -258,7 +266,7 @@ export default function TaskManager() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">الخادم الكاهن: {task.familyMembers.length} شخص</span>
+                      <span className="font-medium">أعضاء الأسرة: {task.familyMembers.length} شخص</span>
                     </div>
                     {task.notes && (
                       <div className="text-sm text-muted-foreground border-t pt-2">
@@ -284,9 +292,9 @@ export default function TaskManager() {
                       </Button>
                     </div>
                   </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            ))}
         </div>
       )}
 
@@ -317,7 +325,8 @@ export default function TaskManager() {
                       title={`موقع ${selectedTaskForMap.familyName}`}
                     />
                   </div>
-                ) : (
+                </div>
+              ) : (
                 <div className="text-center text-muted-foreground">
                   <MapPin className="h-12 w-12 mb-4" />
                   <p>لا توجد إحداثيات لعرضها</p>
@@ -326,83 +335,85 @@ export default function TaskManager() {
             </div>
           </DialogContent>
         </Dialog>
+      </Dialog>
 
       {/* Task Details Modal */}
       {selectedTask && (
         <Dialog open={!!selectedTask} onOpenChange={(open) => !open ? setSelectedTask(null) : null}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>تفاصيل المهمة</DialogTitle>
-            <DialogDescription>
-              معلومات تفاصيلية عن المهمة
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">العائلة</label>
-                <div className="text-lg font-semibold">{selectedTask.familyName}</div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">الأولوية</label>
-                <Badge className={getPriorityColor(selectedTask.priority)}>
-                  {selectedTask.priority}
-                </Badge>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">الحالة الحالية</label>
-                <Badge className={getStatusColor(selectedTask.status)}>
-                  {getStatusLabel(selectedTask.status)}
-                </Badge>
-              </div>
-              <div>
-                <label className="text-sm font-medium">تاريخ الموعد</label>
-                <span>
-                  {selectedTask.scheduledAt 
-                    ? new Date(selectedTask.scheduledAt).toLocaleDateString('ar-EG')
-                    : 'لم يحدد بعد'}
-                </span>
-              </div>
-            </div>
-            {selectedTask.completedAt && (
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>تفاصيل المهمة</DialogTitle>
+              <DialogDescription>
+                معلومات تفاصيلية عن المهمة
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">تاريخ الإنجاز</label>
-                  <span>{new Date(selectedTask.completedAt).toLocaleDateString('ar-EG')}</span>
+                  <label className="text-sm font-medium">العائلة</label>
+                  <div className="text-lg font-semibold">{selectedTask.familyName}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">الكاهن</label>
-                  <span>{selectedTask.priestName}</span>
+                  <label className="text-sm font-medium">الأولوية</label>
+                  <Badge className={getPriorityColor(selectedTask.priority)}>
+                    {selectedTask.priority}
+                  </Badge>
                 </div>
               </div>
-            )}
-            <div>
-              <label className="text-sm font-medium">الخادم المكلف</label>
-              <span>{selectedTask.servantName}</span>
-            </div>
-            <div>
-              <label className="text-sm font-medium">العنوان</label>
-              <span>{selectedTask.familyAddress || 'غير مسجل'}</span>
-            </div>
-            <div>
-              <label className="text font-medium">الهاتف</label>
-              <span>{selectedTask.familyPhone || 'غير مسجل'}</span>
-            </div>
-            {selectedTask.notes && (
-              <div>
-                <label className="text-sm font-medium">ملاحظات</label>
-                <p className="text-sm text-muted-foreground">{selectedTask.notes}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">الحالة الحالية</label>
+                  <Badge className={getStatusColor(selectedTask.status)}>
+                    {getStatusLabel(selectedTask.status)}
+                  </Badge>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">تاريخ الموعد</label>
+                  <span>
+                    {selectedTask.scheduledAt 
+                      ? new Date(selectedTask.scheduledAt).toLocaleDateString('ar-EG')
+                      : 'لم يحدد بعد'}
+                  </span>
+                </div>
               </div>
-            )}
-            <div className="grid grid-cols-2 gap-4 pt-4">
+              {selectedTask.completedAt && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">تاريخ الإنجاز</label>
+                    <span>{new Date(selectedTask.completedAt).toLocaleDateString('ar-EG')}</span>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">الكاهن</label>
+                    <span>{selectedTask.priestName}</span>
+                  </div>
+                </div>
+              )}
               <div>
-                <label className="text-sm font-medium">ملاحظات الإضافية</label>
-                <Textarea
-                  placeholder="أضف ملاحظاتك حول المهمة..."
-                  rows={4}
-                />
+                <label className="text-sm font-medium">الخادم المكلّف</label>
+                <span>{selectedTask.servantName}</span>
+              </div>
+              <div>
+                <label className="text-sm font-medium">العنوان</label>
+                <span>{selectedTask.familyAddress || 'غير مسجل'}</span>
+              </div>
+              <div>
+                <label className="text-sm font-medium">الهاتف</label>
+                <span>{selectedTask.familyPhone || 'غير مسجل'}</span>
+              </div>
+              {selectedTask.notes && (
+                <div>
+                  <label className="text-sm font-medium">ملاحظات</label>
+                  <p className="text-sm text-muted-foreground">{selectedTask.notes}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div>
+                  <label className="text-sm font-medium">ملاحظات إضافية</label>
+                  <Textarea
+                    placeholder="أضف ملاحظاتك حول المهمة..."
+                    rows={4}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Button
@@ -418,13 +429,14 @@ export default function TaskManager() {
                   إكمال المهمة
                 </Button>
               </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setSelectedTask(null)}>
+                  إغلاق
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setSelectedTask(null)}>
-                إغلاق
-              </Button>
-            </div>
-          </div>
+          </DialogContent>
         </Dialog>
       )}
     </div>

@@ -193,8 +193,8 @@ export async function DELETE(
   }
 }
 
-// PATCH /api/notifications/mark-all-read
-export async function PATCH(request: NextRequest) {
+// POST /api/notifications/mark-all-read
+export async function POST(request: NextRequest) {
   try {
     // Check authentication
     const session = await auth();

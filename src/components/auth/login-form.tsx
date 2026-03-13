@@ -151,11 +151,12 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
 
   return (
     <motion.div variants={cardVariants} initial="hidden" animate="visible" className="w-full max-w-md">
-      <Card className="shadow-2xl overflow-hidden">
-        <CardHeader className="bg-primary/10 text-center p-6">
+      <Card className="glass-panel border-white/40 dark:border-white/10 rounded-2xl overflow-hidden relative group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+        <CardHeader className="text-center p-8 pb-6 relative z-10">
           {renderIcon()}
-          <CardTitle className="text-2xl md:text-3xl font-bold">{title}</CardTitle>
-          {description && <CardDescription className="text-sm md:text-base mt-1">{description}</CardDescription>}
+          <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">{title}</CardTitle>
+          {description && <CardDescription className="text-sm md:text-base mt-2 text-foreground/70">{description}</CardDescription>}
         </CardHeader>
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -173,7 +174,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-base">
+                      <FormLabel className="flex items-center text-base text-foreground/80">
                         <Mail className="me-2 h-5 w-5 text-muted-foreground" />
                         البريد الإلكتروني
                       </FormLabel>
@@ -182,7 +183,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                           type="email" 
                           placeholder="example@email.com" 
                           {...field} 
-                          className="h-12 text-base transition-shadow duration-300 focus:shadow-md" 
+                          className="h-12 text-base bg-background/40 backdrop-blur-sm border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-shadow duration-300 focus:shadow-md" 
                         />
                       </FormControl>
                       <FormMessage />
@@ -196,7 +197,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center text-base">
+                      <FormLabel className="flex items-center text-base text-foreground/80">
                         <Lock className="me-2 h-5 w-5 text-muted-foreground" />
                         كلمة المرور
                       </FormLabel>
@@ -205,7 +206,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                           type="password" 
                           placeholder="********" 
                           {...field} 
-                          className="h-12 text-base transition-shadow duration-300 focus:shadow-md" 
+                          className="h-12 text-base bg-background/40 backdrop-blur-sm border-white/20 dark:border-white/10 focus-visible:ring-primary/50 transition-shadow duration-300 focus:shadow-md" 
                         />
                       </FormControl>
                       <FormMessage />
@@ -219,11 +220,11 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                 </Link>
               </motion.div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4 p-6 md:p-8 border-t">
+            <CardFooter className="flex flex-col gap-4 p-6 md:p-8 relative z-10 border-t border-border/30">
               <motion.div variants={fieldVariants(0.4)} className="w-full">
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-lg font-semibold transition-transform hover:scale-105 active:scale-95" 
+                  className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-primary/25 transition-all duration-300 group hover:-translate-y-1" 
                   disabled={isSubmitting}
                   size="lg"
                 >
@@ -247,7 +248,7 @@ export default function LoginForm({ title, description, redirectPath, userRoleIc
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full h-12 text-lg font-semibold transition-transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2" 
+                  className="w-full h-12 text-lg font-semibold bg-white/5 hover:bg-white/10 border-white/20 dark:border-white/10 transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2" 
                   onClick={handleFacebookSignIn}
                   size="lg"
                 >

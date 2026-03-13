@@ -1,34 +1,21 @@
 
 "use client";
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, BookOpenCheck, Settings, Church, Search, ArrowRightToLine, ClipboardList, Plane, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Church, BookOpenCheck, Plane, User as UserIcon } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarTrigger,
-  SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import InstallPWAButton from '@/components/shared/InstallPWAButton';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { usePathname } from 'next/navigation';
+import { MakhdoumRoleProvider } from '@/contexts/MakhdoumRoleContext';
 
 const navItems = [
   { href: "/makhdoum-panel/dashboard", icon: LayoutDashboard, label: "لوحة التحكم" },
@@ -41,100 +28,37 @@ export default function RegularMakhdoumPanelLayout({ children }: { children: Rea
   const pathname = usePathname();
 
   return (
-    <SidebarProvider defaultOpen>
-      <Sidebar side="right" collapsible="icon">
-        <SidebarHeader className="p-4">
-          <Link href="/makhdoum-panel/dashboard" className="flex items-center gap-2">
-            <Church className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
-              بوابة المخدوم
-            </h1>
-          </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.label}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton
-                    className="w-full justify-start"
-                    tooltip={{ children: item.label, side: "left" }}
-                    isActive={pathname === item.href || (item.href !== "/makhdoum-panel/dashboard" && pathname.startsWith(item.href))}
-                  >
-                    <item.icon className="h-5 w-5 me-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className="p-4">
-           <SidebarMenu>
-             <SidebarMenuItem>
-                <SidebarMenuButton className="w-full justify-start" tooltip={{ children: "العودة للرئيسية", side: "left" }} asChild>
-                   <Link href="/">
-                    <ArrowRightToLine className="h-5 w-5 me-2" />
-                    <span className="group-data-[collapsible=icon]:hidden">العودة للرئيسية</span>
-                   </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                 <SidebarMenuButton asChild className="w-full justify-start" tooltip={{ children: "الملف الشخصي", side: "left" }} isActive={pathname === '/makhdoum-panel/profile'}>
-                    <Link href="/makhdoum-panel/profile">
-                        <UserIcon className="h-5 w-5 me-2" />
-                        <span className="group-data-[collapsible=icon]:hidden">الملف الشخصي</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-           </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-            <div className="md:hidden">
-                 <SidebarTrigger />
+    <MakhdoumRoleProvider>
+      <SidebarProvider defaultOpen>
+        <Sidebar side="right" collapsible="icon">
+          <SidebarHeader className="p-4">
+            <Link href="/makhdoum-panel/dashboard" className="flex items-center gap-2">
+              <Church className="h-8 w-8 text-primary" />
+              <h1 className="text-xl font-semibold group-data-[collapsible=icon]:hidden">
+                بوابة المخدوم
+              </h1>
+            </Link>
+          </SidebarHeader>
+          <SidebarContent>
+            <nav className="grid gap-1 px-2 group-[[data-collapsible=icon]]:hidden">
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
+            </nav>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="flex items-center gap-2 mt-auto">
+              <ThemeToggle />
+              <InstallPWAButton />
             </div>
-          <div className="flex-1">
-            {/* Optional: Breadcrumbs or page title can go here */}
-          </div>
-          <div className="flex items-center gap-4">
-            <form className="hidden md:flex ml-auto flex-1 sm:flex-initial">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="بحث..."
-                  className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px] bg-background"
-                />
-              </div>
-            </form>
-            <InstallPWAButton />
-            <ThemeToggle />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar>
-                    <AvatarImage src="https://picsum.photos/seed/makhdoumuser/40/40" alt="مستخدم" data-ai-hint="user avatar" />
-                    <AvatarFallback>م</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>حسابي</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/makhdoum-panel/profile">الملف الشخصي</Link></DropdownMenuItem>
-                <DropdownMenuItem>الدعم</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-        <main className="flex-1 p-6 bg-muted/40 dark:bg-background/40 overflow-y-auto">
-            {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          </SidebarFooter>
+        </Sidebar>
+      </SidebarProvider>
+    </MakhdoumRoleProvider>
   );
 }

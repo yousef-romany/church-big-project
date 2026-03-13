@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Phone, MapPin, Edit, Trash2, Plus, Search, ChevronRight, Calendar, DollarSign, UserCheck, AlertTriangle } from 'lucide-react';
+import { Users, Phone, MapPin, Edit, Trash2, Plus, Search, ChevronRight, Calendar, UserCheck, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -179,6 +179,7 @@ export default function FamilyManager() {
               لا توجد عائلات
             </div>
           </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFamilies.map((family, index) => (
@@ -220,7 +221,7 @@ export default function FamilyManager() {
                     )}
                     {family.email && (
                       <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                         <span>{family.email}</span>
                       </div>
                     )}
@@ -232,7 +233,7 @@ export default function FamilyManager() {
                     )}
                     {family.city && (
                       <div className="flex items-center gap-2 text-sm">
-                        <UserCheck className="h-4 w-4 text-muted-formation" />
+                        <UserCheck className="h-4 w-4 text-muted-foreground" />
                         <span>{family.city}</span>
                       </div>
                     )}
@@ -241,7 +242,7 @@ export default function FamilyManager() {
                         <Users className="h-4 w-4" />
                         <span>{family.membersCount} عضو</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
                         <span>{family.childrenCount} طفل</span>
                       </div>
@@ -249,7 +250,7 @@ export default function FamilyManager() {
                   </CardContent>
                 </Card>
               </motion.div>
-          ))}
+            ))}
         </div>
       )}
 
@@ -300,7 +301,7 @@ export default function FamilyManager() {
               </div>
             </div>
             <div>
-              <label className="text font-medium">العنوان</label>
+              <label className="text-sm font-medium">العنوان</label>
               <Input
                 value={newFamily.address}
                 onChange={(e) => setNewFamily({ ...newFamily, address: e.target.value })}
@@ -333,73 +334,78 @@ export default function FamilyManager() {
       {/* Family Details Dialog */}
       {selectedFamily && (
         <Dialog open={!!selectedFamily} onOpenChange={(open) => !open ? setSelectedFamily(null) : null}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>تفاصيل العائلة</DialogTitle>
-            <DialogDescription>
-              معلومات تفاصيلية عن العائلة
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">اسم العائلة</label>
-              <div className="text-lg font-semibold">{selectedFamily.familyName}</div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">رب العائلة</label>
-              <div>{selectedFamily.headOfFamily}</div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">الحالة</label>
-              <Badge className={getStatusColor(selectedFamily.status)}>
-                {selectedFamily.status === 'active' ? 'نشطة' : 'غير نشطة'}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">رقم الهاتف</label>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedFamily.phone || 'غير مسجل'}</span>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>تفاصيل العائلة</DialogTitle>
+              <DialogDescription>
+                معلومات تفاصيلية عن العائلة
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">اسم العائلة</label>
+                  <div className="text-lg font-semibold">{selectedFamily.familyName}</div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">رب العائلة</label>
+                  <div>{selectedFamily.headOfFamily}</div>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">البريد الإلكتروني</label>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedFamily.email || 'غير مسجل'}</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">الحالة</label>
+                  <Badge className={getStatusColor(selectedFamily.status)}>
+                    {selectedFamily.status === 'active' ? 'نشطة' : 'غير نشطة'}
+                  </Badge>
                 </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">العنوان</label>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedFamily.address || 'غير مسجل'}</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">رقم الهاتف</label>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedFamily.phone || 'غير مسجل'}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">البريد الإلكتروني</label>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedFamily.email || 'غير مسجل'}</span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">المدينة</label>
-                <div className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
-                  <span>{selectedFamily.city || 'غير مسجل'}</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">العنوان</label>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedFamily.address || 'غير مسجل'}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">المدينة</label>
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedFamily.city || 'غير مسجل'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 pt-4">
-              <Badge variant="outline">
-                {selectedFamily.membersCount} عضو
-              </Badge>
-              <Badge variant="outline">
-                {selectedFamily.childrenCount} طفل
-              </Badge>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline">
-                <Edit className="h-4 w-4" />
-                تعديل
-              </Button>
+              <div className="flex items-center gap-2 pt-4">
+                <Badge variant="outline">
+                  {selectedFamily.membersCount} عضو
+                </Badge>
+                <Badge variant="outline">
+                  {selectedFamily.childrenCount} طفل
+                </Badge>
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button variant="outline">
+                  <Edit className="h-4 w-4" />
+                  تعديل
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

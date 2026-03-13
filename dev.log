@@ -1,0 +1,126 @@
+   ▲ Next.js 15.2.3
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.2:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 3.3s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1549ms (233 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 21.3s (2014 modules)
+motion() is deprecated. Use motion.create() instead.
+ GET / 200 in 22547ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 3.7s (1951 modules)
+ GET /api/auth/session 200 in 5662ms
+ ✓ Compiled in 2.5s (2198 modules)
+ GET / 200 in 1766ms
+ GET / 200 in 69ms
+ ✓ Compiled in 898ms (817 modules)
+ GET / 200 in 88ms
+ ✓ Compiled in 536ms (817 modules)
+ GET / 200 in 81ms
+ ✓ Compiled in 677ms (817 modules)
+ GET / 200 in 98ms
+ ✓ Compiled in 2.5s (2184 modules)
+ GET / 200 in 1959ms
+ GET / 200 in 127ms
+ ✓ Compiled in 715ms (817 modules)
+ GET / 200 in 107ms
+ ✓ Compiled in 470ms (817 modules)
+ GET / 200 in 83ms
+ ✓ Compiled in 2.1s (2015 modules)
+ GET / 200 in 2183ms
+ GET / 200 in 74ms
+ ✓ Compiled in 1407ms (2001 modules)
+ GET / 200 in 1174ms
+ GET / 200 in 98ms
+ ✓ Compiled in 1303ms (2015 modules)
+ GET / 200 in 1031ms
+ GET / 200 in 29ms
+ ✓ Compiled in 287ms (817 modules)
+ GET / 200 in 22ms
+ ✓ Compiled in 236ms (817 modules)
+ GET / 200 in 65ms
+ ✓ Compiled in 348ms (817 modules)
+ GET / 200 in 47ms
+ ✓ Compiled in 544ms (817 modules)
+ GET / 200 in 58ms
+ ✓ Compiled in 302ms (817 modules)
+ GET / 200 in 37ms
+ ✓ Compiled in 842ms (817 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app-paths-manifest.json',
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 8.1s (2095 modules)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+ GET / 500 in 8962ms
+ GET / 200 in 257ms
+ GET / 200 in 55ms
+motion() is deprecated. Use motion.create() instead.
+ GET / 200 in 533ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1748ms (2099 modules)
+ GET /_next/static/chunks/app/page.js 404 in 2156ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 2161ms
+ GET /_next/static/chunks/main-app.js?v=1773239272594 404 in 2178ms
+ ✓ Compiled in 510ms (1055 modules)
+ ✓ Compiled in 697ms (1055 modules)
+ ✓ Compiled in 369ms (1055 modules)
+ ✓ Compiled in 632ms (1055 modules)
+ ○ Compiling /auth/admin/login ...
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}
+[Error: EACCES: permission denied, open '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'open',
+  path: '/media/yousefx00/f5c7ad6c-a86f-420e-8e5b-cd4ff0e5ec831/Programing Projects/church-big-project/.next/server/app/auth/admin/login/page.js'
+}

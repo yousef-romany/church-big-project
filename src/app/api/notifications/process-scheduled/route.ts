@@ -36,13 +36,12 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
           },
-          },
         },
       },
-      take: 100, // Process in batches to avoid overwhelming
+      take: 100 // Process in batches to avoid overwhelming
     });
 
-     if (scheduledNotifications.length === 0) {
+    if (scheduledNotifications.length === 0) {
       return NextResponse.json({
         message: 'لا توجد إشعارات مجدولة للمعالجة',
         processedCount: 0,
